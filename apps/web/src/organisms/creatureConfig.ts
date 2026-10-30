@@ -118,3 +118,24 @@ export const CELULA: CelulaConfig = {
   turnSeconds: 3,
   rollSpeed: 0.6,
 };
+
+export interface PoliedroConfig {
+  nucleus: NucleusConfig;
+  radius: number;
+  position: [number, number, number];
+  /** Eixo fixo do giro (normalizado no componente). */
+  spinAxis: [number, number, number];
+  /** Velocidade angular constante, rad/s. */
+  spinSpeed: number;
+  /** Amplitude do sobe e desce lento. */
+  bob: number;
+}
+
+export const POLIEDRO: PoliedroConfig = {
+  nucleus: { color: '#a8c8ff', radius: 0.3, pulseHz: 0.12, pulseMin: 1.5, pulseMax: 2.8 },
+  radius: 1.2,
+  position: [-5.5, 5.4, -4.5],
+  spinAxis: [0.3, 1, 0.15],
+  spinSpeed: 0.18,
+  bob: 0.25,
+};

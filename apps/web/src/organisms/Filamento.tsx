@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { useSceneSettings } from '../settings';
+import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import { FILAMENTO as C } from './creatureConfig';
 import { Nucleus } from './Nucleus';
@@ -11,6 +12,7 @@ import { lissajousPath } from './paths';
 const RADIAL = 8;
 /** Começa no meio do trajeto para já entrar em cena cruzando o quadro. */
 const START_TIME = 14;
+const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 
 const vertex = /* glsl */ `
 attribute float aU;
@@ -32,16 +34,25 @@ const fragment = /* glsl */ `
 uniform vec3 uGlow;
 uniform vec3 uBody;
 uniform float uPulse;
+uniform float uTime;
+uniform vec3 uPulses;
 varying float vU;
 varying vec3 vNormalV;
 varying vec3 vViewDir;
 #include <fog_pars_fragment>
+// travelingPulse() de pulse.ts: x = speed, y = spacing, z = width.
+float travelingPulse(float u) {
+  float phase = mod(u - uTime * uPulses.x, uPulses.y);
+  float d = min(phase, uPulses.y - phase) / uPulses.z;
+  return exp(-d * d);
+}
 void main() {
-  // Brilho forte na origem (cabeça), apagando ao longo do corpo até zero na cauda.
-  float fade = pow(1.0 - vU, 2.2);
+  // O corpo inteiro brilha (mais na cabeça) e pulsos de luz correm até a cauda.
+  float body = mix(1.0, 0.3, vU);
+  float pulse = travelingPulse(vU) * (1.0 - 0.6 * vU);
   float rim = pow(1.0 - abs(dot(vNormalV, vViewDir)), 1.5);
-  vec3 color = uBody * (1.0 - vU) + uGlow * (fade * (0.5 + 0.35 * uPulse) + rim * 0.25 * (1.0 - vU));
-  float alpha = clamp((0.35 + 0.65 * fade) * (1.0 - smoothstep(0.75, 1.0, vU)), 0.0, 1.0);
+  vec3 color = uBody * (1.0 - vU) + uGlow * (body * (0.32 + 0.18 * uPulse) + pulse * 0.95 + rim * 0.3 * body);
+  float alpha = clamp((0.3 + 0.45 * body + 0.35 * pulse) * (1.0 - smoothstep(0.85, 1.0, vU)), 0.0, 1.0);
   gl_FragColor = vec4(color, alpha);
   #include <fog_fragment>
 }
@@ -88,6 +99,8 @@ export function Filamento() {
           uGlow: { value: new THREE.Color(C.nucleus.color) },
           uBody: { value: new THREE.Color('#0b2a2e') },
           uPulse: { value: 0 },
+          uTime: { value: 0 },
+          uPulses: { value: new THREE.Vector3(C.pulses.speed, C.pulses.spacing, C.pulses.width) },
         },
       }),
     [],
@@ -125,7 +138,7 @@ export function Filamento() {
       side.crossVectors(tangent, worldUp).normalize();
       up.crossVectors(side, tangent).normalize();
       // Ondulação lateral que viaja da cabeça para a cauda, crescendo com a distância da cabeça.
-      const wave = Math.sin(t * 2.6 - i * 0.32) * C.undulation * Math.min(1, s * 3);
+      const wave = Math.sin(t * 1.6 - i * 0.18) * C.undulation * Math.min(1, s * 3);
       offset.copy(side).multiplyScalar(wave);
       const radius = C.width * (1 - s) ** 0.7 + 0.004;
       for (let k = 0; k < RADIAL; k++) {
@@ -147,7 +160,9 @@ export function Filamento() {
 
     const range = C.nucleus.pulseMax - C.nucleus.pulseMin;
     material.uniforms.uPulse.value = (pulse.current - C.nucleus.pulseMin) / range;
+    material.uniforms.uTime.value = t;
     head.current?.position.copy(spine[0]);
+    setCreatureGlow(FLOOR_SLOTS.filamento, FLOOR_COLOR, spine[0].x, spine[0].y, spine[0].z, 0.7);
   });
 
   return (

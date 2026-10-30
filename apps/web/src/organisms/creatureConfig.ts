@@ -1,4 +1,5 @@
 import type { LissajousParams } from './paths';
+import type { PulseParams } from './pulse';
 
 /**
  * Configuração de cada criatura. Um único conjunto de valores por espécie por
@@ -52,16 +53,19 @@ export interface FilamentoConfig {
   /** Achatamento da seção (1 = tubo, < 1 = fita). */
   flatness: number;
   undulation: number;
+  /** Pulsos de luz correndo da cabeça até a cauda. */
+  pulses: PulseParams;
 }
 
 export const FILAMENTO: FilamentoConfig = {
-  nucleus: { color: '#86f4ec', radius: 0.11, pulseHz: 0.42, pulseMin: 2.2, pulseMax: 3.6 },
+  nucleus: { color: '#86f4ec', radius: 0.17, pulseHz: 0.42, pulseMin: 2.2, pulseMax: 3.6 },
   path: { ax: 8.5, ay: 1.1, az: 2.6, fx: 0.019, fy: 0.047, fz: 0.031, center: [0, 3.8, 4.4] },
-  segments: 72,
-  lag: 0.05,
-  width: 0.15,
-  flatness: 0.35,
-  undulation: 0.16,
+  segments: 90,
+  lag: 0.045,
+  width: 0.42,
+  flatness: 0.22,
+  undulation: 0.3,
+  pulses: { speed: 0.35, spacing: 0.3, width: 0.06 },
 };
 
 export interface CascoConfig {

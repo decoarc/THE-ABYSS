@@ -1,4 +1,5 @@
 import { PALETTE } from '../lib/palette';
+import { Creatures } from '../organisms/Creatures';
 import { CameraRig } from './CameraRig';
 import { Effects } from './Effects';
 import { Lighting } from './Lighting';
@@ -25,6 +26,7 @@ export function Stage() {
       <Tufts />
       <LightShafts />
       <Particles />
+      <Creatures />
       <Effects />
     </>
   );

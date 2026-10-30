@@ -3,6 +3,10 @@ import { CameraRig } from './CameraRig';
 import { Effects } from './Effects';
 import { Lighting } from './Lighting';
 import { Seabed } from './Seabed';
+import { LightShafts } from './environment/LightShafts';
+import { Particles } from './environment/Particles';
+import { Rocks } from './environment/Rocks';
+import { Vents } from './environment/Vents';
 
 export function Stage() {
   return (
@@ -11,6 +15,10 @@ export function Stage() {
       <CameraRig />
       <Lighting />
       <Seabed />
+      <Vents />
+      <Rocks />
+      <LightShafts />
+      <Particles />
       <Effects />
     </>
   );

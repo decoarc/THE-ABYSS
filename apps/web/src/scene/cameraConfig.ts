@@ -15,8 +15,8 @@ export const CAMERA: {
   maxAzimuthAngle: number;
   targetBounds: { x: [number, number]; y: [number, number]; z: [number, number] };
 } = {
-  position: [0, 3.4, 14],
-  target: [0, 2.4, 0],
+  position: [0, 8.2, 17.5],
+  target: [0, 3.1, 0],
   fov: 42,
   minDistance: 5,
   maxDistance: 20,

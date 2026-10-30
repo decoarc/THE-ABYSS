@@ -48,10 +48,10 @@ void main() {
   float fresnel = pow(1.0 - facing, uThickness);
   // Luz do núcleo atravessando o centro do corpo, mais forte no pico do pulso.
   float core = pow(facing, 3.0) * (0.04 + 0.1 * uBreath);
-  vec3 color = uInner * 0.18 + uRim * fresnel * (0.75 + 0.25 * uBreath) + uNucleus * core
+  vec3 color = uInner * 0.14 + uRim * fresnel * (0.55 + 0.25 * uBreath) + uNucleus * core
     + uRim * max(vDisp, 0.0) * 0.4;
   float alpha = clamp(0.05 + fresnel * 0.75 + core, 0.0, 1.0);
-  gl_FragColor = vec4(color, alpha);
+  gl_FragColor = vec4(color * alpha, 1.0);
   #include <fog_fragment>
 }
 `;
@@ -70,6 +70,8 @@ export function Membrana() {
         fragmentShader: fragment,
         transparent: true,
         depthWrite: false,
+        // Aditivo: o corpo gelatinoso nunca escurece o que está atrás dele.
+        blending: THREE.AdditiveBlending,
         uniforms: {
           uTime: { value: 0 },
           uWobble: { value: C.wobble },
@@ -96,7 +98,7 @@ export function Membrana() {
     // Órbita larga e lenta em volta da chaminé herói, com oscilação de altura e de raio.
     const a = 0.9 + t * C.driftSpeed;
     const r = C.driftRadius + Math.sin(t * 0.07) * 0.8;
-    g.position.set(Math.cos(a) * r, 4.6 + Math.sin(t * 0.21) * 0.45, Math.sin(a) * r * 0.75 + 1);
+    g.position.set(Math.cos(a) * r, 4.5 + Math.sin(t * 0.21) * 0.45, Math.sin(a) * r * 0.75 + 0.5);
     g.rotation.set(Math.sin(t * 0.13) * 0.2, t * 0.05, Math.cos(t * 0.11) * 0.15);
   });
 

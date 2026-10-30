@@ -17,18 +17,30 @@ interface Variety {
 }
 
 const VARIETIES: Record<'cyan' | 'violet' | 'rose', Variety> = {
-  cyan: { params: { depth: 5, branchAngle: 0.5, lengthDecay: 0.78, radius: 0.11, height: 2.6 }, body: '#0c2a30', glow: PALETTE.cyan },
-  violet: { params: { depth: 4, branchAngle: 0.75, lengthDecay: 0.74, radius: 0.1, height: 1.8 }, body: '#1a1430', glow: PALETTE.violet },
-  rose: { params: { depth: 4, branchAngle: 0.62, lengthDecay: 0.7, radius: 0.09, height: 1.5 }, body: '#24121c', glow: '#b0577e' },
+  cyan: {
+    params: { depth: 6, branchAngle: 0.62, lengthDecay: 0.8, radius: 0.1, height: 2.6, flatten: 0.75, trunk: 0.07 },
+    body: '#123c47',
+    glow: '#5bb8d6',
+  },
+  violet: {
+    params: { depth: 5, branchAngle: 0.7, lengthDecay: 0.8, radius: 0.09, height: 2.2, flatten: 0.6, trunk: 0.06 },
+    body: '#211a3c',
+    glow: PALETTE.violet,
+  },
+  rose: {
+    params: { depth: 5, branchAngle: 0.8, lengthDecay: 0.74, radius: 0.07, height: 1.5, flatten: 0.3, trunk: 0.05 },
+    body: '#2a1422',
+    glow: '#a5507a',
+  },
 };
 
 const PLACEMENTS: { x: number; z: number; kind: keyof typeof VARIETIES; seed: number; scale: number }[] = [
-  { x: -5.6, z: 1.2, kind: 'cyan', seed: 4, scale: 1.1 },
-  { x: 5.2, z: 0.6, kind: 'violet', seed: 9, scale: 1.2 },
-  { x: -3.4, z: 5.4, kind: 'rose', seed: 2, scale: 1 },
-  { x: 7.4, z: -5.8, kind: 'cyan', seed: 13, scale: 1.4 },
-  { x: -8.2, z: -4.6, kind: 'violet', seed: 21, scale: 1.3 },
-  { x: 3.1, z: 5.6, kind: 'cyan', seed: 8, scale: 0.8 },
+  { x: -3.4, z: 1.0, kind: 'cyan', seed: 4, scale: 1.5 },
+  { x: 3.9, z: 0.6, kind: 'violet', seed: 9, scale: 1.5 },
+  { x: -6.6, z: 3.4, kind: 'rose', seed: 2, scale: 1.1 },
+  { x: 6.8, z: -4.8, kind: 'cyan', seed: 13, scale: 1.3 },
+  { x: -7.2, z: -4.2, kind: 'violet', seed: 21, scale: 1.2 },
+  { x: 2.6, z: 4.6, kind: 'rose', seed: 8, scale: 0.8 },
 ];
 
 /** Um coral inteiro num único BufferGeometry: tubos por segmento + bulbos nas pontas. */
@@ -118,8 +130,8 @@ void main() {
   float rim = pow(1.0 - abs(dot(vNormalV, vViewDir)), 2.5);
   float tip = smoothstep(0.35, 1.25, vTip);
   float pulse = 0.85 + 0.15 * sin(uTime * 0.7 + uPhase + vTip * 3.0);
-  vec3 color = uBody * (0.6 + 0.4 * vNormalV.y)
-    + uGlow * (0.06 + rim * 0.35 + tip * tip * 1.5 * pulse);
+  vec3 color = uBody * (0.7 + 0.3 * vNormalV.y)
+    + uGlow * (0.22 + rim * 0.35 + tip * tip * 0.9 * pulse);
   gl_FragColor = vec4(color, 1.0);
   #include <fog_fragment>
 }
@@ -151,7 +163,7 @@ function Coral({ x, z, kind, seed, scale }: (typeof PLACEMENTS)[number]) {
       geometry={geometry}
       material={material}
       position={[x, seabedHeight(x, z) - 0.05, z]}
-      rotation={[0, seed, 0]}
+      rotation={[0, (seed % 5) * 0.25 - 0.5, 0]}
       scale={scale}
     />
   );

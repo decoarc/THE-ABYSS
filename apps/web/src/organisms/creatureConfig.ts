@@ -34,8 +34,8 @@ export interface MembranaConfig {
 }
 
 export const MEMBRANA: MembranaConfig = {
-  nucleus: { color: '#c4f7ef', radius: 0.26, pulseHz: 0.16, pulseMin: 1.4, pulseMax: 3.2 },
-  radius: 1.35,
+  nucleus: { color: '#7fe9dd', radius: 0.13, pulseHz: 0.16, pulseMin: 1.05, pulseMax: 1.9 },
+  radius: 1.05,
   wobble: 0.14,
   thickness: 2.4,
   driftRadius: 4.6,
@@ -80,7 +80,7 @@ export const CASCO: CascoConfig = {
   nucleus: { color: '#c9a2ff', radius: 0.32, pulseHz: 0.09, pulseMin: 1.6, pulseMax: 3.0 },
   radius: 0.95,
   faceShrink: 0.86,
-  position: [6.4, 3.0, 2.6],
+  position: [5.4, 4.9, -5.2],
   adjustEvery: [6, 12],
   adjustDuration: 0.55,
 };
@@ -95,12 +95,12 @@ export interface EsporosConfig {
 export const ESPOROS: EsporosConfig = {
   nucleus: { color: '#9fd8cf', radius: 0.032, pulseHz: 0.6, pulseMin: 1.5, pulseMax: 2.6 },
   boids: {
-    bounds: { min: [-13, 3.6, -10], max: [-2.5, 8, -2] },
+    bounds: { min: [-11, 4.2, -9], max: [-3, 7.6, -2.5] },
     maxSpeed: 1.5,
-    neighborRadius: 1.1,
-    separation: 1.4,
+    neighborRadius: 2.0,
+    separation: 0.6,
     alignment: 0.7,
-    cohesion: 0.45,
+    cohesion: 0.9,
     burstChance: 0.04,
   },
   shellRadius: 0.085,

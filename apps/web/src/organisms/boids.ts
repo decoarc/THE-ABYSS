@@ -39,7 +39,7 @@ export function createBoids(count: number, rng: () => number, p: BoidParams): Bo
     for (let k = 0; k < 3; k++) {
       // Nasce num núcleo central do volume, para começar já como um grupo.
       const c = (min[k] + max[k]) / 2, h = (max[k] - min[k]) / 2;
-      pos[i * 3 + k] = c + (rng() - 0.5) * h;
+      pos[i * 3 + k] = c + (rng() - 0.5) * h * 0.6;
       vel[i * 3 + k] = (rng() - 0.5) * p.maxSpeed * 0.4;
     }
   }

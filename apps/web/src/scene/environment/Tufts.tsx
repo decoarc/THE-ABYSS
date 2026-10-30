@@ -22,7 +22,7 @@ function tuftGeometry(): THREE.BufferGeometry {
     const lean = new THREE.Euler((rng() - 0.5) * 0.7, 0, (rng() - 0.5) * 0.7);
     const stalk = new THREE.CylinderGeometry(0.006, 0.014, h, 4, 3, true);
     stalk.translate(0, h / 2, 0);
-    const bulb = new THREE.IcosahedronGeometry(0.03 + rng() * 0.015, 0);
+    const bulb = new THREE.IcosahedronGeometry(0.022 + rng() * 0.012, 0);
     bulb.translate(0, h, 0);
     for (const [g, isBulb] of [[stalk, false], [bulb, true]] as const) {
       g.rotateX(lean.x);
@@ -124,7 +124,7 @@ export function Tufts() {
       const a = rng() * Math.PI * 2;
       const r = Math.sqrt(-2 * Math.log(1 - rng() * 0.98)) * 0.45;
       const x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
-      const s = 0.45 + rng() * 0.6;
+      const s = 0.28 + rng() * 0.42;
       scale.set(s, s * (0.8 + rng() * 0.5), s);
       quat.setFromEuler(new THREE.Euler(0, rng() * Math.PI * 2, 0));
       pos.set(x, seabedHeight(x, z) - 0.03, z);

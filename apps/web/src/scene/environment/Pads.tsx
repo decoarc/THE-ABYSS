@@ -3,13 +3,14 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../../lib/motion';
 import { PALETTE } from '../../lib/palette';
+import { createNoise2D } from '../../lib/noise';
 import { createRng } from '../../lib/random';
 import { useSceneSettings } from '../../settings';
 import { foggyShader } from '../glsl/material';
 import { seabedHeight } from '../terrain';
 import { VENTS, scatter } from './layout';
 
-const COUNT = 46;
+const COUNT = 34;
 
 const vertex = /* glsl */ `
 attribute float aPhase;
@@ -44,7 +45,8 @@ void main() {
   float pulse = 0.55 + 0.45 * sin(uTime * 0.5 + vPhase * 6.2831);
   float top = smoothstep(0.2, 1.0, vTop);
   float rim = pow(1.0 - abs(dot(vNormalV, vViewDir)), 2.0);
-  vec3 color = vColor * (0.08 + top * 0.75 * pulse + rim * 0.35);
+  float edge = 1.0 - smoothstep(0.25, 0.85, vTop);
+  vec3 color = vColor * (0.05 + top * 0.12 * pulse + edge * (0.55 + 0.45 * pulse) + rim * 0.3);
   gl_FragColor = vec4(color, 1.0);
   #include <fog_fragment>
 }
@@ -54,9 +56,18 @@ void main() {
 export function Pads() {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const geometry = useMemo(() => {
-    const g = new THREE.SphereGeometry(1, 20, 10);
-    g.scale(1, 0.32, 1);
-    g.translate(0, 0.08, 0);
+    // Almofada irregular: esfera achatada com borda ondulada por ruído.
+    const g = new THREE.SphereGeometry(1, 28, 12);
+    const noise = createNoise2D(41);
+    const pos = g.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const a = Math.atan2(z, x);
+      const k = 1 + 0.28 * noise(Math.cos(a) * 1.6 + 3, Math.sin(a) * 1.6) + 0.12 * noise(x * 3, z * 3);
+      pos.setXYZ(i, x * k, Math.max(y, -0.2) * 0.38, z * k);
+    }
+    g.computeVertexNormals();
+    g.translate(0, 0.06, 0);
     const phase = new Float32Array(COUNT);
     const color = new Float32Array(COUNT * 3);
     const rng = createRng(404);
@@ -82,15 +93,17 @@ export function Pads() {
     if (!m) return;
     const rng = createRng(405);
     const avoid = VENTS.map((v) => ({ center: [v.position[0], v.position[2]] as [number, number], radius: v.radius * 2 }));
-    // Mais concentradas no anel em torno das chaminés.
-    const near = scatter(rng, Math.round(COUNT * 0.7), { minR: 2, maxR: 11, avoid });
-    const far = scatter(rng, COUNT - near.length, { minR: 11, maxR: 26, avoid });
+    // Maioria num canteiro à frente das chaminés (primeiro plano), o resto espalhado.
+    const near = scatter(rng, COUNT * 4, { minR: 2.4, maxR: 9, avoid })
+      .filter(([x, z]) => z > 1.8 && Math.abs(x) < 6)
+      .slice(0, Math.round(COUNT * 0.7));
+    const far = scatter(rng, COUNT - near.length, { minR: 9, maxR: 24, avoid });
     const matrix = new THREE.Matrix4();
     const quat = new THREE.Quaternion();
     const scale = new THREE.Vector3();
     const pos = new THREE.Vector3();
     [...near, ...far].forEach(([x, z], i) => {
-      const s = 0.12 + rng() ** 2 * 0.35;
+      const s = 0.18 + rng() ** 2 * 0.5;
       scale.set(s * (0.8 + rng() * 0.4), s, s * (0.8 + rng() * 0.4));
       quat.setFromEuler(new THREE.Euler(0, rng() * Math.PI, 0));
       pos.set(x, seabedHeight(x, z) - 0.02, z);

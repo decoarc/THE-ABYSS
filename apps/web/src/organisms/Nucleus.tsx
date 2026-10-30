@@ -68,7 +68,7 @@ export function Nucleus({
     const intensity = nucleusPulse(time.current, config);
     if (pulseRef) pulseRef.current = intensity;
     core.color.copy(base).multiplyScalar(intensity);
-    halo.opacity = 0.18 + 0.12 * intensity;
+    halo.opacity = 0.25 + 0.15 * intensity;
     sprite.current?.scale.setScalar(config.radius * haloScale * (0.85 + 0.08 * intensity));
   });
 

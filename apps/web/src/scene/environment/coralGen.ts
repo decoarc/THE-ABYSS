@@ -18,6 +18,10 @@ export interface CoralParams {
   radius: number;
   /** Altura aproximada do coral inteiro. */
   height: number;
+  /** 0 = arbusto 3D; 1 = leque plano no plano XY. */
+  flatten?: number;
+  /** Fração da altura gasta no tronco. */
+  trunk?: number;
 }
 
 /** Afinamento por geração; depender só da profundidade garante raio monótono. */
@@ -63,13 +67,15 @@ export function generateCoral(rng: () => number, p: CoralParams): Segment[] {
       const axis = normalize(rotate(perp, dir, around));
       let child = rotate(dir, axis, p.branchAngle * (0.7 + rng() * 0.6));
       // Leve tropismo para cima, e nunca abaixo do mínimo.
-      child = normalize([child[0], child[1] + 0.25, child[2]]);
+      child = normalize([child[0], child[1] + 0.25, child[2] * (1 - (p.flatten ?? 0))]);
       if (child[1] < MIN_RISE) child = normalize([child[0], MIN_RISE * 1.5, child[2]]);
-      grow(end, child, length * p.lengthDecay * (0.85 + rng() * 0.3), depth + 1);
+      // A primeira geração parte de um comprimento próprio, para um tronco curto não encolher o coral inteiro.
+      const base = depth === 0 ? p.height * 0.3 : length;
+      grow(end, child, base * p.lengthDecay * (0.85 + rng() * 0.3), depth + 1);
     }
   };
 
   const lean = normalize([(rng() - 0.5) * 0.3, 1, (rng() - 0.5) * 0.3]);
-  grow([0, 0, 0], lean, p.height * 0.32, 0);
+  grow([0, 0, 0], lean, p.height * (p.trunk ?? 0.32), 0);
   return segments;
 }

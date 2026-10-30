@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getHaloTexture } from '../../organisms/Nucleus';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../../lib/motion';
@@ -23,9 +24,9 @@ function ventGeometry(spec: VentSpec, seed: number): THREE.BufferGeometry {
   for (let ring = 0; ring <= RINGS; ring++) {
     const v = ring / RINGS;
     const y = v * spec.height;
-    const flare = 1 + 1.4 * (1 - v) ** 3;
-    const lip = v > 0.9 ? 1 + (v - 0.9) * 2.5 : 1;
-    const taper = 1 - 0.35 * v;
+    const flare = 1 + 0.9 * (1 - v) ** 5;
+    const lip = v > 0.94 ? 1 + (v - 0.94) * 2 : 1;
+    const taper = 1 - 0.3 * v;
     const sway = noise(v * 1.6, 3.1) * spec.height * 0.05;
     for (let s = 0; s < RADIAL; s++) {
       const a = (s / RADIAL) * Math.PI * 2;
@@ -91,13 +92,13 @@ void main() {
   vec3 base = uRock * light * (0.7 + 0.5 * grain);
 
   // Fissuras: bandas finas de ruído esticadas na vertical, tremulando devagar.
-  float n = snoise(vec3(vLocal.x * 2.2, vLocal.y * 0.45 - uTime * 0.05, vLocal.z * 2.2) + uSeed);
-  float crack = 1.0 - smoothstep(0.0, 0.07, abs(n));
+  float n = snoise(vec3(vLocal.x * 3.2, vLocal.y * 0.12 - uTime * 0.03, vLocal.z * 3.2) + uSeed);
+  float crack = (1.0 - smoothstep(0.0, 0.055, abs(n))) * smoothstep(-0.5, 0.2, snoise(vLocal * vec3(0.8, 0.3, 0.8) + uSeed * 3.0));
   float flicker = 0.75 + 0.25 * snoise(vec3(vLocal.y * 0.8, uTime * 0.4, uSeed));
   float upward = smoothstep(0.05, 0.9, vHeight);
-  float rim = smoothstep(0.86, 1.0, vHeight) * (1.0 - step(1.1, vHeight));
+  float rim = smoothstep(0.95, 1.0, vHeight) * (1.0 - step(1.1, vHeight));
   float mouth = step(1.1, vHeight);
-  vec3 heat = uHeat * uHeatStrength * (crack * flicker * (0.3 + 0.9 * upward) + rim * 1.4 + mouth * 2.6);
+  vec3 heat = uHeat * uHeatStrength * (crack * flicker * (0.5 + 1.6 * upward) + rim * 0.3 + mouth * 3.2);
 
   gl_FragColor = vec4(base + heat, 1.0);
   #include <fog_fragment>
@@ -133,7 +134,7 @@ varying float vFade;
 #include <fog_pars_fragment>
 void main() {
   float a = smoothstep(0.5, 0.0, length(gl_PointCoord - 0.5));
-  gl_FragColor = vec4(uColor * a * vFade * 0.3, 1.0);
+  gl_FragColor = vec4(uColor * a * vFade * 0.07, 1.0);
   #include <fog_fragment>
 }
 `;
@@ -188,7 +189,7 @@ function Vent({ spec, seed }: { spec: VentSpec; seed: number }) {
           uSeed: { value: seed * 1.7 },
           uRock: { value: new THREE.Color('#0e1b22') },
           uHeat: { value: new THREE.Color(PALETTE.amber) },
-          uHeatStrength: { value: spec.hero ? 1.0 : 0.6 },
+          uHeatStrength: { value: spec.hero ? 1.0 : 0.75 },
         },
       }),
     [seed, spec.hero],
@@ -202,6 +203,17 @@ function Vent({ spec, seed }: { spec: VentSpec; seed: number }) {
   return (
     <group position={spec.position}>
       <mesh geometry={geometry} material={material} position={[0, -0.3, 0]} />
+      {/* Brasa na boca: halo quente pequeno, subordinado aos núcleos das criaturas. */}
+      <sprite position={[0, spec.height - 0.25, 0]} scale={spec.radius * (spec.hero ? 6 : 4.5)}>
+        <spriteMaterial
+          map={getHaloTexture()}
+          color={PALETTE.amber}
+          opacity={spec.hero ? 0.55 : 0.4}
+          transparent
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </sprite>
       <Plume spec={spec} seed={seed} />
     </group>
   );

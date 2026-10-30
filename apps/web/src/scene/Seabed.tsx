@@ -11,8 +11,8 @@ export function Seabed() {
     g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position as THREE.BufferAttribute;
     const colors = new Float32Array(pos.count * 3);
-    const dark = new THREE.Color(PALETTE.bg);
-    const mid = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.teal), 0.25);
+    const dark = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.bg), 0.4);
+    const mid = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.teal), 0.7);
     const tmp = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
       const x = pos.getX(i), z = pos.getZ(i);

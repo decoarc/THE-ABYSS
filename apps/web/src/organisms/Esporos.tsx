@@ -59,7 +59,7 @@ varying vec3 vViewDir;
 #include <fog_pars_fragment>
 void main() {
   float rim = pow(1.0 - abs(dot(vNormalV, vViewDir)), 2.0);
-  gl_FragColor = vec4(vColor * (0.15 + rim * 0.6), 0.12 + rim * 0.55);
+  gl_FragColor = vec4(vColor * (0.1 + rim * 0.45), 0.05 + rim * 0.35);
   #include <fog_fragment>
 }
 `;

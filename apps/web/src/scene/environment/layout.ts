@@ -13,10 +13,10 @@ function vent(x: number, z: number, height: number, radius: number, hero = false
 
 /** Chaminé herói na origem; as demais agrupadas atrás e aos lados dela. */
 export const VENTS: VentSpec[] = [
-  vent(0, 0, 4.6, 0.95, true),
-  vent(-3.3, -2.1, 2.9, 0.7),
-  vent(3.0, -3.2, 3.4, 0.75),
-  vent(-1.9, 2.3, 1.5, 0.55),
+  vent(0, 0, 6.6, 0.55, true),
+  vent(-1.7, -1.1, 4.3, 0.45),
+  vent(1.6, -1.4, 5.1, 0.5),
+  vent(-0.8, 1.4, 2.6, 0.42),
 ];
 
 export interface ScatterOptions {

@@ -65,3 +65,52 @@ Leitura:
 
 - **Chaminés hidrotermais:** luz e cor estão no lugar, mas a silhueta gerada por anéis de ruído é regular demais. Uma escultura com crostas, ramificações e bocas secundárias resolveria melhor do que mais parâmetros.
 - Nenhuma criatura precisa de Blender nesta etapa: os problemas que restam nelas são de calibração, não de forma.
+
+---
+
+# Protótipo 2
+
+**Status:** aguardando aprovação explícita do autor. O protótipo 1 fica na tag `prototipo-1`; o 2 na tag `prototipo-2`.
+Design: `docs/superpowers/specs/2026-10-30-prototipo-visual-v2-design.md`.
+
+## O que mudou
+
+- **Luz no chão:** sedimento com grão, poças de luz sob os raios, brilho de corais/almofadas/criaturas/chaminés tingindo o leito, mais pedras médias escuras.
+- **Elenco:** Membrana, Filamento (redesenhado), Casco (maior, frestas maiores), **Célula** (nova), **Poliedro** (novo). Esporos removidos.
+
+## Capturas (v1 × v2)
+
+| | v1 | v2 |
+|---|---|---|
+| 1440×900 | [v1](captures/desktop-1440x900.png) | [v2](captures/v2/desktop-1440x900.png) |
+| 2560×1600 | [v1](captures/desktop-2560x1600.png) | [v2](captures/v2/desktop-2560x1600.png) |
+| 390×844 | [v1](captures/narrow-390x844.png) | [v2](captures/v2/narrow-390x844.png) |
+| Movimento reduzido | [v1](captures/reduced-motion-1440x900.png) | [v2](captures/v2/reduced-motion-1440x900.png) |
+| Sequência | [v1 0](captures/seq-0.png) · [v1 7](captures/seq-7.png) | [v2 0](captures/v2/seq-0.png) · [v2 2](captures/v2/seq-2.png) · [v2 4](captures/v2/seq-4.png) · [v2 7](captures/v2/seq-7.png) |
+
+Movimento reduzido: 4,6% dos pixels mudam em 3,5 s (normal: 25,4%).
+Na captura estreita a Célula está fora do quadro naquele instante (ela vai e volta pela esquerda).
+
+## Desempenho
+
+Mesmo método da v1 (Chromium 156.0.8078.4, janela visível, ANGLE/D3D11, viewport 1920×1080, `?perf=1`).
+
+| GPU | Preset | DPR | Buffer | p50 | p95 | Draw calls |
+|---|---|---|---|---|---|---|
+| RTX 4070 Laptop | high | 1,0 | 1920×1080 | 4,2 | 4,3 | 85 |
+| RTX 4070 Laptop | high | 1,5 | 2880×1620 | 4,2 | 4,4 | 85 |
+| Intel Arc | high | 1,0 | 1920×1080 | 11,6 | 12,7 | 85 |
+| Intel Arc | high | 1,5 | 2880×1620 | 21,1 | 27,5 | 85 |
+| Intel Arc | low | 1,0 | 1920×1080 | 8,6 | 13,0 | 85 |
+
+Leitura:
+- RTX continua presa no vsync de ~240 Hz.
+- A Intel Arc ficou bem mais pesada que na v1 (high a DPR 1,5: p50 8,6 → 21,1 ms). Os suspeitos são o passe extra de transmissão do cristal do Poliedro e o shader do leito; não isolei qual pesa mais.
+- Metas do plano atendidas: Arc `low` p95 13,0 ms (limite 33); RTX `high` p50 4,2 ms (limite 16,7). `QUALITY` não mudou; se for preciso aliviar a Arc, o primeiro passo é `crystal: false` no `low`.
+
+## Desvios que continuam em relação à referência
+
+1. Almofadas lisas; pedras facetadas em vez de arredondadas.
+2. Célula com silhueta de cápsula regular de perto.
+3. Chaminés com silhueta regular (candidatas a Blender, como na v1).
+4. Interface editorial ausente, por decisão do autor.

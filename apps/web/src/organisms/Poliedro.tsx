@@ -27,14 +27,16 @@ export function Poliedro() {
     () =>
       q.crystal
         ? new THREE.MeshPhysicalMaterial({
-            color: '#c4dcec',
-            roughness: 0.35,
+            color: '#d6e8f4',
+            roughness: 0.28,
             metalness: 0,
             transmission: 0.92,
             thickness: 1.2,
             ior: 1.45,
             attenuationColor: new THREE.Color('#5d7fa8'),
             attenuationDistance: 2.5,
+            // Brilho interno do núcleo difundido no cristal: as faces nunca ficam escuras.
+            emissive: new THREE.Color(C.nucleus.color).multiplyScalar(0.07),
             flatShading: true,
           })
         : new THREE.MeshStandardMaterial({
@@ -69,13 +71,13 @@ export function Poliedro() {
     solid.current.quaternion.premultiply(step);
     g.position.set(C.position[0], C.position[1] + Math.sin(time.current * 0.25) * C.bob, C.position[2]);
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
-    edgeMaterial.opacity = 0.25 + 0.2 * breath;
+    edgeMaterial.opacity = 0.4 + 0.25 * breath;
     setCreatureGlow(FLOOR_SLOTS.poliedro, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 0.45 + 0.25 * breath);
   });
 
   return (
     <group ref={group}>
-      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={5} />
+      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} />
       <group ref={solid}>
         <mesh geometry={geometry} material={material} />
         <lineSegments geometry={edges} material={edgeMaterial} />

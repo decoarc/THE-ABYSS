@@ -109,7 +109,7 @@ export function Seabed() {
             }),
           },
           uPoolColor: { value: new THREE.Color('#7fb8c4') },
-          uPoolStrength: { value: 0.35 },
+          uPoolStrength: { value: 0.45 },
           uGlowPos: { value: Array.from({ length: MAX_FLOOR_GLOWS }, () => new THREE.Vector4()) },
           uGlowCol: { value: Array.from({ length: MAX_FLOOR_GLOWS }, () => new THREE.Color()) },
           uGlowCount: { value: 0 },

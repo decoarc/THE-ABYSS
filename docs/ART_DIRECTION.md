@@ -89,3 +89,41 @@ Medido: 3,7% dos pixels mudam em 3,5 s com movimento reduzido, contra 16,3% norm
 - **Cardume de esporos** tende a se espalhar numa faixa larga dentro do volume em vez de formar bolas densas.
 - **Leito**: a referência tem textura de sedimento e muitas pedras médias; aqui o relevo é suave e as pedras são poucas e escuras.
 - **Chaminés**: candidatas a Blender se a revisão pedir silhueta mais esculpida (topos com chaminés secundárias, crostas). Luz e cor já estão no lugar; o limite é a forma.
+
+---
+
+# Protótipo 2
+
+O protótipo 1 fica na tag `prototipo-1`. Capturas da v2 em `docs/captures/v2/`.
+
+## Luz no chão
+
+O leito deixou de usar `MeshStandardMaterial` e ganhou shader próprio (`Seabed.tsx`):
+
+- **Sedimento:** as manchas largas por cor de vértice da v1, mais grão em duas escalas (simplex 2,7 e 11 ciclos/unidade). Iluminação fixa e fraca de cima, `0,55 + 0,65 × normal.y`, para o relevo aparecer.
+- **Poças de luz:** gaussianas nas pegadas dos raios de luz (`shaftLayout.ts`, mesma fórmula testada em `shaftPool`), clareando o próprio sedimento (`albedo × 1,6`) mais um toque de `#7fb8c4`, força 0,45. Um raio foi movido para cair no primeiro plano à esquerda (`x -5, z 0.5`), onde a poça aparece.
+- **Brilho da vida:** até 16 fontes (`floorGlow.ts`) tingem o chão com falloff `(1 - d/r)²`: 6 corais, 2 manchas do canteiro de almofadas, as 5 criaturas (mais fraco e mais largo quanto mais alto elas estão; somem acima de 8 unidades) e 2 de calor âmbar das chaminés. O leito não recebe mais a pointLight âmbar, então o calor no chão vem desses dois slots.
+- **Pedras:** 280 no preset alto (120 no baixo), tamanho típico 0,1–0,65, mais escuras que o sedimento: leem como silhueta.
+
+## Criaturas
+
+| Criatura | Núcleo | Corpo / material | Movimento |
+|---|---|---|---|
+| Membrana | `#7fe9dd` 0,16 Hz | igual à v1 | igual à v1 |
+| Filamento | `#86f4ec` 0,42 Hz, raio 0,17 | fita de 0,42 de largura, achatamento 0,22, ~5 unidades; corpo inteiro brilha (`mix(1, 0.3, u)`) e pulsos gaussianos correm da cabeça à cauda (0,35 u/s, um a cada 0,3 u) | Lissajous da v1, ondulação mais larga e lenta |
+| Casco | `#c9a2ff` 0,09 Hz | raio 1,15 (era 0,95), frestas maiores (faces a 78%) | igual à v1, mais perto do centro (`6.3, 3.7, -3.4`) |
+| Célula | `#d4ec7a` 0,25 Hz | cápsula de 2,0 × 0,46, frente 20% mais gorda, relevo por ruído; pele cerosa verde-acinzentada `#3f5a4a` translúcida (alpha 0,5–0,95 pela borda) mostrando 14 grânulos e o núcleo; luz do núcleo tinge a parede por dentro; 3 flagelos ondulando | vai e volta entre dois pontos à esquerda, cosseno até 0,35 u/s, para 3 s em cada ponta virando de lado; rola no próprio eixo |
+| Poliedro | `#a8c8ff` 0,12 Hz, raio 0,4 | dodecaedro liso de raio 1,2 em cristal fosco (`MeshPhysicalMaterial`: transmission 0,92, roughness 0,28, ior 1,45, atenuação `#5d7fa8`, emissivo fraco); o núcleo aparece refratado dentro; arestas aditivas na cor do núcleo. Sem `crystal`: pedra polida escura | giro perfeitamente regular num eixo fixo, 0,18 rad/s; sobe e desce bem devagar |
+
+O cristal precisou de **pouco emissivo** (0,07 × cor do núcleo): com 0,22 as faces ficavam lavanda chapada e o núcleo sumia.
+A Célula precisou de **pele translúcida**: opaca, lia como pílula/picles; mostrando os grânulos, lê como célula.
+
+Esporos removidos: liam como o Filamento (ponto brilhante com rastro), só que menores.
+
+Movimento reduzido: 4,6% dos pixels mudam em 3,5 s, contra 25,4% normal.
+
+## Desvios que continuam
+
+- Almofadas ainda lisas; leito sem as pedras médias de borda arredondada da referência (as pedras daqui são facetadas).
+- A Célula ainda tem silhueta de cápsula regular de perto; candidata a Blender se a forma incomodar.
+- Chaminés: mesmo comentário da v1 (silhueta regular demais; candidatas a Blender).

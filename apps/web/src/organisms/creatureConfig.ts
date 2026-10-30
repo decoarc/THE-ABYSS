@@ -61,7 +61,7 @@ export const FILAMENTO: FilamentoConfig = {
   nucleus: { color: '#86f4ec', radius: 0.17, pulseHz: 0.42, pulseMin: 2.2, pulseMax: 3.6 },
   path: { ax: 8.5, ay: 1.1, az: 2.6, fx: 0.019, fy: 0.047, fz: 0.031, center: [0, 3.8, 4.4] },
   segments: 90,
-  lag: 0.045,
+  lag: 0.055,
   width: 0.42,
   flatness: 0.22,
   undulation: 0.3,
@@ -81,9 +81,9 @@ export interface CascoConfig {
 
 export const CASCO: CascoConfig = {
   nucleus: { color: '#c9a2ff', radius: 0.32, pulseHz: 0.09, pulseMin: 1.6, pulseMax: 3.0 },
-  radius: 0.95,
-  faceShrink: 0.86,
-  position: [5.4, 4.9, -5.2],
+  radius: 1.15,
+  faceShrink: 0.78,
+  position: [6.3, 3.7, -3.4],
   adjustEvery: [6, 12],
   adjustDuration: 0.55,
 };
@@ -108,8 +108,8 @@ export interface CelulaConfig {
 
 export const CELULA: CelulaConfig = {
   nucleus: { color: '#d4ec7a', radius: 0.15, pulseHz: 0.25, pulseMin: 1.4, pulseMax: 2.6 },
-  length: 1.6,
-  radius: 0.38,
+  length: 2.0,
+  radius: 0.46,
   granules: 14,
   flagella: 3,
   from: [-7.5, 2.4, 1.5],
@@ -132,9 +132,9 @@ export interface PoliedroConfig {
 }
 
 export const POLIEDRO: PoliedroConfig = {
-  nucleus: { color: '#a8c8ff', radius: 0.3, pulseHz: 0.12, pulseMin: 1.5, pulseMax: 2.8 },
+  nucleus: { color: '#a8c8ff', radius: 0.4, pulseHz: 0.12, pulseMin: 1.5, pulseMax: 2.8 },
   radius: 1.2,
-  position: [-5.5, 5.4, -4.5],
+  position: [-5.2, 5.5, -3.6],
   spinAxis: [0.3, 1, 0.15],
   spinSpeed: 0.18,
   bob: 0.25,

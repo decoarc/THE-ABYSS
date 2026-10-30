@@ -15,7 +15,7 @@ const SHAFT_CENTER_Y = SHAFT_HEIGHT / 2 - 1;
 const REFERENCE_STRENGTH = 0.06;
 
 export const SHAFTS: ShaftSpec[] = [
-  { x: -6, z: -9, tilt: 0.12, radius: 3.2, strength: 0.05 },
+  { x: -5, z: 0.5, tilt: 0.1, radius: 2.8, strength: 0.055 },
   { x: 2.5, z: -5, tilt: -0.08, radius: 2.4, strength: 0.06 },
   { x: 9, z: -14, tilt: 0.05, radius: 4, strength: 0.045 },
   { x: -1, z: -18, tilt: -0.1, radius: 3.5, strength: 0.04 },

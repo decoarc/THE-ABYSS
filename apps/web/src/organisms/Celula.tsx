@@ -25,8 +25,8 @@ ${SNOISE}
 void main() {
   vLocal = position;
   // Frente (y > 0) um pouco mais gorda que a traseira, e relevo baixo: não pode ler como pílula.
-  float swell = 1.0 + 0.12 * position.y / uLength;
-  float bump = 1.0 + 0.05 * snoise(position * 2.4);
+  float swell = 1.0 + 0.2 * position.y / uLength;
+  float bump = 1.0 + 0.08 * snoise(position * 2.0) + 0.03 * snoise(position * 6.0);
   vec3 p = vec3(position.x * swell * bump, position.y, position.z * swell * bump);
   vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
   vNormalV = normalize(normalMatrix * normal);
@@ -51,11 +51,11 @@ void main() {
   float rim = 1.0 - facing;
   // Pele cerosa: manchas suaves, brilho especular largo e fraco na borda.
   float mottle = snoise(vLocal * 3.0) * 0.5 + 0.5;
-  vec3 skin = uSkin * (0.75 + 0.35 * mottle) * (0.45 + 0.55 * max(vNormalV.y, 0.0));
+  vec3 skin = uSkin * (0.6 + 0.6 * mottle) * (0.4 + 0.4 * max(vNormalV.y, 0.0));
   // Luz do núcleo atravessando a parede, mais forte onde ela é vista de frente (mais fina).
   vec3 inner = uNucleus * facing * facing * (0.12 + 0.22 * uPulse);
   vec3 sheen = uSheen * pow(rim, 3.0) * 0.35;
-  float alpha = clamp(0.78 + rim * 0.2, 0.0, 1.0);
+  float alpha = clamp(0.5 + rim * 0.45, 0.0, 1.0);
   gl_FragColor = vec4(skin + inner + sheen, alpha);
   #include <fog_fragment>
 }
@@ -108,7 +108,7 @@ export function Celula() {
         transparent: true,
         uniforms: {
           uLength: { value: C.length },
-          uSkin: { value: new THREE.Color('#3d4a33') },
+          uSkin: { value: new THREE.Color('#3f5a4a') },
           uSheen: { value: new THREE.Color('#cfe6c8') },
           uNucleus: { value: new THREE.Color(C.nucleus.color) },
           uPulse: { value: 0 },

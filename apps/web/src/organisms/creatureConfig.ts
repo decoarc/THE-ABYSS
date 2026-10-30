@@ -1,4 +1,5 @@
 import type { LissajousParams } from './paths';
+import type { BoidParams } from './boids';
 
 /**
  * Configuração de cada criatura. Um único conjunto de valores por espécie por
@@ -82,4 +83,25 @@ export const CASCO: CascoConfig = {
   position: [6.4, 3.0, 2.6],
   adjustEvery: [6, 12],
   adjustDuration: 0.55,
+};
+
+export interface EsporosConfig {
+  nucleus: NucleusConfig;
+  boids: BoidParams;
+  /** Raio da casca de cada esporo. */
+  shellRadius: number;
+}
+
+export const ESPOROS: EsporosConfig = {
+  nucleus: { color: '#9fd8cf', radius: 0.032, pulseHz: 0.6, pulseMin: 1.5, pulseMax: 2.6 },
+  boids: {
+    bounds: { min: [-13, 3.6, -10], max: [-2.5, 8, -2] },
+    maxSpeed: 1.5,
+    neighborRadius: 1.1,
+    separation: 1.4,
+    alignment: 0.7,
+    cohesion: 0.45,
+    burstChance: 0.04,
+  },
+  shellRadius: 0.085,
 };

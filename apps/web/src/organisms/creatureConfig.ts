@@ -87,3 +87,34 @@ export const CASCO: CascoConfig = {
   adjustEvery: [6, 12],
   adjustDuration: 0.55,
 };
+
+export interface CelulaConfig {
+  nucleus: NucleusConfig;
+  /** Comprimento total da cápsula. */
+  length: number;
+  radius: number;
+  granules: number;
+  flagella: number;
+  /** Pontas do trajeto de vai e volta. */
+  from: [number, number, number];
+  to: [number, number, number];
+  /** Velocidade máxima no trajeto, em unidades/s. */
+  speed: number;
+  /** Tempo parada numa ponta, virando para voltar. */
+  turnSeconds: number;
+  /** Rolagem em torno do próprio eixo, rad/s. */
+  rollSpeed: number;
+}
+
+export const CELULA: CelulaConfig = {
+  nucleus: { color: '#d4ec7a', radius: 0.15, pulseHz: 0.25, pulseMin: 1.4, pulseMax: 2.6 },
+  length: 1.6,
+  radius: 0.38,
+  granules: 14,
+  flagella: 3,
+  from: [-7.5, 2.4, 1.5],
+  to: [-2.5, 2.9, 5.5],
+  speed: 0.35,
+  turnSeconds: 3,
+  rollSpeed: 0.6,
+};

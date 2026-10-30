@@ -7,6 +7,7 @@ import { Stage } from './scene/Stage';
 import { DemoBadge } from './ui/DemoBadge';
 import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
+import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 
 class CanvasErrorBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -34,6 +35,7 @@ function Ready({ onReady }: { onReady: () => void }) {
 function Scene({ onFail }: { onFail: () => void }) {
   const { q } = useSceneSettings();
   const [ready, setReady] = useState(false);
+  const [perf] = useState(() => isPerfEnabled(window.location.search));
 
   return (
     <>
@@ -51,6 +53,7 @@ function Scene({ onFail }: { onFail: () => void }) {
             });
           }}
         >
+          {perf && <PerfProbe />}
           <Suspense fallback={null}>
             <Stage />
             <Ready onReady={() => setReady(true)} />

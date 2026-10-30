@@ -3,9 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { createRng } from '../lib/random';
+import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
 import { useSceneSettings } from '../settings';
 import { CASCO as C } from './creatureConfig';
 import { Nucleus } from './Nucleus';
+
+const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 
 /** Espessura das placas, relativa ao raio. */
 const PLATE_DEPTH = 0.22;
@@ -132,6 +135,7 @@ export function Casco() {
       C.position[2] + s.drift.z,
     );
     if (glow.current) glow.current.intensity = 1.2 * pulse.current;
+    setCreatureGlow(FLOOR_SLOTS.casco, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 0.35 * pulse.current);
   });
 
   return (

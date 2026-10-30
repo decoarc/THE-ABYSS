@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { getHaloTexture } from '../../organisms/Nucleus';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -9,6 +9,7 @@ import { createRng } from '../../lib/random';
 import { useSceneSettings } from '../../settings';
 import { foggyShader } from '../glsl/material';
 import { SNOISE } from '../glsl/noise';
+import { FLOOR_SLOTS, floorGlows, glowOf } from '../floorGlow';
 import { pointScale } from '../glsl/points';
 import { VENTS, type VentSpec } from './layout';
 
@@ -220,6 +221,15 @@ function Vent({ spec, seed }: { spec: VentSpec; seed: number }) {
 }
 
 export function Vents() {
+  useEffect(() => {
+    // Calor da chaminé herói e do grupo em volta, no chão.
+    floorGlows.set(FLOOR_SLOTS.vents, glowOf(PALETTE.amber, 0, 0.3, 3.2, 0.9));
+    floorGlows.set(FLOOR_SLOTS.vents + 1, glowOf(PALETTE.amber, 0, -0.6, 6, 0.3));
+    return () => {
+      floorGlows.clear(FLOOR_SLOTS.vents);
+      floorGlows.clear(FLOOR_SLOTS.vents + 1);
+    };
+  }, []);
   return (
     <>
       {VENTS.map((spec, i) => (

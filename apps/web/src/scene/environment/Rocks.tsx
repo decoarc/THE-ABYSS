@@ -34,7 +34,7 @@ export function Rocks() {
     if (!m) return;
     const rng = createRng(77);
     const avoid = VENTS.map((v) => ({ center: [v.position[0], v.position[2]] as [number, number], radius: v.radius * 1.8 }));
-    const points = scatter(rng, q.rockCount, { minR: 1.8, maxR: 40, avoid });
+    const points = scatter(rng, q.rockCount, { minR: 1.8, maxR: 34, avoid });
     const matrix = new THREE.Matrix4();
     const quat = new THREE.Quaternion();
     const euler = new THREE.Euler();
@@ -45,9 +45,9 @@ export function Rocks() {
     const navy = new THREE.Color(PALETTE.navy);
     points.forEach(([x, z], i) => {
       const r = Math.hypot(x, z);
-      // Pedras maiores perto das chaminés; cascalho no resto.
       const near = Math.max(0, 1 - r / 12);
-      const size = 0.12 + rng() ** 3 * 0.9 + near * rng() * 0.9;
+      // Muitas pedras médias espalhadas, poucas grandes perto das chaminés.
+      const size = 0.1 + rng() ** 1.6 * 0.55 + near * rng() * 0.7;
       scale.set(size * (0.8 + rng() * 0.6), size * (0.6 + rng() * 0.6), size * (0.8 + rng() * 0.6));
       euler.set(rng() * 0.6, rng() * Math.PI * 2, rng() * 0.6);
       quat.setFromEuler(euler);

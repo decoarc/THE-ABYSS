@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -7,6 +7,7 @@ import { PALETTE } from '../../lib/palette';
 import { createRng } from '../../lib/random';
 import { useSceneSettings } from '../../settings';
 import { foggyShader } from '../glsl/material';
+import { FLOOR_SLOTS, floorGlows, glowOf } from '../floorGlow';
 import { seabedHeight } from '../terrain';
 import { generateCoral, type CoralParams } from './coralGen';
 
@@ -137,8 +138,12 @@ void main() {
 }
 `;
 
-function Coral({ x, z, kind, seed, scale }: (typeof PLACEMENTS)[number]) {
+function Coral({ x, z, kind, seed, scale, slot }: (typeof PLACEMENTS)[number] & { slot: number }) {
   const variety = VARIETIES[kind];
+  useEffect(() => {
+    floorGlows.set(slot, glowOf(variety.glow, x, z, 2.2 * scale, 0.55));
+    return () => floorGlows.clear(slot);
+  }, [slot, variety, x, z, scale]);
   const geometry = useMemo(() => coralGeometry(variety, seed), [variety, seed]);
   const material = useMemo(
     () =>
@@ -173,7 +178,7 @@ export function Corals() {
   return (
     <>
       {PLACEMENTS.map((p, i) => (
-        <Coral key={i} {...p} />
+        <Coral key={i} {...p} slot={FLOOR_SLOTS.coral + i} />
       ))}
     </>
   );

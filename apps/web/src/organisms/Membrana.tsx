@@ -5,6 +5,7 @@ import { clampDelta } from '../lib/motion';
 import { PALETTE } from '../lib/palette';
 import { useSceneSettings } from '../settings';
 import { SNOISE } from '../scene/glsl/noise';
+import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import { MEMBRANA as C } from './creatureConfig';
 import { Nucleus } from './Nucleus';
@@ -56,6 +57,8 @@ void main() {
 }
 `;
 
+const FLOOR_COLOR = glowOf(PALETTE.cyan, 0, 0, 0, 0).color;
+
 /** Membrana: bolha gelatinosa e translúcida que respira no ritmo do núcleo. Criatura herói. */
 export function Membrana() {
   const { motion } = useSceneSettings();
@@ -100,6 +103,7 @@ export function Membrana() {
     const r = C.driftRadius + Math.sin(t * 0.07) * 0.8;
     g.position.set(Math.cos(a) * r, 4.5 + Math.sin(t * 0.21) * 0.45, Math.sin(a) * r * 0.75 + 0.5);
     g.rotation.set(Math.sin(t * 0.13) * 0.2, t * 0.05, Math.cos(t * 0.11) * 0.15);
+    setCreatureGlow(FLOOR_SLOTS.membrana, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 1.3 * (0.6 + 0.4 * breath));
   });
 
   return (

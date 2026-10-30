@@ -7,6 +7,7 @@ import { createNoise2D } from '../../lib/noise';
 import { createRng } from '../../lib/random';
 import { useSceneSettings } from '../../settings';
 import { foggyShader } from '../glsl/material';
+import { FLOOR_SLOTS, floorGlows, glowOf } from '../floorGlow';
 import { seabedHeight } from '../terrain';
 import { VENTS, scatter } from './layout';
 
@@ -110,6 +111,16 @@ export function Pads() {
       m.setMatrixAt(i, matrix.compose(pos, quat, scale));
     });
     m.instanceMatrix.needsUpdate = true;
+
+    // O canteiro da frente tinge o chão em volta: um brilho largo ciano e um violeta deslocado.
+    const cx = near.reduce((s, [x]) => s + x, 0) / near.length;
+    const cz = near.reduce((s, [, z]) => s + z, 0) / near.length;
+    floorGlows.set(FLOOR_SLOTS.pads, glowOf(PALETTE.cyan, cx - 1.2, cz, 5, 0.5));
+    floorGlows.set(FLOOR_SLOTS.pads + 1, glowOf(PALETTE.violet, cx + 1.8, cz + 0.6, 4, 0.45));
+    return () => {
+      floorGlows.clear(FLOOR_SLOTS.pads);
+      floorGlows.clear(FLOOR_SLOTS.pads + 1);
+    };
   }, []);
 
   const { motion } = useSceneSettings();

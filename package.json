@@ -8,5 +8,8 @@
     "preview": "pnpm --filter @abyss/web preview",
     "test": "pnpm --filter @abyss/web test",
     "typecheck": "pnpm --filter @abyss/web typecheck"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }

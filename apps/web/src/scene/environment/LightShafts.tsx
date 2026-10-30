@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../../lib/motion';
 import { useSceneSettings } from '../../settings';
+import { SHAFTS, SHAFT_HEIGHT as HEIGHT } from './shaftLayout';
 
 const shaftVertex = /* glsl */ `
 varying vec3 vNormalV;
@@ -38,15 +39,6 @@ void main() {
   gl_FragColor = vec4(uColor * facing * vertical * breathe * uStrength, 1.0);
 }
 `;
-
-const SHAFTS: { x: number; z: number; tilt: number; radius: number; strength: number }[] = [
-  { x: -6, z: -9, tilt: 0.12, radius: 3.2, strength: 0.05 },
-  { x: 2.5, z: -5, tilt: -0.08, radius: 2.4, strength: 0.06 },
-  { x: 9, z: -14, tilt: 0.05, radius: 4, strength: 0.045 },
-  { x: -1, z: -18, tilt: -0.1, radius: 3.5, strength: 0.04 },
-];
-
-const HEIGHT = 26;
 
 export function LightShafts() {
   const { motion } = useSceneSettings();

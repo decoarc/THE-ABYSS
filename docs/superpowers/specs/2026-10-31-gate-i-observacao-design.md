@@ -111,6 +111,13 @@ Decisão do autor (opção b, escolhida entre três: diminuir as criaturas, ampl
 
 A densidade de organismos pode mudar em relação ao protótipo.
 
+**Parada 1 (2026-10-31): decisão do autor sobre a densidade.** Com o volume de raio 18 e 45 organismos, o quadro inicial mostrava cerca de 25 organismos e lia como multidão. A câmera (z = 17,5) ficava dentro do volume, então havia criaturas coladas na lente. O desempenho estava dentro do orçamento (Intel Arc `low` com p95 de 16,4 ms; RTX `high` com p50 de 4,2 ms). Entre três opções (volume maior com zona livre, menos organismos, ou ambos), o autor escolheu a primeira:
+- **mantém os 45 organismos**;
+- **o raio do volume sobe para ~28** (dentro do alcance da névoa);
+- **cria-se uma zona livre em volta da câmera do quadro herói**, onde nenhum organismo entra.
+
+A meta é que o quadro inicial mostre de 8 a 12 organismos, nenhum colado na lente. Se ainda ler como multidão, o passo seguinte é reduzir a população.
+
 ## 10. Deixado ao construtor
 
 - Modelo de movimento no servidor (vagar com steering, trajetos parametrizados ou outro), desde que o resultado pareça vivo e cada espécie mantenha o caráter de movimento que tem no protótipo.

@@ -3,10 +3,13 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { createRng } from '../lib/random';
-import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
+import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { useSceneSettings } from '../settings';
 import { CASCO as C } from './creatureConfig';
+import { requestCreatureGlow } from './creatureGlow';
+import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
+import { useOrganismPose } from './useOrganismPose';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 
@@ -75,32 +78,44 @@ function shellGeometry(): THREE.BufferGeometry {
   return g;
 }
 
+// Compartilhada por todas as instâncias.
+let sharedGeometry: THREE.BufferGeometry | null = null;
+const getGeometry = () => (sharedGeometry ??= shellGeometry());
+
 /** Casco: rígido, facetado, quase imóvel; gira devagar e às vezes dá um tranco curto. */
-export function Casco() {
+export function Casco({ id }: { id: string }) {
   const { motion } = useSceneSettings();
-  const geometry = useMemo(shellGeometry, []);
+  const pose = useOrganismPose(id);
+  const geometry = getGeometry();
   const group = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
   const glow = useRef<THREE.PointLight>(null);
+  const phase = useMemo(() => phaseOf(id), [id]);
   const state = useMemo(() => {
-    const rng = createRng(77);
+    // Semente por instância: os trancos de cascos diferentes não coincidem.
+    const rng = createRng(77 + Math.floor(phase * 2 ** 31));
+    const t = phase * 1000;
     return {
       rng,
-      t: 0,
-      nextAdjust: C.adjustEvery[0] * 0.5,
+      t,
+      nextAdjust: t + C.adjustEvery[0] * (0.5 + rng()),
       adjustT: -1,
       adjustAxis: new THREE.Vector3(1, 0, 0),
       jolt: new THREE.Vector3(),
       drift: new THREE.Vector3(),
       axis: new THREE.Vector3(),
       q: new THREE.Quaternion(),
+      // Orientação inicial diferente para cada instância.
+      initial: new THREE.Quaternion().setFromEuler(new THREE.Euler(rng() * 6.28, rng() * 6.28, rng() * 6.28)),
     };
-  }, []);
+  }, [phase]);
   const glowColor = useMemo(() => new THREE.Color(C.nucleus.color), []);
 
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
+    g.visible = pose.has.current;
+    if (!g.visible) return;
     const s = state;
     const step = clampDelta(dt) * motion;
     s.t += step;
@@ -129,21 +144,22 @@ export function Casco() {
     // Volta devagar ao ponto de pairar.
     s.drift.multiplyScalar(1 - Math.min(1, step * 0.25));
 
+    // Posição canônica do servidor + deriva cosmética dos trancos e leve flutuação.
     g.position.set(
-      C.position[0] + s.drift.x,
-      C.position[1] + s.drift.y + Math.sin(s.t * 0.4) * 0.08,
-      C.position[2] + s.drift.z,
+      pose.pos.x + s.drift.x,
+      pose.pos.y + s.drift.y + Math.sin(s.t * 0.4) * 0.08,
+      pose.pos.z + s.drift.z,
     );
     if (glow.current) glow.current.intensity = 1.2 * pulse.current;
-    setCreatureGlow(FLOOR_SLOTS.casco, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 0.35 * pulse.current);
+    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.35 * pulse.current);
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} visible={false} quaternion={state.initial}>
       <mesh geometry={geometry}>
         <meshStandardMaterial color="#10161c" roughness={0.85} metalness={0.05} flatShading />
       </mesh>
-      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} />
+      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} timeOffset={phase * 1000} />
       <pointLight ref={glow} color={glowColor} distance={3.5} decay={2} />
     </group>
   );

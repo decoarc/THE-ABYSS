@@ -1,4 +1,4 @@
-import { MAX_FLOOR_GLOWS, createFloorGlowStore, setCreatureGlow, type FloorGlow } from './floorGlow';
+import { CREATURE_GLOW_SLOTS, FLOOR_SLOTS, MAX_FLOOR_GLOWS, createFloorGlowStore, setCreatureGlow, type FloorGlow } from './floorGlow';
 
 const G: FloorGlow = { x: 0, z: 0, radius: 1, color: [1, 1, 1], intensity: 1 };
 const buffers = () => [new Float32Array(MAX_FLOOR_GLOWS * 4), new Float32Array(MAX_FLOOR_GLOWS * 3)] as const;
@@ -44,4 +44,10 @@ it('criatura muito alta não tinge o chão', () => {
   setCreatureGlow(0, [1, 1, 1], 0, 40, 0, 1, s);
   s.pack(p, c);
   expect(p[3]).toBe(0);
+});
+
+it('criaturas dividem os slots 8–12, sem slot por espécie', () => {
+  expect(FLOOR_SLOTS.creatures).toBe(8);
+  expect(CREATURE_GLOW_SLOTS).toBe(5);
+  for (const k of ['membrana', 'filamento', 'casco', 'celula', 'poliedro']) expect(k in FLOOR_SLOTS).toBe(false);
 });

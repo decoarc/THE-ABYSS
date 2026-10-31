@@ -1,4 +1,4 @@
-import { MEMBRANA, nucleusPulse } from './creatureConfig';
+import { CASCO, CELULA, FILAMENTO, MEMBRANA, POLIEDRO, nucleusPulse } from './creatureConfig';
 
 it('pulso fica no intervalo', () => {
   for (let t = 0; t < 20; t += 0.013) {
@@ -17,3 +17,8 @@ it('pulso alcança perto dos extremos', () => {
   expect(Math.max(...vs)).toBeCloseTo(n.pulseMax, 2);
   expect(Math.min(...vs)).toBeCloseTo(n.pulseMin, 2);
 });
+it('núcleos das cinco criaturas distintos', () => {
+  const ns = [MEMBRANA, FILAMENTO, CASCO, CELULA, POLIEDRO].map((c) => `${c.nucleus.color}@${c.nucleus.pulseHz}`);
+  expect(new Set(ns).size).toBe(5);
+});
+it('Poliedro maior que o Casco', () => expect(POLIEDRO.radius).toBeGreaterThan(CASCO.radius));

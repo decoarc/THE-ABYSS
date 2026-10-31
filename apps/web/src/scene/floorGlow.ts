@@ -13,17 +13,22 @@ export interface FloorGlow {
   intensity: number;
 }
 
-/** Slots fixos: 0–5 corais, 6–7 canteiros de almofadas, 8–12 criaturas, 13–14 chaminés. */
+/**
+ * Slots fixos: 0–5 corais, 6–7 canteiros de almofadas, 8–12 criaturas, 13–14 chaminés.
+ * Os slots de criatura são dinâmicos: a cada quadro vão para as mais próximas do alvo da câmera.
+ */
 export const FLOOR_SLOTS = {
   coral: 0,
   pads: 6,
-  membrana: 8,
-  filamento: 9,
-  casco: 10,
-  celula: 11,
-  poliedro: 12,
+  creatures: 8,
   vents: 13,
 } as const;
+
+/** Quantas criaturas tingem o leito ao mesmo tempo (slots 8–12). */
+export const CREATURE_GLOW_SLOTS = 5;
+
+/** Raio do brilho no chão logo abaixo de uma criatura rente ao leito; cresce com a altura. */
+export const CREATURE_GLOW_RADIUS = 2;
 
 /** Monta um FloorGlow a partir de uma cor CSS (convertida para RGB linear). */
 export function glowOf(color: string, x: number, z: number, radius: number, intensity: number): FloorGlow {
@@ -92,11 +97,12 @@ export function setCreatureGlow(
   z: number,
   strength: number,
   store: FloorGlowStore = floorGlows,
+  radius: number = CREATURE_GLOW_RADIUS,
 ): void {
   const h = Math.max(0, y - seabedHeight(x, z));
   scratch.x = x;
   scratch.z = z;
-  scratch.radius = 2 + h * 0.6;
+  scratch.radius = radius + h * 0.6;
   scratch.intensity = strength * Math.max(0, 1 - h / CREATURE_GLOW_REACH);
   scratch.color = color;
   store.set(slot, scratch);

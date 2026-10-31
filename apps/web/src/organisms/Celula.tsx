@@ -1,19 +1,42 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { createRng } from '../lib/random';
-import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
+import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import { SNOISE } from '../scene/glsl/noise';
 import { useSceneSettings } from '../settings';
-import { cellPose } from './cellPose';
 import { CELULA as C } from './creatureConfig';
+import { requestCreatureGlow } from './creatureGlow';
+import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
+import { useOrganismPose } from './useOrganismPose';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 const FLAGELLUM_LENGTH = 1.1;
 const UP = new THREE.Vector3(0, 1, 0);
+/** Abaixo desta velocidade (unidades/s) a direção é ruído: a célula mantém a orientação. */
+const MIN_HEADING_SPEED = 0.02;
+/** Rapidez com que o eixo longo vira para a velocidade (1/s); ~2–3 s para meia volta. */
+const TURN_RATE = 1.5;
+
+const SHAFT = C.length - 2 * C.radius;
+
+// Compartilhadas por todas as instâncias.
+let shared: { body: THREE.BufferGeometry; flagellum: THREE.BufferGeometry; granule: THREE.BufferGeometry } | null = null;
+function getGeometry() {
+  if (!shared) {
+    const flagellum = new THREE.CylinderGeometry(0.008, 0.022, FLAGELLUM_LENGTH, 5, 24, true);
+    flagellum.translate(0, -FLAGELLUM_LENGTH / 2, 0);
+    shared = {
+      body: new THREE.CapsuleGeometry(C.radius, SHAFT, 10, 28),
+      flagellum,
+      granule: new THREE.IcosahedronGeometry(0.045, 1),
+    };
+  }
+  return shared;
+}
 
 const bodyVertex = /* glsl */ `
 uniform float uLength;
@@ -91,15 +114,19 @@ void main() {
 `;
 
 /** Célula: cápsula cerosa e sólida, grânulos e núcleo por dentro, flagelos batendo atrás. */
-export function Celula() {
-  const { motion } = useSceneSettings();
+export function Celula({ id }: { id: string }) {
+  const { motion, q: quality } = useSceneSettings();
+  const pose = useOrganismPose(id);
   const group = useRef<THREE.Group>(null);
   const granules = useRef<THREE.InstancedMesh>(null);
   const pulse = useRef(C.nucleus.pulseMin);
-  const time = useRef(0);
+  const phase = useMemo(() => phaseOf(id), [id]);
+  const offset = phase * 1000;
+  const time = useRef(offset);
+  const granuleCount = quality.celulaGranules;
 
-  const shaft = C.length - 2 * C.radius;
-  const body = useMemo(() => new THREE.CapsuleGeometry(C.radius, shaft, 10, 28), [shaft]);
+  const shaft = SHAFT;
+  const { body, flagellum, granule: granuleGeometry } = getGeometry();
   const bodyMaterial = useMemo(
     () =>
       foggyShader({
@@ -117,11 +144,6 @@ export function Celula() {
     [],
   );
 
-  const flagellum = useMemo(() => {
-    const g = new THREE.CylinderGeometry(0.008, 0.022, FLAGELLUM_LENGTH, 5, 24, true);
-    g.translate(0, -FLAGELLUM_LENGTH / 2, 0);
-    return g;
-  }, []);
   const flagellumMaterials = useMemo(
     () =>
       Array.from({ length: C.flagella }, (_, i) =>
@@ -141,7 +163,14 @@ export function Celula() {
     [],
   );
 
-  const granuleGeometry = useMemo(() => new THREE.IcosahedronGeometry(0.045, 1), []);
+  useEffect(
+    () => () => {
+      bodyMaterial.dispose();
+      for (const m of flagellumMaterials) m.dispose();
+    },
+    [bodyMaterial, flagellumMaterials],
+  );
+
   useLayoutEffect(() => {
     const m = granules.current;
     if (!m) return;
@@ -152,7 +181,7 @@ export function Celula() {
     const s = new THREE.Vector3();
     const dark = new THREE.Color('#1c2416');
     const lit = new THREE.Color(C.nucleus.color).multiplyScalar(0.7);
-    for (let i = 0; i < C.granules; i++) {
+    for (let i = 0; i < granuleCount; i++) {
       // Espalhados no interior do cilindro central, longe da parede.
       const a = rng() * Math.PI * 2, r = Math.sqrt(rng()) * C.radius * 0.6;
       p.set(Math.cos(a) * r, (rng() - 0.5) * shaft * 1.1, Math.sin(a) * r);
@@ -162,39 +191,56 @@ export function Celula() {
     }
     m.instanceMatrix.needsUpdate = true;
     if (m.instanceColor) m.instanceColor.needsUpdate = true;
-  }, [shaft]);
+  }, [shaft, granuleCount]);
 
-  const scratch = useMemo(
-    () => ({ heading: new THREE.Vector3(), q: new THREE.Quaternion(), roll: new THREE.Quaternion() }),
-    [],
-  );
+  const scratch = useMemo(() => {
+    // Antes da primeira velocidade útil, deitada numa direção horizontal própria da instância.
+    const a = phase * Math.PI * 2;
+    const heading = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+    return {
+      heading,
+      orient: new THREE.Quaternion().setFromUnitVectors(UP, heading),
+      target: new THREE.Quaternion(),
+      roll: new THREE.Quaternion(),
+      aimed: false,
+    };
+  }, [phase]);
 
   useFrame((_, dt) => {
     const step = clampDelta(dt) * motion;
     time.current += step;
     const g = group.current;
     if (!g) return;
-    const pose = cellPose(time.current, C);
-    g.position.set(...pose.position);
-    scratch.heading.set(...pose.heading);
-    scratch.q.setFromUnitVectors(UP, scratch.heading);
-    scratch.roll.setFromAxisAngle(UP, pose.roll);
-    g.quaternion.copy(scratch.q).multiply(scratch.roll);
+    g.visible = pose.has.current;
+    if (!g.visible) return;
+    // Posição canônica do servidor; o eixo longo (frente = +y local) vira para a velocidade.
+    g.position.copy(pose.pos);
+    const speed = pose.vel.length();
+    if (speed > MIN_HEADING_SPEED) {
+      scratch.heading.copy(pose.vel).divideScalar(speed);
+      scratch.target.setFromUnitVectors(UP, scratch.heading);
+      if (scratch.aimed) scratch.orient.slerp(scratch.target, 1 - Math.exp(-TURN_RATE * clampDelta(dt)));
+      else scratch.orient.copy(scratch.target);
+      scratch.aimed = true;
+    }
+    // A rolagem em torno do próprio eixo continua cosmética.
+    scratch.roll.setFromAxisAngle(UP, (time.current * C.rollSpeed) % (Math.PI * 2));
+    g.quaternion.copy(scratch.orient).multiply(scratch.roll);
 
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
     bodyMaterial.uniforms.uPulse.value = breath;
     for (const m of flagellumMaterials) m.uniforms.uTime.value = time.current;
-    setCreatureGlow(FLOOR_SLOTS.celula, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 0.5 + 0.3 * breath);
+    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.5 + 0.3 * breath);
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} visible={false}>
       {/* Conteúdo interno primeiro; a pele translúcida é desenhada por cima. */}
-      <instancedMesh ref={granules} args={[granuleGeometry, undefined, C.granules]} renderOrder={1}>
+      <instancedMesh ref={granules} key={granuleCount} args={[granuleGeometry, undefined, granuleCount]} renderOrder={1}>
         <meshBasicMaterial />
       </instancedMesh>
       <group position={[0, shaft * 0.2, 0]}>
-        <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} />
+        <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} timeOffset={offset} />
       </group>
       <mesh geometry={body} material={bodyMaterial} renderOrder={2} />
       {flagellumMaterials.map((m, i) => {

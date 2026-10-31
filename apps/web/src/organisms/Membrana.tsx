@@ -1,14 +1,17 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { PALETTE } from '../lib/palette';
 import { useSceneSettings } from '../settings';
 import { SNOISE } from '../scene/glsl/noise';
-import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
+import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import { MEMBRANA as C } from './creatureConfig';
+import { requestCreatureGlow } from './creatureGlow';
+import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
+import { useOrganismPose } from './useOrganismPose';
 
 const vertex = /* glsl */ `
 uniform float uTime;
@@ -59,13 +62,19 @@ void main() {
 
 const FLOOR_COLOR = glowOf(PALETTE.cyan, 0, 0, 0, 0).color;
 
+// Compartilhada por todas as instâncias (só os uniforms variam por instância).
+let sharedGeometry: THREE.BufferGeometry | null = null;
+const getGeometry = () => (sharedGeometry ??= new THREE.IcosahedronGeometry(C.radius, 24));
+
 /** Membrana: bolha gelatinosa e translúcida que respira no ritmo do núcleo. Criatura herói. */
-export function Membrana() {
+export function Membrana({ id }: { id: string }) {
   const { motion } = useSceneSettings();
+  const pose = useOrganismPose(id);
   const group = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
-  const time = useRef(0);
-  const geometry = useMemo(() => new THREE.IcosahedronGeometry(C.radius, 24), []);
+  const offset = useMemo(() => phaseOf(id) * 1000, [id]);
+  const time = useRef(offset);
+  const geometry = getGeometry();
   const material = useMemo(
     () =>
       foggyShader({
@@ -87,6 +96,7 @@ export function Membrana() {
       }),
     [],
   );
+  useEffect(() => () => material.dispose(), [material]);
 
   useFrame((_, dt) => {
     const step = clampDelta(dt) * motion;
@@ -98,18 +108,18 @@ export function Membrana() {
 
     const g = group.current;
     if (!g) return;
-    // Órbita larga e lenta em volta da chaminé herói, com oscilação de altura e de raio.
-    const a = 0.9 + t * C.driftSpeed;
-    const r = C.driftRadius + Math.sin(t * 0.07) * 0.8;
-    g.position.set(Math.cos(a) * r, 4.5 + Math.sin(t * 0.21) * 0.45, Math.sin(a) * r * 0.75 + 0.5);
+    g.visible = pose.has.current;
+    if (!g.visible) return;
+    // Posição canônica do servidor; a rotação lenta é cosmética.
+    g.position.copy(pose.pos);
     g.rotation.set(Math.sin(t * 0.13) * 0.2, t * 0.05, Math.cos(t * 0.11) * 0.15);
-    setCreatureGlow(FLOOR_SLOTS.membrana, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 1.3 * (0.6 + 0.4 * breath));
+    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 1.3 * (0.6 + 0.4 * breath));
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} visible={false}>
       <mesh geometry={geometry} material={material} renderOrder={3} />
-      <Nucleus config={C.nucleus} pulseRef={pulse} />
+      <Nucleus config={C.nucleus} pulseRef={pulse} timeOffset={offset} />
     </group>
   );
 }

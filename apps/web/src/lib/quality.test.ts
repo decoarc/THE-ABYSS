@@ -7,3 +7,9 @@ it('low nunca excede high', () => {
   for (const k of ['maxDpr', 'particleCount', 'tuftCount', 'rockCount'] as const)
     expect(QUALITY.low[k]).toBeLessThanOrEqual(QUALITY.high[k]);
 });
+it('segmentos do Filamento e grânulos da Célula por perfil', () => {
+  expect(QUALITY.high.filamentoSegments).toBe(90);
+  expect(QUALITY.low.filamentoSegments).toBe(48);
+  expect(QUALITY.high.celulaGranules).toBe(14);
+  expect(QUALITY.low.celulaGranules).toBe(8);
+});

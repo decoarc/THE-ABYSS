@@ -1,4 +1,4 @@
-import { useMemo, useRef, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, type RefObject } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
@@ -37,13 +37,16 @@ export function Nucleus({
   config,
   pulseRef,
   haloScale = 7,
+  timeOffset = 0,
 }: {
   config: NucleusConfig;
   pulseRef?: RefObject<number>;
   haloScale?: number;
+  /** Desloca o relógio do pulso, em segundos: instâncias da mesma espécie não pulsam juntas. */
+  timeOffset?: number;
 }) {
   const { motion } = useSceneSettings();
-  const time = useRef(0);
+  const time = useRef(timeOffset);
   const core = useMemo(
     () => new THREE.MeshBasicMaterial({ color: config.color, toneMapped: false }),
     [config.color],
@@ -59,6 +62,13 @@ export function Nucleus({
         toneMapped: false,
       }),
     [config.color],
+  );
+  useEffect(
+    () => () => {
+      core.dispose();
+      halo.dispose();
+    },
+    [core, halo],
   );
   const base = useMemo(() => new THREE.Color(config.color), [config.color]);
   const sprite = useRef<THREE.Sprite>(null);

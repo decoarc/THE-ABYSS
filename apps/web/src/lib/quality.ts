@@ -8,11 +8,33 @@ export interface QualitySettings {
   postprocessing: boolean;
   /** Poliedro com material de cristal (transmissão); caro em GPU integrada. */
   crystal: boolean;
+  /** Amostras do corpo do Filamento (o comprimento do corpo não muda com o perfil). */
+  filamentoSegments: number;
+  /** Grânulos dentro de cada Célula. */
+  celulaGranules: number;
 }
 
 export const QUALITY: Record<QualityLevel, QualitySettings> = {
-  high: { maxDpr: 1.5, particleCount: 1500, tuftCount: 600, rockCount: 280, postprocessing: true, crystal: true },
-  low: { maxDpr: 1, particleCount: 400, tuftCount: 200, rockCount: 120, postprocessing: true, crystal: true },
+  high: {
+    maxDpr: 1.5,
+    particleCount: 1500,
+    tuftCount: 600,
+    rockCount: 280,
+    postprocessing: true,
+    crystal: true,
+    filamentoSegments: 90,
+    celulaGranules: 14,
+  },
+  low: {
+    maxDpr: 1,
+    particleCount: 400,
+    tuftCount: 200,
+    rockCount: 120,
+    postprocessing: true,
+    crystal: true,
+    filamentoSegments: 48,
+    celulaGranules: 8,
+  },
 };
 
 export function parseQuality(search: string): QualityLevel {

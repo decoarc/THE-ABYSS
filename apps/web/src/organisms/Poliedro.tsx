@@ -1,28 +1,45 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
-import { FLOOR_SLOTS, glowOf, setCreatureGlow } from '../scene/floorGlow';
+import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { useSceneSettings } from '../settings';
 import { POLIEDRO as C } from './creatureConfig';
+import { requestCreatureGlow } from './creatureGlow';
+import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
+import { useOrganismPose } from './useOrganismPose';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 const AXIS = new THREE.Vector3(...C.spinAxis).normalize();
+
+// Compartilhadas por todas as instâncias.
+let sharedGeometry: { solid: THREE.BufferGeometry; edges: THREE.BufferGeometry } | null = null;
+function getGeometry() {
+  if (!sharedGeometry) {
+    const solid = new THREE.DodecahedronGeometry(C.radius, 0);
+    sharedGeometry = { solid, edges: new THREE.EdgesGeometry(solid) };
+  }
+  return sharedGeometry;
+}
 
 /**
  * Poliedro: dodecaedro inteiro e liso, girando num eixo fixo com velocidade constante.
  * Cristal fosco com o núcleo visível dentro; sem `crystal`, pedra polida escura.
  */
-export function Poliedro() {
+export function Poliedro({ id }: { id: string }) {
   const { motion, q } = useSceneSettings();
+  const pose = useOrganismPose(id);
   const group = useRef<THREE.Group>(null);
   const solid = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
-  const time = useRef(0);
+  const phase = useMemo(() => phaseOf(id), [id]);
+  const offset = phase * 1000;
+  const time = useRef(offset);
+  // Cada instância começa num ângulo diferente do mesmo giro regular.
+  const initial = useMemo(() => new THREE.Quaternion().setFromAxisAngle(AXIS, phase * Math.PI * 2), [phase]);
 
-  const geometry = useMemo(() => new THREE.DodecahedronGeometry(C.radius, 0), []);
-  const edges = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
+  const { solid: geometry, edges } = getGeometry();
   const material = useMemo(
     () =>
       q.crystal
@@ -59,6 +76,8 @@ export function Poliedro() {
       }),
     [],
   );
+  useEffect(() => () => material.dispose(), [material]);
+  useEffect(() => () => edgeMaterial.dispose(), [edgeMaterial]);
   const step = useMemo(() => new THREE.Quaternion(), []);
 
   useFrame((_, dt) => {
@@ -66,19 +85,23 @@ export function Poliedro() {
     time.current += s;
     const g = group.current;
     if (!g || !solid.current) return;
+    g.visible = pose.has.current;
+    if (!g.visible) return;
     // Giro perfeitamente regular: mesmo eixo, mesma velocidade, sempre.
     step.setFromAxisAngle(AXIS, C.spinSpeed * s);
     solid.current.quaternion.premultiply(step);
-    g.position.set(C.position[0], C.position[1] + Math.sin(time.current * 0.25) * C.bob, C.position[2]);
+    // Posição canônica do servidor + sobe e desce cosmético.
+    g.position.copy(pose.pos);
+    g.position.y += Math.sin(time.current * 0.25) * C.bob;
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
     edgeMaterial.opacity = 0.4 + 0.25 * breath;
-    setCreatureGlow(FLOOR_SLOTS.poliedro, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, 0.45 + 0.25 * breath);
+    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.45 + 0.25 * breath);
   });
 
   return (
-    <group ref={group}>
-      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} />
-      <group ref={solid}>
+    <group ref={group} visible={false}>
+      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} timeOffset={offset} />
+      <group ref={solid} quaternion={initial}>
         <mesh geometry={geometry} material={material} />
         <lineSegments geometry={edges} material={edgeMaterial} />
       </group>

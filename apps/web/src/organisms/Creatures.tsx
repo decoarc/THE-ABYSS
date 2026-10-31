@@ -6,6 +6,7 @@ import { CreatureGlows } from './creatureGlow';
 import { Filamento } from './Filamento';
 import { Membrana } from './Membrana';
 import { Poliedro } from './Poliedro';
+import { SelectionRing } from './SelectionRing';
 
 type CreatureComponent = ComponentType<{ id: string }>;
 
@@ -32,6 +33,7 @@ export function Creatures() {
         return Creature ? <Creature key={o.id} id={o.id} /> : null;
       })}
       <CreatureGlows />
+      <SelectionRing />
     </>
   );
 }

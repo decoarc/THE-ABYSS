@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createSelection, type Selection, type SelectionState } from './selection';
+import { clearIfGone } from './selectionSync';
 import type { OrganismInfo } from './wire';
 import { connectWorld, type SocketLike } from './worldConnection';
 import { createWorldStore, type ConnectionStatus, type WorldStore } from './worldStore';
@@ -26,6 +27,9 @@ export function WorldProvider({
   }));
 
   useEffect(() => connectWorld(value.store, { url, socketFactory }), [value, url, socketFactory]);
+
+  // Mudou o roster (reinício ou morte): a seleção que saiu do mundo é solta.
+  useEffect(() => value.store.subscribe(() => clearIfGone(value.store, value.selection)), [value]);
 
   return <WorldContext.Provider value={value}>{children}</WorldContext.Provider>;
 }

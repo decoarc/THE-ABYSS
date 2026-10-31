@@ -12,6 +12,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 const FLAGELLUM_LENGTH = 1.1;
@@ -117,6 +118,7 @@ void main() {
 export function Celula({ id }: { id: string }) {
   const { motion, q: quality } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const granules = useRef<THREE.InstancedMesh>(null);
   const pulse = useRef(C.nucleus.pulseMin);
@@ -234,7 +236,7 @@ export function Celula({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false}>
+    <group ref={group} visible={false} {...selectable}>
       {/* Conteúdo interno primeiro; a pele translúcida é desenhada por cima. */}
       <instancedMesh ref={granules} key={granuleCount} args={[granuleGeometry, undefined, granuleCount]} renderOrder={1}>
         <meshBasicMaterial />

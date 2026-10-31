@@ -12,6 +12,7 @@ import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { createTrail } from './trail';
 import { useOrganismPose } from './useOrganismPose';
+import { useSelectable } from './useSelectable';
 
 const RADIAL = 8;
 /** Duração do corpo em ms de trajeto: independe de quantas amostras o perfil usa. */
@@ -74,6 +75,7 @@ void main() {
 export function Filamento({ id }: { id: string }) {
   const { motion, q } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const selectable = useSelectable(id);
   const phase = useMemo(() => phaseOf(id), [id]);
   const offset = phase * 1000;
   const time = useRef(offset);
@@ -229,7 +231,7 @@ export function Filamento({ id }: { id: string }) {
   });
 
   return (
-    <group ref={root} visible={false}>
+    <group ref={root} visible={false} {...selectable}>
       <mesh geometry={geometry} material={material} renderOrder={3} frustumCulled={false} />
       <group ref={head}>
         <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={9} timeOffset={offset} />

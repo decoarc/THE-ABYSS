@@ -10,6 +10,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 
@@ -86,6 +87,7 @@ const getGeometry = () => (sharedGeometry ??= shellGeometry());
 export function Casco({ id }: { id: string }) {
   const { motion } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const selectable = useSelectable(id);
   const geometry = getGeometry();
   const group = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
@@ -155,7 +157,7 @@ export function Casco({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false} quaternion={state.initial}>
+    <group ref={group} visible={false} {...selectable} quaternion={state.initial}>
       <mesh geometry={geometry}>
         <meshStandardMaterial color="#10161c" roughness={0.85} metalness={0.05} flatShading />
       </mesh>

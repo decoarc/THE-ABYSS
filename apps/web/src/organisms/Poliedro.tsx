@@ -9,6 +9,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
 const AXIS = new THREE.Vector3(...C.spinAxis).normalize();
@@ -30,6 +31,7 @@ function getGeometry() {
 export function Poliedro({ id }: { id: string }) {
   const { motion, q } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const solid = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
@@ -99,7 +101,7 @@ export function Poliedro({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false}>
+    <group ref={group} visible={false} {...selectable}>
       <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} timeOffset={offset} />
       <group ref={solid} quaternion={initial}>
         <mesh geometry={geometry} material={material} />

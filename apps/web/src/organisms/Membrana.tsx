@@ -12,6 +12,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useSelectable } from './useSelectable';
 
 const vertex = /* glsl */ `
 uniform float uTime;
@@ -70,6 +71,7 @@ const getGeometry = () => (sharedGeometry ??= new THREE.IcosahedronGeometry(C.ra
 export function Membrana({ id }: { id: string }) {
   const { motion } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
   const offset = useMemo(() => phaseOf(id) * 1000, [id]);
@@ -117,7 +119,7 @@ export function Membrana({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false}>
+    <group ref={group} visible={false} {...selectable}>
       <mesh geometry={geometry} material={material} renderOrder={3} />
       <Nucleus config={C.nucleus} pulseRef={pulse} timeOffset={offset} />
     </group>

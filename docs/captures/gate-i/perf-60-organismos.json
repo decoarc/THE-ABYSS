@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": "GPU padrão · high",
+    "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.699999928474426,
+    "p95": 17.899999976158142,
+    "drawCalls": 254,
+    "frames": 601
+  },
+  {
+    "scenario": "GPU padrão · low",
+    "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "low",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.699999928474426,
+    "p95": 17.800000071525574,
+    "drawCalls": 265,
+    "frames": 601
+  },
+  {
+    "scenario": "GPU alto desempenho · high",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.699999928474426,
+    "p95": 17.800000071525574,
+    "drawCalls": 259,
+    "frames": 601
+  },
+  {
+    "scenario": "GPU alto desempenho · low",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "low",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.699999928474426,
+    "p95": 17.600000023841858,
+    "drawCalls": 258,
+    "frames": 601
+  },
+  {
+    "scenario": "GPU padrão · high · sem vsync",
+    "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 3.5,
+    "p95": 6.184999942779532,
+    "drawCalls": 258,
+    "frames": 2684
+  },
+  {
+    "scenario": "GPU alto desempenho · high · sem vsync",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 3.100000023841858,
+    "p95": 4.299999952316284,
+    "drawCalls": 255,
+    "frames": 3080
+  }
+]

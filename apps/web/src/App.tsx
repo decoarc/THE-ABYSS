@@ -5,6 +5,9 @@ import { PALETTE } from './lib/palette';
 import { SceneSettingsProvider, useSceneSettings } from './settings';
 import { Stage } from './scene/Stage';
 import { DemoBadge } from './ui/DemoBadge';
+import { InspectPanel } from './ui/InspectPanel';
+import { SpeciesIndex } from './ui/SpeciesIndex';
+import { ConnectionNotice } from './ui/ConnectionNotice';
 import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
 import { WorldProvider, useWorld } from './services/WorldProvider';
@@ -114,6 +117,9 @@ export function App({
         <Scene onFail={() => setFailed(true)} />
       )}
       <DemoBadge />
+      <SpeciesIndex />
+      <InspectPanel />
+      <ConnectionNotice />
     </SceneSettingsProvider>
     </WorldProvider>
   );

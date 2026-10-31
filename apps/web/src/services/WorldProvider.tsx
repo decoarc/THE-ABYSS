@@ -10,7 +10,8 @@ interface WorldContextValue {
   selection: Selection;
 }
 
-const WorldContext = createContext<WorldContextValue | null>(null);
+/** Exportado só para os testes montarem um mundo sem socket. */
+export const WorldContext = createContext<WorldContextValue | null>(null);
 
 export function WorldProvider({
   url,

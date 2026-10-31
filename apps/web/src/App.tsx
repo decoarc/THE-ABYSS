@@ -7,6 +7,8 @@ import { Stage } from './scene/Stage';
 import { DemoBadge } from './ui/DemoBadge';
 import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
+import { WorldProvider } from './services/WorldProvider';
+import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 
 class CanvasErrorBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
@@ -65,10 +67,19 @@ function Scene({ onFail }: { onFail: () => void }) {
   );
 }
 
-export function App({ webglAvailable = detectWebGL() }: { webglAvailable?: boolean }) {
+const WORLD_URL: string = import.meta.env.VITE_WORLD_URL ?? 'ws://localhost:4000/socket';
+
+export function App({
+  webglAvailable = detectWebGL(),
+  socketFactory,
+}: {
+  webglAvailable?: boolean;
+  socketFactory?: (url: string) => SocketLike;
+}) {
   const [failed, setFailed] = useState(false);
 
   return (
+    <WorldProvider url={WORLD_URL} socketFactory={socketFactory}>
     <SceneSettingsProvider>
       {!webglAvailable ? (
         <Fallback reason="no-webgl" />
@@ -79,5 +90,6 @@ export function App({ webglAvailable = detectWebGL() }: { webglAvailable?: boole
       )}
       <DemoBadge />
     </SceneSettingsProvider>
+    </WorldProvider>
   );
 }

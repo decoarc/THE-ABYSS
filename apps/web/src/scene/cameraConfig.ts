@@ -14,6 +14,8 @@ export const CAMERA: {
   minAzimuthAngle: number;
   maxAzimuthAngle: number;
   targetBounds: { x: [number, number]; y: [number, number]; z: [number, number] };
+  /** Tempo (s) para a câmera voltar ao quadro herói ao soltar o organismo. */
+  returnSeconds: number;
 } = {
   position: [0, 8.2, 17.5],
   target: [0, 3.1, 0],
@@ -25,6 +27,7 @@ export const CAMERA: {
   minAzimuthAngle: -0.95,
   maxAzimuthAngle: 0.95,
   targetBounds: { x: [-5, 5], y: [0.8, 4.5], z: [-5, 5] },
+  returnSeconds: 1.5,
 };
 
 /** Proporção do enquadramento herói (a mesma da referência, 16:10). */

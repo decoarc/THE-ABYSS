@@ -10,6 +10,17 @@ import Config
 config :abyss,
   generators: [timestamp_type: :utc_datetime]
 
+# Mundo simulado (valores iniciais; ajustáveis na Parada 1).
+# seed: nil -> aleatório na partida; inteiro -> determinístico.
+config :abyss, :world,
+  population: 45,
+  tick_hz: 10,
+  seed: nil,
+  radius: 18.0,
+  y_min: 1.5,
+  y_max: 8.0,
+  edge_margin: 3.0
+
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,
   url: [host: "localhost"],

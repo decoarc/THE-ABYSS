@@ -1,0 +1,82 @@
+defmodule Abyss.World.Species do
+  @moduledoc "Tabela fixa de espécies do mundo (ordem canônica)."
+
+  @type t :: %{
+          id: atom,
+          code: String.t(),
+          name: String.t(),
+          max_speed: float,
+          wander: float,
+          turn_rate: float,
+          body_radius: float,
+          run_s: {number, number} | nil,
+          pause_s: number | nil
+        }
+
+  @species [
+    %{
+      id: :membrana,
+      code: "MBR",
+      name: "Membrana",
+      max_speed: 0.25,
+      wander: 0.35,
+      turn_rate: 0.6,
+      body_radius: 1.1,
+      run_s: nil,
+      pause_s: nil
+    },
+    %{
+      id: :filamento,
+      code: "FIL",
+      name: "Filamento",
+      max_speed: 0.9,
+      wander: 0.8,
+      turn_rate: 1.5,
+      body_radius: 0.5,
+      run_s: nil,
+      pause_s: nil
+    },
+    %{
+      id: :casco,
+      code: "CAS",
+      name: "Casco",
+      max_speed: 0.06,
+      wander: 0.2,
+      turn_rate: 0.4,
+      body_radius: 1.2,
+      run_s: nil,
+      pause_s: nil
+    },
+    %{
+      id: :celula,
+      code: "CEL",
+      name: "Célula",
+      max_speed: 0.35,
+      wander: 0.25,
+      turn_rate: 1.0,
+      body_radius: 1.0,
+      run_s: {8, 14},
+      pause_s: 3
+    },
+    %{
+      id: :poliedro,
+      code: "POL",
+      name: "Poliedro",
+      max_speed: 0.08,
+      wander: 0.2,
+      turn_rate: 0.4,
+      body_radius: 1.3,
+      run_s: nil,
+      pause_s: nil
+    }
+  ]
+
+  @spec all() :: [t]
+  def all, do: @species
+
+  @spec get!(atom) :: t
+  def get!(id) do
+    Enum.find(@species, &(&1.id == id)) ||
+      raise ArgumentError, "espécie desconhecida: #{inspect(id)}"
+  end
+end

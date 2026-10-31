@@ -13,7 +13,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/raio/y_min/y_max/tick_hz, `name` (nil = anônimo), `broadcast`."
+  @doc "opts: população/seed/raio/y_min/y_max/tick_hz, `exclusion` (opcional), `name` (nil = anônimo), `broadcast`."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -41,7 +41,8 @@ defmodule Abyss.World.Server do
         radius: Keyword.fetch!(opts, :radius),
         y_min: Keyword.fetch!(opts, :y_min),
         y_max: Keyword.fetch!(opts, :y_max),
-        now_ms: now_ms
+        now_ms: now_ms,
+        exclusion: exclusion(Keyword.get(opts, :exclusion))
       })
 
     state = %{
@@ -100,6 +101,11 @@ defmodule Abyss.World.Server do
   end
 
   # --- Internos ---
+
+  defp exclusion(nil), do: nil
+
+  defp exclusion(kw),
+    do: %{center: Keyword.fetch!(kw, :center), radius: Keyword.fetch!(kw, :radius)}
 
   # Agenda o tick n+1 contra o relógio de partida (sem acumular deriva).
   defp schedule(state) do

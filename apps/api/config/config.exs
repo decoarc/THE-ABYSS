@@ -16,10 +16,12 @@ config :abyss, :world,
   population: 45,
   tick_hz: 10,
   seed: nil,
-  radius: 18.0,
+  radius: 28.0,
   y_min: 1.5,
   y_max: 8.0,
-  edge_margin: 3.0
+  edge_margin: 3.0,
+  # Esfera ao redor da câmera hero (cameraConfig.ts) onde nenhum organismo entra.
+  exclusion: [center: {0.0, 8.2, 17.5}, radius: 10.0]
 
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,

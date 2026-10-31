@@ -10,6 +10,7 @@ defmodule Abyss.World.Sim do
   @y_margin 0.5
   @sep_gap 0.5
   @spawn_tries 50
+  @exclusion_reach 2.0
 
   defstruct organisms: [], rng: nil, tick: 0, bounds: %{}
 
@@ -20,17 +21,29 @@ defmodule Abyss.World.Sim do
           bounds: map
         }
 
+  @doc """
+  `opts` pode trazer `exclusion: %{center: {x, y, z}, radius: r}` (esfera onde
+  nenhum organismo pode estar; ausente ou nil = sem zona livre).
+  """
   @spec new(map) :: t
-  def new(%{
-        population: pop,
-        seed: seed,
-        radius: radius,
-        y_min: y_min,
-        y_max: y_max,
-        now_ms: now_ms
-      })
+  def new(
+        %{
+          population: pop,
+          seed: seed,
+          radius: radius,
+          y_min: y_min,
+          y_max: y_max,
+          now_ms: now_ms
+        } = opts
+      )
       when is_integer(pop) and pop >= 5 and pop <= 200 do
-    bounds = %{radius: radius, y_min: y_min, y_max: y_max}
+    bounds = %{
+      radius: radius,
+      y_min: y_min,
+      y_max: y_max,
+      exclusion: Map.get(opts, :exclusion)
+    }
+
     species = Species.all()
     n = length(species)
     base = div(pop, n)
@@ -96,8 +109,10 @@ defmodule Abyss.World.Sim do
         dist(pos, p.pos) >= sp.body_radius + Species.get!(p.species).body_radius + @sep_gap
       end)
 
+    free? = free? and not in_exclusion?(pos, sp, bounds)
+
     if free? or tries <= 1,
-      do: {pos, rng},
+      do: {keep_out(pos, sp, bounds), rng},
       else: pick_position(sp, bounds, placed, rng, tries - 1)
   end
 
@@ -132,11 +147,12 @@ defmodule Abyss.World.Sim do
       dir
       |> scale(target)
       |> add(edge_steer(o.pos, bounds, sp.max_speed))
+      |> add(exclusion_steer(o.pos, sp, bounds))
       |> add(separation(o, sp, snapshot))
 
     k = min(1.0, sp.turn_rate * dt)
     vel = o.vel |> add(scale(sub(desired, o.vel), k)) |> clamp_norm(sp.max_speed)
-    pos = o.pos |> add(scale(vel, dt)) |> clamp_volume(bounds)
+    pos = o.pos |> add(scale(vel, dt)) |> clamp_volume(bounds) |> keep_out(sp, bounds)
 
     {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng}
   end
@@ -178,6 +194,61 @@ defmodule Abyss.World.Sim do
       end
 
     {sx, sy, sz}
+  end
+
+  # Zona livre (esfera, inflada pelo raio do corpo): empurra para fora ao se
+  # aproximar, no mesmo estilo do edge_steer.
+  defp exclusion_steer(_pos, _sp, %{exclusion: nil}), do: {0.0, 0.0, 0.0}
+
+  defp exclusion_steer(pos, sp, %{exclusion: %{center: c, radius: r}}) do
+    limit = r + sp.body_radius + @exclusion_reach
+    d = dist(pos, c)
+
+    if d < limit do
+      u = outward(pos, c, d)
+      scale(u, (limit - d) * sp.max_speed)
+    else
+      {0.0, 0.0, 0.0}
+    end
+  end
+
+  defp in_exclusion?(_pos, _sp, %{exclusion: nil}), do: false
+
+  defp in_exclusion?(pos, sp, %{exclusion: %{center: c, radius: r}}),
+    do: dist(pos, c) < r + sp.body_radius
+
+  # Projeção dura: leva à superfície da esfera e reaplica o volume; se o clamp
+  # de y devolveu o ponto para dentro, desloca na horizontal até sair.
+  defp keep_out(pos, _sp, %{exclusion: nil}), do: pos
+
+  defp keep_out(pos, sp, %{exclusion: %{center: {cx, cy, cz} = c, radius: r}} = bounds) do
+    reff = r + sp.body_radius
+    d = dist(pos, c)
+
+    if d >= reff do
+      pos
+    else
+      p = c |> add(scale(outward(pos, c, d), reff)) |> clamp_volume(bounds)
+
+      if dist(p, c) >= reff - 1.0e-9 do
+        p
+      else
+        {_, y, _} = p
+        dy = y - cy
+        h = :math.sqrt(max(reff * reff - dy * dy, 0.0)) + 1.0e-6
+        {px, _, pz} = pos
+        hx = px - cx
+        hz = pz - cz
+        hn = :math.sqrt(hx * hx + hz * hz)
+        {ux, uz} = if hn > 1.0e-9, do: {hx / hn, hz / hn}, else: {0.0, -1.0}
+        clamp_volume({cx + ux * h, y, cz + uz * h}, bounds)
+      end
+    end
+  end
+
+  defp outward(pos, c, d) do
+    {dx, dy, dz} = sub(pos, c)
+    if d > 1.0e-9, do: {dx / d, dy / d, dz / d}, else: {0.0, 0.0, -1.0}
   end
 
   defp separation(o, sp, snapshot) do

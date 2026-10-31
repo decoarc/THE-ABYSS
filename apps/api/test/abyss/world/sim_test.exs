@@ -106,4 +106,43 @@ defmodule Abyss.World.SimTest do
 
     assert paused
   end
+
+  describe "zona livre da câmera" do
+    @cam {0.0, 8.2, 17.5}
+    @wide %{
+      population: 45,
+      seed: 7,
+      radius: 28.0,
+      y_min: 1.5,
+      y_max: 8.0,
+      now_ms: 0,
+      exclusion: %{center: {0.0, 8.2, 17.5}, radius: 10.0}
+    }
+    @body Map.new(Species.all(), &{&1.id, &1.body_radius})
+
+    defp outside?(sim) do
+      Enum.all?(sim.organisms, &(dist(&1.pos, @cam) >= 10.0 + @body[&1.species] - 1.0e-9))
+    end
+
+    test "ninguém nasce na zona da câmera" do
+      for seed <- 1..20, do: assert(outside?(Sim.new(%{@wide | seed: seed})))
+    end
+
+    test "ninguém entra na zona da câmera" do
+      Enum.reduce(1..3000, Sim.new(@wide), fn _, s ->
+        s = Sim.step(s, 0.1)
+        assert outside?(s)
+        s
+      end)
+    end
+
+    test "volume de raio 28" do
+      sim = run(Sim.new(@wide), 3000)
+
+      for o <- sim.organisms do
+        {x, _y, z} = o.pos
+        assert x * x + z * z <= 28.0 * 28.0 + 1.0e-9
+      end
+    end
+  end
 end

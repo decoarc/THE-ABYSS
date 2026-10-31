@@ -22,8 +22,21 @@ export interface WorldStore {
   status(): ConnectionStatus;
   setStatus(s: ConnectionStatus): void;
   subscribe(fn: () => void): () => void;
+  lastTick(): number;
+  /** Posições canônicas de cada organismo no tick pedido, se ainda estiver no histórico recente. */
+  positionsAt(tick: number): Record<string, Vec3> | null;
   /** Só para teste. */
   debugBufferSize(id: string): number;
+}
+
+/** Quantos ticks recentes ficam guardados para `positionsAt` (~3 s a 10 Hz). */
+const HISTORY_TICKS = 32;
+
+interface HistoryEntry {
+  tick: number;
+  ids: readonly string[];
+  /** Uma linha por organismo, na ordem de `ids`: x, y, z, vx, vy, vz. */
+  rows: ReadonlyArray<ArrayLike<number>>;
 }
 
 interface Ring {
@@ -41,6 +54,8 @@ export function createWorldStore(): WorldStore {
   let species: readonly SpeciesInfo[] = [];
   let rings: Ring[] = [];
   let index = new Map<string, number>();
+  let history: HistoryEntry[] = [];
+  let rosterIds: readonly string[] = [];
   let status: ConnectionStatus = 'connecting';
   const listeners = new Set<() => void>();
 
@@ -78,6 +93,11 @@ export function createWorldStore(): WorldStore {
     return localMs - offset;
   }
 
+  function remember(tick: number, ids: readonly string[], rows: ReadonlyArray<ArrayLike<number>>) {
+    history.push({ tick, ids, rows });
+    if (history.length > HISTORY_TICKS) history.shift();
+  }
+
   function notify() {
     for (const fn of listeners) fn();
   }
@@ -90,6 +110,9 @@ export function createWorldStore(): WorldStore {
       lastTick = s.tick;
       roster = s.organisms;
       species = s.species;
+      rosterIds = s.organisms.map((o) => o.id);
+      history = [];
+      remember(s.tick, rosterIds, s.organisms.map((o) => [...o.p, ...o.v]));
       diffCount = 0;
       diffHead = 0;
       observe(localMs, s.server_ms);
@@ -112,6 +135,7 @@ export function createWorldStore(): WorldStore {
         const row = t.o[i];
         push(rings[i], t.server_ms, row[0], row[1], row[2], row[3], row[4], row[5]);
       }
+      remember(t.tick, rosterIds, t.o);
       return 'ok';
     },
 
@@ -161,6 +185,20 @@ export function createWorldStore(): WorldStore {
       return true;
     },
 
+    lastTick: () => lastTick,
+    positionsAt(tick) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const e = history[i];
+        if (e.tick !== tick) continue;
+        const out: Record<string, Vec3> = {};
+        e.ids.forEach((id, k) => {
+          const row = e.rows[k];
+          out[id] = [row[0], row[1], row[2]];
+        });
+        return out;
+      }
+      return null;
+    },
     serverNow,
     status: () => status,
     setStatus(s) {

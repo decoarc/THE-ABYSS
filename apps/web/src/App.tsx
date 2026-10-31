@@ -12,6 +12,7 @@ import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
 import { WorldProvider, useWorld } from './services/WorldProvider';
 import { isClick, type Point } from './lib/pointer';
+import { debugEnabled, installDebugBridge, type AbyssDebug } from './services/debugBridge';
 import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 
@@ -42,6 +43,16 @@ function EscapeClears() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selection]);
+  return null;
+}
+
+/** Com `?debug=1`, expõe o mundo em `window.__abyss` para os testes e2e. */
+function DebugBridge() {
+  const { store, selection } = useWorld();
+  useEffect(() => {
+    if (!debugEnabled(window.location.search)) return;
+    return installDebugBridge(window as unknown as { __abyss?: AbyssDebug }, store, selection);
+  }, [store, selection]);
   return null;
 }
 
@@ -109,6 +120,7 @@ export function App({
     <WorldProvider url={WORLD_URL} socketFactory={socketFactory}>
     <SceneSettingsProvider>
       <EscapeClears />
+      <DebugBridge />
       {!webglAvailable ? (
         <Fallback reason="no-webgl" />
       ) : failed ? (

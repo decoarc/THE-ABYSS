@@ -7,7 +7,10 @@
     "build": "pnpm --filter @abyss/web build",
     "preview": "pnpm --filter @abyss/web preview",
     "test": "pnpm --filter @abyss/web test",
-    "typecheck": "pnpm --filter @abyss/web typecheck"
+    "typecheck": "pnpm --filter @abyss/web typecheck",
+    "api:test": "docker compose -f infra/compose/compose.yaml run --rm api mix test",
+    "api:up": "docker compose -f infra/compose/compose.yaml up -d api",
+    "api:down": "docker compose -f infra/compose/compose.yaml down"
   },
   "devDependencies": {
     "playwright": "^1.64.1"

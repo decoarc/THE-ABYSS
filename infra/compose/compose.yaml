@@ -1,0 +1,18 @@
+services:
+  api:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile.dev
+    # MIX_ENV is deliberately unset: dev is the mix default, and an explicit
+    # MIX_ENV=dev would also force `mix test` into dev (no test/support compiled).
+    command: mix phx.server
+    ports:
+      - "4000:4000"
+    volumes:
+      - ../../apps/api:/app
+      - api_deps:/app/deps
+      - api_build:/app/_build
+
+volumes:
+  api_deps:
+  api_build:

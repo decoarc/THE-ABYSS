@@ -2,3 +2,6 @@
 node_modules/
 dist/
 /captures/
+apps/api/_build/
+apps/api/deps/
+apps/api/.elixir_ls/

@@ -1,0 +1,20 @@
+defmodule AbyssWeb.StatsControllerTest do
+  use AbyssWeb.ConnCase, async: false
+
+  setup do
+    start_supervised!(
+      {Abyss.World.Server,
+       population: 10, tick_hz: 20, seed: 1, radius: 18.0, y_min: 1.5, y_max: 8.0,
+       broadcast: fn _ -> :ok end}
+    )
+
+    :ok
+  end
+
+  test "GET /api/stats", %{conn: conn} do
+    body = json_response(get(conn, "/api/stats"), 200)
+    assert Map.has_key?(body, "tick")
+    assert Map.has_key?(body, "jitter_ms_p99")
+    assert Map.has_key?(body, "observers")
+  end
+end

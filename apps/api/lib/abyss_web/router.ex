@@ -9,5 +9,6 @@ defmodule AbyssWeb.Router do
     pipe_through :api
 
     get "/health", HealthController, :show
+    get "/stats", StatsController, :show
   end
 end

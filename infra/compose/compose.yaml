@@ -6,6 +6,9 @@ services:
     # MIX_ENV is deliberately unset: dev is the mix default, and an explicit
     # MIX_ENV=dev would also force `mix test` into dev (no test/support compiled).
     command: mix phx.server
+    environment:
+      # Padrão 45; a rodada de carga usa 60 (ABYSS_POPULATION=60 pnpm api:up).
+      - ABYSS_POPULATION=${ABYSS_POPULATION:-45}
     ports:
       - "4000:4000"
     volumes:

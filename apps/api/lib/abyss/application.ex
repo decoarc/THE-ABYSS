@@ -7,20 +7,35 @@ defmodule Abyss.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      AbyssWeb.Telemetry,
-      {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: Abyss.PubSub},
-      # Start a worker by calling: Abyss.Worker.start_link(arg)
-      # {Abyss.Worker, arg},
-      # Start to serve requests, typically the last entry
-      AbyssWeb.Endpoint
-    ]
+    children =
+      [
+        AbyssWeb.Telemetry,
+        {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
+        {Phoenix.PubSub, name: Abyss.PubSub},
+        Abyss.World.Observers,
+        AbyssWeb.Endpoint
+      ] ++ world_children()
 
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Abyss.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # O Server do mundo vem depois do Endpoint; desligável (`start_world: false` nos testes).
+  defp world_children do
+    if Application.get_env(:abyss, :start_world, true) do
+      [
+        {Abyss.World.Server,
+         Application.fetch_env!(:abyss, :world) ++
+           [
+             name: Abyss.World.Server,
+             broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)
+           ]}
+      ]
+    else
+      []
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration

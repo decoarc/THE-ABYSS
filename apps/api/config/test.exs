@@ -16,3 +16,6 @@ config :phoenix, :plug_init_mode, :runtime
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# O mundo global não sobe nos testes; cada teste inicia o seu Server.
+config :abyss, start_world: false

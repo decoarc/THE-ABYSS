@@ -118,6 +118,8 @@ A densidade de organismos pode mudar em relação ao protótipo.
 
 A meta é que o quadro inicial mostre de 8 a 12 organismos, nenhum colado na lente. Se ainda ler como multidão, o passo seguinte é reduzir a população.
 
+**Parada 2 (2026-10-31): aceite do autor sobre o movimento e o Seguir.** O autor assistiu ao vídeo do roteiro (seleção de MBR-0003, Seguir, soltar com Esc) e aprovou o movimento vindo do servidor, sem ajustes de parâmetros. Os valores ficam como estão: taxa do Seguir de 2,5/s e retorno em 1,5 s.
+
 ## 10. Deixado ao construtor
 
 - Modelo de movimento no servidor (vagar com steering, trajetos parametrizados ou outro), desde que o resultado pareça vivo e cada espécie mantenha o caráter de movimento que tem no protótipo.

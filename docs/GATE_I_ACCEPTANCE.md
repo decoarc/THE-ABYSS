@@ -2,7 +2,7 @@
 
 **Data:** 2026-10-31 · **Branch:** `gate-i-base-main` (a partir de `main` `9baad35`, com o trabalho do `gate-i`)
 **Spec:** `docs/superpowers/specs/2026-10-31-gate-i-observacao-design.md` · **Plano:** `docs/superpowers/plans/2026-10-31-gate-i-observacao.md`
-**Status:** critérios 1–4 e 6 atendidos por evidência automática ou medida; critério 5 com **aceite do autor pendente**.
+**Status:** gate I **aprovado pelo autor** em 2026-10-31 (critério 5). Todos os critérios 1–6 atendidos.
 
 ## Como ver
 
@@ -91,7 +91,7 @@ Ressalva: uma rodada por cenário. Não medi outros navegadores nem monitores de
 | 2 | Seleção confiável; "Seguir" acompanha sem perder | Atendido: e2e "selecionar pelo índice"; testes de seleção, anel e câmera; Parada 2 |
 | 3 | Reinício sem quebrar | Atendido: e2e "reinício reconecta com mundo novo" |
 | 4 | Carga medida, 60 organismos, 50 observadores | Atendido: rodada oficial acima |
-| 5 | Visual intacto: aceite explícito do autor | **Pendente.** Movimento aprovado na Parada 2; comparação com o protótipo 2 ainda não registrada |
+| 5 | Visual intacto: aceite explícito do autor | Atendido: aprovado pelo autor em 2026-10-31, após comparação com o protótipo 2 |
 | 6 | Testes automatizados de seleção e consistência | Atendido: suítes web, API e e2e |
 
 ## Desvios em relação ao plano
@@ -102,4 +102,4 @@ Ressalva: uma rodada por cenário. Não medi outros navegadores nem monitores de
 
 ## Aceite do autor
 
-**Aceite do autor:** pendente (critério 5: comparar com o protótipo 2 aprovado).
+**Aceite do autor:** aprovado em 2026-10-31 (critério 5, comparação com o protótipo 2).

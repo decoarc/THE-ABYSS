@@ -13,6 +13,7 @@ import { stepFollow } from './follow';
 import { createFlyInput } from './flyInput';
 import { WORLD_ENV, aim, constrainCamera, forwardOf, look, stepFreeFly, wasConstrained, type FlyInput, type FlyState } from './freeFly';
 import { pickSpawn } from './spawnPoint';
+import { adoptPose, takeCameraPose } from './cameraPose';
 
 const INTRO_SECONDS = 3;
 /** A introdução começa este tanto acima do ponto de partida e desce até ele. */
@@ -188,6 +189,21 @@ function FreeRig() {
     const s = fly.current;
     const keys = input.current?.read() ?? NO_INPUT;
     const swimming = keys.forward !== 0 || keys.right !== 0 || keys.up !== 0;
+
+    // Pose pedida pelo ?debug=1: encerra a introdução e o seguimento e fica onde foi posta.
+    const posed = takeCameraPose();
+    if (posed) {
+      adoptPose(s, posed);
+      constrainCamera(s.pos, WORLD_ENV);
+      introDone.current = true;
+      intro.current = null;
+      if (mode.current === 'following') selection.setFollowing(false);
+      mode.current = 'free';
+      followTarget.current = null;
+      camera.position.set(s.pos[0], s.pos[1], s.pos[2]);
+      camera.rotation.set(s.pitch, s.yaw, 0, 'YXZ');
+      return;
+    }
 
     // Antes do primeiro snapshot: quadro herói parado.
     if (!introDone.current) {

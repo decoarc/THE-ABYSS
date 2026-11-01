@@ -5,12 +5,14 @@ defmodule Abyss.World.Sim do
   """
 
   alias Abyss.World.{Organism, Species}
+  alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
   @y_margin 0.5
   @sep_gap 0.5
   @spawn_tries 50
-  @exclusion_reach 2.0
+  @sponge_reach 1.0
+  @max_population 400
 
   defstruct organisms: [], rng: nil, tick: 0, bounds: %{}
 
@@ -22,58 +24,64 @@ defmodule Abyss.World.Sim do
         }
 
   @doc """
-  `opts` pode trazer `exclusion: %{center: {x, y, z}, radius: r}` (esfera onde
-  nenhum organismo pode estar; ausente ou nil = sem zona livre).
+  `opts`: `population` (5..400), `seed`, `now_ms`, `map` (`Abyss.World.Map`),
+  `creature_scale` (raio efetivo = body_radius × escala) e `test_species`
+  (false = mundo sem organismos).
   """
   @spec new(map) :: t
-  def new(
-        %{
-          population: pop,
-          seed: seed,
-          radius: radius,
-          y_min: y_min,
-          y_max: y_max,
-          now_ms: now_ms
-        } = opts
-      )
-      when is_integer(pop) and pop >= 5 and pop <= 200 do
-    bounds = %{
-      radius: radius,
-      y_min: y_min,
-      y_max: y_max,
-      exclusion: Map.get(opts, :exclusion)
-    }
-
-    species = Species.all()
-    n = length(species)
-    base = div(pop, n)
-    extra = rem(pop, n)
-
-    roster =
-      species
-      |> Enum.with_index()
-      |> Enum.flat_map(fn {sp, i} ->
-        for k <- 1..(base + if(i < extra, do: 1, else: 0)), do: {sp, k}
-      end)
-
+  def new(%{
+        population: pop,
+        seed: seed,
+        now_ms: now_ms,
+        map: %WMap{} = map,
+        creature_scale: scale,
+        test_species: test_species
+      })
+      when is_integer(pop) and pop >= 5 and pop <= @max_population do
+    bounds = %{map: map, creature_scale: scale, y_min: map.y_min, y_max: map.y_max}
     rng = :rand.seed_s(:exsss, seed)
 
     {organisms, rng} =
-      Enum.reduce(roster, {[], rng}, fn {sp, k}, {acc, rng} ->
-        {o, rng} = spawn_one(sp, k, now_ms, bounds, acc, rng)
-        {[o | acc], rng}
-      end)
+      if test_species do
+        species = Species.all()
+        n = length(species)
+        base = div(pop, n)
+        extra = rem(pop, n)
 
-    %__MODULE__{organisms: Enum.reverse(organisms), rng: rng, tick: 0, bounds: bounds}
+        roster =
+          species
+          |> Enum.with_index()
+          |> Enum.flat_map(fn {sp, i} ->
+            for k <- 1..(base + if(i < extra, do: 1, else: 0)), do: {sp, k}
+          end)
+
+        {placed, rng} =
+          Enum.reduce(roster, {[], rng}, fn {sp, k}, {acc, rng} ->
+            {o, rng} = spawn_one(sp, k, now_ms, bounds, acc, rng)
+            {[o | acc], rng}
+          end)
+
+        {Enum.reverse(placed), rng}
+      else
+        {[], rng}
+      end
+
+    %__MODULE__{organisms: organisms, rng: rng, tick: 0, bounds: bounds}
   end
 
   def new(%{population: pop}) do
-    raise ArgumentError, "população deve estar entre 5 e 200, recebido: #{inspect(pop)}"
+    raise ArgumentError,
+          "população deve estar entre 5 e #{@max_population}, recebido: #{inspect(pop)}"
   end
+
+  @doc "Raio efetivo (body_radius × creature_scale) da espécie."
+  @spec body_radius(t, atom) :: float
+  def body_radius(%__MODULE__{bounds: bounds}, species_id),
+    do: eff_radius(Species.get!(species_id), bounds)
 
   @spec step(t, float) :: t
   def step(%__MODULE__{organisms: orgs, rng: rng, bounds: bounds} = sim, dt) do
-    snapshot = Enum.map(orgs, &{&1.id, &1.pos, Species.get!(&1.species).body_radius})
+    snapshot = Enum.map(orgs, &{&1.id, &1.pos, eff_radius(Species.get!(&1.species), bounds)})
 
     {new_orgs, rng} =
       Enum.map_reduce(orgs, rng, fn o, rng -> step_one(o, snapshot, bounds, dt, rng) end)
@@ -102,26 +110,52 @@ defmodule Abyss.World.Sim do
   end
 
   defp pick_position(sp, bounds, placed, rng, tries) do
-    {pos, rng} = random_position(bounds, rng)
+    {pos, rng} = random_position(sp, bounds, rng)
+    r = eff_radius(sp, bounds)
 
     free? =
       Enum.all?(placed, fn p ->
-        dist(pos, p.pos) >= sp.body_radius + Species.get!(p.species).body_radius + @sep_gap
-      end)
-
-    free? = free? and not in_exclusion?(pos, sp, bounds)
+        dist(pos, p.pos) >= r + eff_radius(Species.get!(p.species), bounds) + @sep_gap
+      end) and not in_sponge?(pos, r, bounds.map)
 
     if free? or tries <= 1,
-      do: {keep_out(pos, sp, bounds), rng},
+      do: {keep_out_sponges(pos, r, bounds.map), rng},
       else: pick_position(sp, bounds, placed, rng, tries - 1)
   end
 
-  defp random_position(%{radius: r, y_min: y0, y_max: y1}, rng) do
+  # Região pela dieta; depois um ponto uniforme no disco da região, a pelo
+  # menos @edge_margin da borda.
+  defp random_position(sp, %{map: map, y_min: y0, y_max: y1}, rng) do
+    {region, rng} = pick_region(sp.diet, map.regions, rng)
+    {cx, cz} = region.center
     {u, rng} = :rand.uniform_s(rng)
     {a, rng} = uniform_range(rng, 0.0, 2 * :math.pi())
     {y, rng} = uniform_range(rng, y0 + @y_margin, y1 - @y_margin)
-    rho = (r - @edge_margin) * :math.sqrt(u)
-    {{rho * :math.cos(a), y, rho * :math.sin(a)}, rng}
+    rho = max(region.radius - @edge_margin, 0.0) * :math.sqrt(u)
+    {{cx + rho * :math.cos(a), y, cz + rho * :math.sin(a)}, rng}
+  end
+
+  defp pick_region(diet, regions, rng) do
+    weights =
+      Enum.map(regions, fn r ->
+        case diet do
+          :flora -> r.flora_patches * 1.0
+          :particles -> r.particle_share * 1.0
+          _ -> 1.0
+        end
+      end)
+
+    {u, rng} = :rand.uniform_s(rng)
+    target = u * Enum.sum(weights)
+
+    {region, _} =
+      regions
+      |> Enum.zip(weights)
+      |> Enum.reduce_while({nil, target}, fn {r, w}, {_, left} ->
+        if left < w, do: {:halt, {r, 0.0}}, else: {:cont, {r, left - w}}
+      end)
+
+    {region || List.last(regions), rng}
   end
 
   defp initial_mode_left(%{run_s: {lo, hi}}, rng), do: uniform_range(rng, lo * 1.0, hi * 1.0)
@@ -131,6 +165,7 @@ defmodule Abyss.World.Sim do
 
   defp step_one(o, snapshot, bounds, dt, rng) do
     sp = Species.get!(o.species)
+    r = eff_radius(sp, bounds)
     sdt = :math.sqrt(dt)
 
     {n1, rng} = :rand.normal_s(rng)
@@ -147,12 +182,17 @@ defmodule Abyss.World.Sim do
       dir
       |> scale(target)
       |> add(edge_steer(o.pos, bounds, sp.max_speed))
-      |> add(exclusion_steer(o.pos, sp, bounds))
-      |> add(separation(o, sp, snapshot))
+      |> add(sponge_steer(o.pos, r, bounds.map, sp.max_speed))
+      |> add(separation(o, sp, r, snapshot))
 
     k = min(1.0, sp.turn_rate * dt)
     vel = o.vel |> add(scale(sub(desired, o.vel), k)) |> clamp_norm(sp.max_speed)
-    pos = o.pos |> add(scale(vel, dt)) |> clamp_volume(bounds) |> keep_out(sp, bounds)
+
+    pos =
+      o.pos
+      |> add(scale(vel, dt))
+      |> clamp_volume(bounds)
+      |> keep_out_sponges(r, bounds.map)
 
     {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng}
   end
@@ -171,14 +211,14 @@ defmodule Abyss.World.Sim do
 
   defp advance_mode(_sp, mode, left, yaw, rng), do: {mode, left, yaw, rng}
 
-  defp edge_steer({x, y, z}, %{radius: r, y_min: y0, y_max: y1}, gain) do
-    rh = :math.sqrt(x * x + z * z)
-    edge = r - @edge_margin
+  defp edge_steer({x, y, z}, %{map: map, y_min: y0, y_max: y1}, gain) do
+    depth = WMap.edge_depth(map, x, z)
 
     {sx, sz} =
-      if rh > edge and rh > 1.0e-9 do
-        f = -(rh - edge) * gain / rh
-        {x * f, z * f}
+      if depth < @edge_margin do
+        {ix, iz} = WMap.inward(map, x, z)
+        f = (@edge_margin - depth) * gain
+        {ix * f, iz * f}
       else
         {0.0, 0.0}
       end
@@ -196,68 +236,52 @@ defmodule Abyss.World.Sim do
     {sx, sy, sz}
   end
 
-  # Zona livre (esfera, inflada pelo raio do corpo): empurra para fora ao se
-  # aproximar, no mesmo estilo do edge_steer.
-  defp exclusion_steer(_pos, _sp, %{exclusion: nil}), do: {0.0, 0.0, 0.0}
+  # Esponjas (cilindros verticais de altura h): afastamento radial no XZ.
+  defp sponge_steer({x, y, z}, r, map, gain) do
+    Enum.reduce(map.sponges, {0.0, 0.0, 0.0}, fn sp, acc ->
+      limit = sp.r + r + @sponge_reach
+      {ux, uz, d} = away(x, z, sp)
 
-  defp exclusion_steer(pos, sp, %{exclusion: %{center: c, radius: r}}) do
-    limit = r + sp.body_radius + @exclusion_reach
-    d = dist(pos, c)
-
-    if d < limit do
-      u = outward(pos, c, d)
-      scale(u, (limit - d) * sp.max_speed)
-    else
-      {0.0, 0.0, 0.0}
-    end
+      if d < limit and y < sp.h + 0.5,
+        do: add(acc, {ux * (limit - d) * gain, 0.0, uz * (limit - d) * gain}),
+        else: acc
+    end)
   end
 
-  defp in_exclusion?(_pos, _sp, %{exclusion: nil}), do: false
-
-  defp in_exclusion?(pos, sp, %{exclusion: %{center: c, radius: r}}),
-    do: dist(pos, c) < r + sp.body_radius
-
-  # Projeção dura: leva à superfície da esfera e reaplica o volume; se o clamp
-  # de y devolveu o ponto para dentro, desloca na horizontal até sair.
-  defp keep_out(pos, _sp, %{exclusion: nil}), do: pos
-
-  defp keep_out(pos, sp, %{exclusion: %{center: {cx, cy, cz} = c, radius: r}} = bounds) do
-    reff = r + sp.body_radius
-    d = dist(pos, c)
-
-    if d >= reff do
-      pos
-    else
-      p = c |> add(scale(outward(pos, c, d), reff)) |> clamp_volume(bounds)
-
-      if dist(p, c) >= reff - 1.0e-9 do
-        p
-      else
-        {_, y, _} = p
-        dy = y - cy
-        h = :math.sqrt(max(reff * reff - dy * dy, 0.0)) + 1.0e-6
-        {px, _, pz} = pos
-        hx = px - cx
-        hz = pz - cz
-        hn = :math.sqrt(hx * hx + hz * hz)
-        {ux, uz} = if hn > 1.0e-9, do: {hx / hn, hz / hn}, else: {0.0, -1.0}
-        clamp_volume({cx + ux * h, y, cz + uz * h}, bounds)
-      end
-    end
+  defp in_sponge?({x, y, z}, r, map) do
+    Enum.any?(map.sponges, fn sp ->
+      {_, _, d} = away(x, z, sp)
+      y < sp.h and d < sp.r + r
+    end)
   end
 
-  defp outward(pos, c, d) do
-    {dx, dy, dz} = sub(pos, c)
-    if d > 1.0e-9, do: {dx / d, dy / d, dz / d}, else: {0.0, 0.0, -1.0}
+  # Projeção dura para fora do cilindro da esponja.
+  defp keep_out_sponges(pos, r, map) do
+    Enum.reduce(map.sponges, pos, fn sp, {px, py, pz} = acc ->
+      {ux, uz, d} = away(px, pz, sp)
+      min_d = sp.r + r
+
+      if py < sp.h and d < min_d,
+        do: {sp.x + ux * min_d, py, sp.z + uz * min_d},
+        else: acc
+    end)
   end
 
-  defp separation(o, sp, snapshot) do
+  # {ux, uz, d}: direção unitária da esponja para o ponto e a distância no XZ.
+  defp away(x, z, sp) do
+    dx = x - sp.x
+    dz = z - sp.z
+    d = :math.sqrt(dx * dx + dz * dz)
+    if d > 1.0e-9, do: {dx / d, dz / d, d}, else: {1.0, 0.0, d}
+  end
+
+  defp separation(o, sp, r0, snapshot) do
     Enum.reduce(snapshot, {0.0, 0.0, 0.0}, fn {id, pos, r}, acc ->
       if id == o.id do
         acc
       else
         d = dist(o.pos, pos)
-        reach = sp.body_radius + r + @sep_gap
+        reach = r0 + r + @sep_gap
 
         if d < reach do
           {dx, dy, dz} = sub(o.pos, pos)
@@ -270,13 +294,25 @@ defmodule Abyss.World.Sim do
     end)
   end
 
-  defp clamp_volume({x, y, z}, %{radius: r, y_min: y0, y_max: y1}) do
-    rh = :math.sqrt(x * x + z * z)
-    {x, z} = if rh > r, do: {x * r / rh, z * r / rh}, else: {x, z}
+  # Clamp duro: y no intervalo do mapa; XZ de volta a edge_depth >= -0.5.
+  defp clamp_volume({x, y, z}, %{map: map, y_min: y0, y_max: y1}) do
+    depth = WMap.edge_depth(map, x, z)
+
+    {x, z} =
+      if depth < -0.5 do
+        {ix, iz} = WMap.inward(map, x, z)
+        back = -0.5 - depth
+        {x + ix * back, z + iz * back}
+      else
+        {x, z}
+      end
+
     {x, clamp(y, y0, y1), z}
   end
 
   # --- helpers ---------------------------------------------------------------
+
+  defp eff_radius(sp, %{creature_scale: scale}), do: sp.body_radius * scale
 
   defp uniform_range(rng, lo, hi) do
     {u, rng} = :rand.uniform_s(rng)

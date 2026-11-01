@@ -6,7 +6,14 @@ defmodule Abyss.World.WireTest do
   @meta %{world_id: "abc", tick_hz: 10, server_ms: 1_000}
 
   defp sim do
-    Sim.new(%{population: 20, seed: 1, radius: 18.0, y_min: 1.5, y_max: 8.0, now_ms: 5})
+    Sim.new(%{
+      population: 20,
+      seed: 1,
+      now_ms: 5,
+      map: Abyss.World.Map.load!("/shared/world/map-e1.json"),
+      creature_scale: 0.5,
+      test_species: true
+    })
     |> Sim.step(0.1)
   end
 
@@ -14,13 +21,25 @@ defmodule Abyss.World.WireTest do
     s = Wire.snapshot(sim(), @meta)
 
     assert s |> Map.keys() |> Enum.sort() ==
-             Enum.sort([:world_id, :tick, :tick_hz, :server_ms, :bounds, :species, :organisms])
+             Enum.sort([
+               :world_id,
+               :tick,
+               :tick_hz,
+               :server_ms,
+               :map_id,
+               :creature_scale,
+               :bounds,
+               :species,
+               :organisms
+             ])
 
     assert length(s.organisms) == 20
-    assert s.bounds == %{radius: 18.0, y_min: 1.5, y_max: 8.0}
+    assert s.bounds == %{y_min: 1.5, y_max: 8.0}
+    assert s.map_id == "e1"
+    assert s.creature_scale == 0.5
     assert s.tick == 1
     assert length(s.species) == 5
-    assert hd(s.species) == %{id: "membrana", code: "MBR", name: "Membrana", body_radius: 1.1}
+    assert hd(s.species) == %{id: "membrana", code: "MBR", name: "Membrana", body_radius: 0.55}
 
     o = hd(s.organisms)
     assert o |> Map.keys() |> Enum.sort() == [:born_ms, :id, :p, :species, :v]

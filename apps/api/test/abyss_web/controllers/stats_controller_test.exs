@@ -3,9 +3,7 @@ defmodule AbyssWeb.StatsControllerTest do
 
   setup do
     start_supervised!(
-      {Abyss.World.Server,
-       population: 10, tick_hz: 20, seed: 1, radius: 18.0, y_min: 1.5, y_max: 8.0,
-       broadcast: fn _ -> :ok end}
+      {Abyss.World.Server, population: 10, tick_hz: 20, seed: 1, broadcast: fn _ -> :ok end}
     )
 
     :ok

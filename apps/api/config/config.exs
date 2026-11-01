@@ -16,15 +16,13 @@ config :abyss, :map_path, "/shared/world/map-e1.json"
 # Mundo simulado (valores iniciais; ajustáveis na Parada 1).
 # seed: nil -> aleatório na partida; inteiro -> determinístico.
 config :abyss, :world,
-  population: 45,
+  population: 150,
   tick_hz: 10,
   seed: nil,
-  radius: 28.0,
-  y_min: 1.5,
-  y_max: 8.0,
-  edge_margin: 3.0,
-  # Esfera ao redor da câmera hero (cameraConfig.ts) onde nenhum organismo entra.
-  exclusion: [center: {0.0, 8.2, 17.5}, radius: 10.0]
+  # Espécies de teste do E1; false = mundo sem organismos (só comida).
+  test_species: true,
+  # Raio efetivo = body_radius × creature_scale.
+  creature_scale: 0.5
 
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,

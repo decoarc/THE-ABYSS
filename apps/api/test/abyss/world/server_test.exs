@@ -12,9 +12,6 @@ defmodule Abyss.World.ServerTest do
         population: 10,
         tick_hz: 50,
         seed: 1,
-        radius: 18.0,
-        y_min: 1.5,
-        y_max: 8.0,
         broadcast: &send(test_pid, {:tick, &1})
       )
 

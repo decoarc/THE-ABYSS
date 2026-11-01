@@ -9,9 +9,6 @@ defmodule AbyssWeb.WorldChannelTest do
        population: 45,
        tick_hz: 20,
        seed: 1,
-       radius: 18.0,
-       y_min: 1.5,
-       y_max: 8.0,
        broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)}
     )
 

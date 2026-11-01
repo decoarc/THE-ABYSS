@@ -27,15 +27,20 @@ if map_path = System.get_env("ABYSS_MAP_PATH") do
   config :abyss, :map_path, map_path
 end
 
-# População do mundo: padrão em config.exs (45); faixa aceita 5–200 (gate I).
+# População do mundo: padrão em config.exs (150); faixa aceita 5–400 (gate E1).
 if population = System.get_env("ABYSS_POPULATION") do
   n = String.to_integer(population)
 
-  if n < 5 or n > 200 do
-    raise "ABYSS_POPULATION fora da faixa aceita (5–200): #{n}"
+  if n < 5 or n > 400 do
+    raise "ABYSS_POPULATION fora da faixa aceita (5–400): #{n}"
   end
 
   config :abyss, :world, population: n
+end
+
+# Espécies de teste: "false" liga o mundo vazio (só flora e partículas).
+if System.get_env("ABYSS_TEST_SPECIES") do
+  config :abyss, :world, test_species: System.get_env("ABYSS_TEST_SPECIES") != "false"
 end
 
 if config_env() == :prod do

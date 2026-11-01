@@ -10,7 +10,10 @@ defmodule Abyss.World.Species do
           turn_rate: float,
           body_radius: float,
           run_s: {number, number} | nil,
-          pause_s: number | nil
+          pause_s: number | nil,
+          diet: :flora | :particles | :none,
+          perception: float | nil,
+          sated_s: number | nil
         }
 
   @species [
@@ -23,7 +26,10 @@ defmodule Abyss.World.Species do
       turn_rate: 0.6,
       body_radius: 1.1,
       run_s: nil,
-      pause_s: nil
+      pause_s: nil,
+      diet: :particles,
+      perception: 6.0,
+      sated_s: 20
     },
     %{
       id: :filamento,
@@ -34,7 +40,10 @@ defmodule Abyss.World.Species do
       turn_rate: 1.5,
       body_radius: 0.5,
       run_s: nil,
-      pause_s: nil
+      pause_s: nil,
+      diet: :none,
+      perception: nil,
+      sated_s: nil
     },
     %{
       id: :casco,
@@ -45,7 +54,10 @@ defmodule Abyss.World.Species do
       turn_rate: 0.4,
       body_radius: 1.2,
       run_s: nil,
-      pause_s: nil
+      pause_s: nil,
+      diet: :flora,
+      perception: 4.0,
+      sated_s: 30
     },
     %{
       id: :celula,
@@ -56,7 +68,10 @@ defmodule Abyss.World.Species do
       turn_rate: 1.0,
       body_radius: 1.0,
       run_s: {8, 14},
-      pause_s: 3
+      pause_s: 3,
+      diet: :flora,
+      perception: 6.0,
+      sated_s: 20
     },
     %{
       id: :poliedro,
@@ -67,7 +82,10 @@ defmodule Abyss.World.Species do
       turn_rate: 0.4,
       body_radius: 1.3,
       run_s: nil,
-      pause_s: nil
+      pause_s: nil,
+      diet: :none,
+      perception: nil,
+      sated_s: nil
     }
   ]
 

@@ -7,8 +7,9 @@ services:
     # MIX_ENV=dev would also force `mix test` into dev (no test/support compiled).
     command: mix phx.server
     environment:
-      # Padrão 45; a rodada de carga usa 60 (ABYSS_POPULATION=60 pnpm api:up).
-      - ABYSS_POPULATION=${ABYSS_POPULATION:-45}
+      # Padrão 150 (faixa 5-400); ABYSS_TEST_SPECIES=false liga o mundo vazio.
+      - ABYSS_POPULATION=${ABYSS_POPULATION:-150}
+      - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-true}
     ports:
       - "4000:4000"
     volumes:

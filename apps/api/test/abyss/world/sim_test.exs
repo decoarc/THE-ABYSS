@@ -2,8 +2,17 @@ defmodule Abyss.World.SimTest do
   use ExUnit.Case, async: true
 
   alias Abyss.World.{Sim, Species}
+  alias Abyss.World.Map, as: WMap
 
-  @opts %{population: 45, seed: 7, radius: 18.0, y_min: 1.5, y_max: 8.0, now_ms: 0}
+  @map WMap.load!("/shared/world/map-e1.json")
+  @opts %{
+    population: 45,
+    seed: 7,
+    now_ms: 0,
+    map: @map,
+    creature_scale: 0.5,
+    test_species: true
+  }
 
   defp run(sim, n), do: Enum.reduce(1..n, sim, fn _, s -> Sim.step(s, 0.1) end)
   defp norm({x, y, z}), do: :math.sqrt(x * x + y * y + z * z)
@@ -22,9 +31,59 @@ defmodule Abyss.World.SimTest do
     assert Enum.map(Species.all(), &count(sim, &1.id)) == [10, 10, 9, 9, 9]
   end
 
-  test "rejeita população fora de 5..200" do
+  test "aceita 5..400" do
+    assert length(Sim.new(%{@opts | population: 400}).organisms) == 400
     assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 4}) end
-    assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 201}) end
+    assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 401}) end
+  end
+
+  test "mundo vazio" do
+    sim = Sim.new(%{@opts | test_species: false})
+    assert sim.organisms == []
+    assert Sim.step(sim, 0.1).tick == 1
+  end
+
+  test "raio efetivo" do
+    assert Sim.body_radius(Sim.new(@opts), :membrana) == 1.1 * 0.5
+  end
+
+  test "distribui pela comida" do
+    sim = Sim.new(%{@opts | population: 150})
+
+    in_region = fn sp ->
+      sim.organisms
+      |> Enum.filter(&(&1.species == sp))
+      |> Enum.frequencies_by(fn %{pos: {x, _, z}} -> WMap.region_at(@map, x, z) end)
+    end
+
+    total = fn f -> f |> Map.values() |> Enum.sum() end
+
+    for sp <- [:celula, :casco] do
+      f = in_region.(sp)
+      assert Map.get(f, :jardim, 0) > total.(f) / 2
+    end
+
+    f = in_region.(:membrana)
+    assert Map.get(f, :planicie, 0) > total.(f) / 2
+
+    for sp <- [:filamento, :poliedro] do
+      f = in_region.(sp)
+      assert Enum.all?([:jardim, :floresta, :planicie], &(Map.get(f, &1, 0) > 0))
+    end
+  end
+
+  test "não atravessam esponjas" do
+    sim = run(Sim.new(@opts), 3000)
+
+    for o <- sim.organisms, sp <- @map.sponges do
+      {x, y, z} = o.pos
+      r = Sim.body_radius(sim, o.species)
+
+      if y < sp.h do
+        d = :math.sqrt((x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z))
+        assert d >= sp.r + r - 0.05
+      end
+    end
   end
 
   test "é determinístico pela seed" do
@@ -36,12 +95,12 @@ defmodule Abyss.World.SimTest do
     assert a.tick == 100
   end
 
-  test "todos ficam no volume" do
+  test "todos ficam no mapa" do
     sim = run(Sim.new(@opts), 3000)
 
     for o <- sim.organisms do
       {x, y, z} = o.pos
-      assert x * x + z * z <= 18.0 * 18.0 + 1.0e-9
+      assert WMap.edge_depth(@map, x, z) > -0.5
       assert y >= 1.5 and y <= 8.0
       assert x == x and y == y and z == z
     end
@@ -57,7 +116,7 @@ defmodule Abyss.World.SimTest do
 
   test "evita sobreposição" do
     sim = run(Sim.new(@opts), 600)
-    rad = Map.new(Species.all(), &{&1.id, &1.body_radius})
+    rad = Map.new(Species.all(), &{&1.id, Sim.body_radius(sim, &1.id)})
 
     for a <- sim.organisms, b <- sim.organisms, a.id < b.id do
       assert dist(a.pos, b.pos) >= 0.5 * (rad[a.species] + rad[b.species])
@@ -105,44 +164,5 @@ defmodule Abyss.World.SimTest do
       |> elem(1)
 
     assert paused
-  end
-
-  describe "zona livre da câmera" do
-    @cam {0.0, 8.2, 17.5}
-    @wide %{
-      population: 45,
-      seed: 7,
-      radius: 28.0,
-      y_min: 1.5,
-      y_max: 8.0,
-      now_ms: 0,
-      exclusion: %{center: {0.0, 8.2, 17.5}, radius: 10.0}
-    }
-    @body Map.new(Species.all(), &{&1.id, &1.body_radius})
-
-    defp outside?(sim) do
-      Enum.all?(sim.organisms, &(dist(&1.pos, @cam) >= 10.0 + @body[&1.species] - 1.0e-9))
-    end
-
-    test "ninguém nasce na zona da câmera" do
-      for seed <- 1..20, do: assert(outside?(Sim.new(%{@wide | seed: seed})))
-    end
-
-    test "ninguém entra na zona da câmera" do
-      Enum.reduce(1..3000, Sim.new(@wide), fn _, s ->
-        s = Sim.step(s, 0.1)
-        assert outside?(s)
-        s
-      end)
-    end
-
-    test "volume de raio 28" do
-      sim = run(Sim.new(@wide), 3000)
-
-      for o <- sim.organisms do
-        {x, _y, z} = o.pos
-        assert x * x + z * z <= 28.0 * 28.0 + 1.0e-9
-      end
-    end
   end
 end

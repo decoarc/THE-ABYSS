@@ -7,13 +7,14 @@ defmodule Abyss.World.Server do
 
   use GenServer
 
+  alias Abyss.World.Map, as: WMap
   alias Abyss.World.{Observers, Sim, Wire}
 
   @ring_size 600
 
   # --- API ---
 
-  @doc "opts: população/seed/raio/y_min/y_max/tick_hz, `exclusion` (opcional), `name` (nil = anônimo), `broadcast`."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -34,15 +35,19 @@ defmodule Abyss.World.Server do
     seed = Keyword.get(opts, :seed) || :rand.uniform(2_000_000_000)
     now_ms = System.system_time(:millisecond)
 
+    map_path =
+      Keyword.get_lazy(opts, :map_path, fn -> Application.fetch_env!(:abyss, :map_path) end)
+
+    map = WMap.load!(map_path)
+
     sim =
       Sim.new(%{
         population: Keyword.fetch!(opts, :population),
         seed: seed,
-        radius: Keyword.fetch!(opts, :radius),
-        y_min: Keyword.fetch!(opts, :y_min),
-        y_max: Keyword.fetch!(opts, :y_max),
         now_ms: now_ms,
-        exclusion: exclusion(Keyword.get(opts, :exclusion))
+        map: map,
+        creature_scale: Keyword.get(opts, :creature_scale, 0.5),
+        test_species: Keyword.get(opts, :test_species, true)
       })
 
     state = %{
@@ -101,11 +106,6 @@ defmodule Abyss.World.Server do
   end
 
   # --- Internos ---
-
-  defp exclusion(nil), do: nil
-
-  defp exclusion(kw),
-    do: %{center: Keyword.fetch!(kw, :center), radius: Keyword.fetch!(kw, :radius)}
 
   # Agenda o tick n+1 contra o relógio de partida (sem acumular deriva).
   defp schedule(state) do

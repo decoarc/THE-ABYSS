@@ -12,14 +12,16 @@ defmodule Abyss.World.Wire do
       tick: sim.tick,
       tick_hz: meta.tick_hz,
       server_ms: meta.server_ms,
-      bounds: Map.take(sim.bounds, [:radius, :y_min, :y_max]),
+      map_id: sim.bounds.map.id,
+      creature_scale: sim.bounds.creature_scale,
+      bounds: Map.take(sim.bounds, [:y_min, :y_max]),
       species:
         Enum.map(Species.all(), fn sp ->
           %{
             id: Atom.to_string(sp.id),
             code: sp.code,
             name: sp.name,
-            body_radius: sp.body_radius
+            body_radius: Sim.body_radius(sim, sp.id)
           }
         end),
       organisms:

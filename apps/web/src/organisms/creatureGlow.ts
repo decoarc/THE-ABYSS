@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import type * as THREE from 'three';
-import { CAMERA } from '../scene/cameraConfig';
 import { CREATURE_GLOW_SLOTS, FLOOR_SLOTS, floorGlows, setCreatureGlow } from '../scene/floorGlow';
 import type { Vec3 } from '../services/wire';
 
@@ -61,15 +60,17 @@ function clearCreatureSlots(from: number) {
   for (let i = from; i < CREATURE_GLOW_SLOTS; i++) floorGlows.clear(FLOOR_SLOTS.creatures + i);
 }
 
-const FALLBACK_TARGET: Vec3 = [...CAMERA.target];
+/** Sem controle de órbita (câmera livre), o foco dos brilhos é este ponto à frente da câmera. */
+const FOCUS_AHEAD = 8;
 const target: Vec3 = [0, 0, 0];
 
 /**
  * No início de cada quadro (antes do leito empacotar os brilhos), escreve nos slots
- * de criatura os pedidos do quadro anterior mais próximos do alvo da câmera.
+ * de criatura os pedidos do quadro anterior mais próximos do alvo da câmera (ou do ponto à frente dela).
  */
 export function CreatureGlows() {
   const controls = useThree((s) => s.controls) as unknown as { target?: THREE.Vector3 } | null;
+  const camera = useThree((s) => s.camera);
 
   useEffect(
     () => () => {
@@ -87,9 +88,11 @@ export function CreatureGlows() {
       target[1] = t.y;
       target[2] = t.z;
     } else {
-      target[0] = FALLBACK_TARGET[0];
-      target[1] = FALLBACK_TARGET[1];
-      target[2] = FALLBACK_TARGET[2];
+      // A câmera olha para −z local: a terceira coluna da matriz de mundo, com o sinal trocado.
+      const e = camera.matrixWorld.elements;
+      target[0] = camera.position.x - e[8] * FOCUS_AHEAD;
+      target[1] = camera.position.y - e[9] * FOCUS_AHEAD;
+      target[2] = camera.position.z - e[10] * FOCUS_AHEAD;
     }
     const nearest = pickNearest(pool.slice(0, count), target, CREATURE_GLOW_SLOTS);
     nearest.forEach((r, i) =>

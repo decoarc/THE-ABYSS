@@ -54,10 +54,10 @@ export const edgeDepth = (x: number, z: number): number => deepest(x, z).depth;
 
 export const regionAt = (x: number, z: number): RegionId => deepest(x, z).region.id;
 
-/** Pesos suaves por região (softmax da profundidade de borda); somam 1. */
-export function regionWeights(x: number, z: number): Record<RegionId, number> {
+/** Pesos suaves por região (softmax da profundidade de borda, largura `blend`); somam 1. */
+export function regionWeights(x: number, z: number, blend: number = BLEND): Record<RegionId, number> {
   const top = edgeDepth(x, z);
-  const raw = MAP.regions.map((r) => Math.exp((depthIn(r, x, z) - top) / BLEND));
+  const raw = MAP.regions.map((r) => Math.exp((depthIn(r, x, z) - top) / blend));
   const sum = raw.reduce((a, b) => a + b, 0);
   const out = { jardim: 0, floresta: 0, planicie: 0 } as Record<RegionId, number>;
   MAP.regions.forEach((r, i) => {

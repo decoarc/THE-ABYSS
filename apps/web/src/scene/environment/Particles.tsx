@@ -15,8 +15,8 @@ import { pointScale } from '../glsl/points';
  */
 const BOX_SIZE = new THREE.Vector3(48, 16, 48);
 const BOX_Y_MIN = -0.5;
-/** Quanto o centro da caixa fica à frente da câmera, no plano horizontal. */
-const BOX_AHEAD = 14;
+/** Quanto o centro da caixa fica à frente da câmera, no plano horizontal: só ~4 unidades da caixa ficam atrás dela. */
+const BOX_AHEAD = 20;
 const forward = new THREE.Vector3();
 
 /** Três tamanhos: grandes e raras, médias, pequenas e numerosas. */
@@ -34,6 +34,7 @@ uniform float uPointScale;
 uniform vec3 uBoxMin;
 uniform vec3 uBoxSize;
 varying float vTwinkle;
+varying float vNear;
 #include <fog_pars_vertex>
 void main() {
   vec3 current = vec3(0.12, -0.035, 0.05) * (0.6 + aSeed);
@@ -43,7 +44,11 @@ void main() {
   p = uBoxMin + mod(p - uBoxMin, uBoxSize);
   vTwinkle = 0.55 + 0.45 * sin(uTime * (0.6 + aSeed) + aSeed * 60.0);
   vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
-  gl_PointSize = max(1.0, aSize * uPointScale / -mvPosition.z);
+  float depth = -mvPosition.z;
+  // A caixa anda com a câmera e pode passar por ela: flocos perto somem e nunca ficam
+  // maiores do que ficavam a 3,5 unidades, a menor distância da neve fixa do gate I.
+  vNear = smoothstep(1.5, 3.5, depth);
+  gl_PointSize = max(1.0, aSize * uPointScale / max(depth, 3.5));
   gl_Position = projectionMatrix * mvPosition;
   #include <fog_vertex>
 }
@@ -52,10 +57,11 @@ void main() {
 const fragment = /* glsl */ `
 uniform vec3 uColor;
 varying float vTwinkle;
+varying float vNear;
 #include <fog_pars_fragment>
 void main() {
   float a = smoothstep(0.5, 0.1, length(gl_PointCoord - 0.5));
-  gl_FragColor = vec4(uColor * a * vTwinkle * 0.55, 1.0);
+  gl_FragColor = vec4(uColor * a * vTwinkle * vNear * 0.55, 1.0);
   #include <fog_fragment>
 }
 `;

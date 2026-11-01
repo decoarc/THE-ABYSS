@@ -1,6 +1,6 @@
 import { createRng } from '../lib/random';
 import { MAP } from '../world/map';
-import { legacyJardimHeight, seabedHeight } from './terrain';
+import { JARDIM_CORE, JARDIM_FADE, legacyJardimHeight, seabedHeight } from './terrain';
 
 function std(xs: number[]): number {
   const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
@@ -53,4 +53,24 @@ it('Planície mais plana', () => {
   const plain = disc(11, 400, p.center[0], p.center[1], p.radius - 10).map(([x, z]) => seabedHeight(x, z));
   const garden = disc(13, 400, 0, 0, 26).map(([x, z]) => seabedHeight(x, z));
   expect(std(plain)).toBeLessThan(std(garden));
+});
+
+/** y_min do servidor (1,5) menos o maior raio efetivo (Poliedro, 1,2 × 0,5). */
+const FLOOR_LIMIT = 0.9;
+
+it('chão abaixo da faixa das criaturas em cada região', () => {
+  for (const r of MAP.regions) {
+    let worst = -Infinity;
+    for (let x = r.center[0] - r.radius; x <= r.center[0] + r.radius; x += 0.5)
+      for (let z = r.center[1] - r.radius; z <= r.center[1] + r.radius; z += 0.5) {
+        if (Math.hypot(x - r.center[0], z - r.center[1]) > r.radius) continue;
+        const d = Math.hypot(x, z);
+        if (d <= JARDIM_CORE) continue;
+        const h = seabedHeight(x, z);
+        // Na passagem a partir do miolo aprovado (que já passa de 0,9 em r = 26), o chão nunca sobe acima do leito aprovado.
+        const limit = d < JARDIM_CORE + JARDIM_FADE ? Math.max(FLOOR_LIMIT, legacyJardimHeight(x, z)) : FLOOR_LIMIT;
+        worst = Math.max(worst, h - limit);
+      }
+    expect(worst, r.id).toBeLessThanOrEqual(0);
+  }
 });

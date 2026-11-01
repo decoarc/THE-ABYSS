@@ -10,6 +10,9 @@ import Config
 config :abyss,
   generators: [timestamp_type: :utc_datetime]
 
+# Mapa compartilhado com o cliente (montado em /shared pelo compose).
+config :abyss, :map_path, "/shared/world/map-e1.json"
+
 # Mundo simulado (valores iniciais; ajustáveis na Parada 1).
 # seed: nil -> aleatório na partida; inteiro -> determinístico.
 config :abyss, :world,

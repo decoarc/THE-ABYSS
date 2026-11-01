@@ -13,6 +13,7 @@ services:
       - "4000:4000"
     volumes:
       - ../../apps/api:/app
+      - ../../shared:/shared:ro
       - api_deps:/app/deps
       - api_build:/app/_build
 

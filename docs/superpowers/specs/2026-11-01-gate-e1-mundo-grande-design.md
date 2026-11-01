@@ -105,6 +105,12 @@ Como no gate I: em cada parada o construtor mostra capturas ou vídeo e pede uma
 3. **Floresta:** a arte da Treliça, incluindo como a câmera e as criaturas lidam com a densidade.
 4. **Comida:** vídeo da flora crescendo e sendo comida, e das partículas caindo e sumindo. Fecha os critérios 1 e 2.
 
+**Parada 1, decidido pelo autor em 2026-11-01** (capturas em `docs/captures/e1/parada-1/`):
+
+- Tamanho das criaturas: `creature_scale` 0,5 (metade do gate I).
+- Tamanho do mapa: mantido (Jardim r 30, Floresta r 30, Planície r 45).
+- Sensação da câmera: o autor vai testar à mão na próxima sessão. Até lá ficam os valores atuais (velocidade máxima 6, aceleração 8, arrasto 2,5; W anda na direção do olhar; borda macia a 6 da borda).
+
 ## 8. Decisões minhas (Claude), a conferir pelo autor
 
 - **O que o "raio 20–50" mede:** a área nadável e composta de cada região, ou seja, o chão com arte própria e o volume onde as criaturas nadam, no mesmo sentido do raio 28 do gate I (`config.exs`). O leito de raio 60 de hoje (`SEABED_RADIUS`) é em grande parte chão engolido pela névoa e não conta.

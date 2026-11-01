@@ -1,8 +1,5 @@
 type Vec3 = [number, number, number];
 
-/** Raio do leito; a névoa precisa engolir tudo a partir de ~0.8 × este raio. */
-export const SEABED_RADIUS = 60;
-
 export const CAMERA: {
   position: Vec3;
   target: Vec3;

@@ -1,4 +1,5 @@
 import type { Vec3 } from '../services/wire';
+import { MAP } from '../world/map';
 import { CAMERA } from './cameraConfig';
 
 /** Quão rápido o alvo alcança o organismo ao seguir (1/s). */
@@ -17,13 +18,19 @@ function distance(a: Vec3, b: Vec3): number {
   return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 }
 
-/** Caixa de alvo que cobre todo o volume do mundo, para o "Seguir" poder acompanhar em qualquer ponto. */
-export function followTargetBounds(b: { radius: number; y_min: number; y_max: number }): {
+/** Caixa de alvo que cobre todo o volume do mundo (retângulo das regiões do mapa), para o "Seguir" acompanhar em qualquer ponto. */
+export function followTargetBounds(b: { y_min: number; y_max: number }): {
   x: [number, number];
   y: [number, number];
   z: [number, number];
 } {
-  return { x: [-b.radius, b.radius], y: [b.y_min, b.y_max], z: [-b.radius, b.radius] };
+  const xs = MAP.regions.flatMap((r) => [r.center[0] - r.radius, r.center[0] + r.radius]);
+  const zs = MAP.regions.flatMap((r) => [r.center[1] - r.radius, r.center[1] + r.radius]);
+  return {
+    x: [Math.min(...xs), Math.max(...xs)],
+    y: [b.y_min, b.y_max],
+    z: [Math.min(...zs), Math.max(...zs)],
+  };
 }
 
 /** Move o alvo na direção do organismo e leva a câmera pelo mesmo deslocamento (enquadramento preservado). */

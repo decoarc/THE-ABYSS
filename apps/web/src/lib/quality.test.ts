@@ -13,3 +13,7 @@ it('segmentos do Filamento e grânulos da Célula por perfil', () => {
   expect(QUALITY.high.celulaGranules).toBe(14);
   expect(QUALITY.low.celulaGranules).toBe(8);
 });
+it('resolução do leito por bloco', () => {
+  expect(QUALITY.high.seabedSegments).toBe(64);
+  expect(QUALITY.low.seabedSegments).toBe(40);
+});

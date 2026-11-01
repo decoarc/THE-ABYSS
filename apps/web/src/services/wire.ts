@@ -5,6 +5,7 @@ export interface SpeciesInfo {
   id: string;
   code: string;
   name: string;
+  /** Raio efetivo (já multiplicado por `creature_scale`). */
   body_radius: number;
 }
 
@@ -21,7 +22,11 @@ export interface WorldSnapshot {
   tick: number;
   tick_hz: number;
   server_ms: number;
-  bounds: { radius: number; y_min: number; y_max: number };
+  map_id: string;
+  /** Escala do corpo das criaturas; o cliente desenha cada uma nesse tamanho. */
+  creature_scale: number;
+  /** Faixa vertical nadável; a horizontal vem do mapa (`world/map.ts`). */
+  bounds: { y_min: number; y_max: number };
   species: SpeciesInfo[];
   organisms: OrganismInfo[];
 }

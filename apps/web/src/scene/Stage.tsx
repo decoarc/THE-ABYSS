@@ -11,6 +11,7 @@ import { Particles } from './environment/Particles';
 import { Rocks } from './environment/Rocks';
 import { Tufts } from './environment/Tufts';
 import { Vents } from './environment/Vents';
+import { Greybox } from './regions/Greybox';
 
 export function Stage() {
   return (
@@ -24,6 +25,7 @@ export function Stage() {
       <Corals />
       <Pads />
       <Tufts />
+      <Greybox />
       <LightShafts />
       <Particles />
       <Creatures />

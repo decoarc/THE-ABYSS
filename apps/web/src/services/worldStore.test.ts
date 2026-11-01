@@ -6,7 +6,8 @@ const SERVER0 = 1_000_000;
 function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   return {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: SERVER0,
-    bounds: { radius: 18, y_min: 1.5, y_max: 8 },
+    map_id: 'e1', creature_scale: 0.5,
+    bounds: { y_min: 1.5, y_max: 8 },
     species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 }],
     organisms: [{ id: 'MBR-0001', species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [1, 0, 0] }],
     ...over,
@@ -30,7 +31,7 @@ it('snapshot define roster e espécies', () => {
   expect(s.roster()).toHaveLength(1);
   expect(s.species()[0].code).toBe('MBR');
   expect(s.worldId()).toBe('w1');
-  expect(s.bounds()?.radius).toBe(18);
+  expect(s.bounds()).toEqual({ y_min: 1.5, y_max: 8 });
 });
 
 it('interpola entre ticks com atraso de renderização', () => {
@@ -106,4 +107,11 @@ it('serverNow usa o menor atraso observado', () => {
   s.applyTick(tick(2, 0.1), SERVER0 + 100 + 10);
   s.applyTick(tick(3, 0.2), SERVER0 + 200 + 30);
   expect(s.serverNow(SERVER0 + 1000)).toBe(SERVER0 + 990);
+});
+
+it('creatureScale lê o snapshot (1 antes dele)', () => {
+  const s = createWorldStore();
+  expect(s.creatureScale()).toBe(1);
+  s.applySnapshot(snap({ creature_scale: 0.25 }), L(SERVER0));
+  expect(s.creatureScale()).toBe(0.25);
 });

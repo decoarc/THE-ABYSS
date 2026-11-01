@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { useSceneSettings } from '../settings';
+import { useCreatureCull } from '../scene/cull';
+import { useWorld } from '../services/WorldProvider';
 import { POLIEDRO as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
@@ -33,6 +35,8 @@ export function Poliedro({ id }: { id: string }) {
   const pose = useOrganismPose(id);
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
+  const shown = useCreatureCull(group, pose);
+  const scale = useWorld().store.creatureScale();
   const solid = useRef<THREE.Group>(null);
   const pulse = useRef(C.nucleus.pulseMin);
   const phase = useMemo(() => phaseOf(id), [id]);
@@ -86,22 +90,20 @@ export function Poliedro({ id }: { id: string }) {
     const s = clampDelta(dt) * motion;
     time.current += s;
     const g = group.current;
-    if (!g || !solid.current) return;
-    g.visible = pose.has.current;
-    if (!g.visible) return;
+    if (!g || !solid.current || !shown.current) return;
     // Giro perfeitamente regular: mesmo eixo, mesma velocidade, sempre.
     step.setFromAxisAngle(AXIS, C.spinSpeed * s);
     solid.current.quaternion.premultiply(step);
     // Posição canônica do servidor + sobe e desce cosmético.
     g.position.copy(pose.pos);
-    g.position.y += Math.sin(time.current * 0.25) * C.bob;
+    g.position.y += Math.sin(time.current * 0.25) * C.bob * scale;
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
     edgeMaterial.opacity = 0.4 + 0.25 * breath;
     requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.45 + 0.25 * breath);
   });
 
   return (
-    <group ref={group} visible={false} {...selectable}>
+    <group ref={group} visible={false} scale={scale} {...selectable}>
       <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} timeOffset={offset} />
       <group ref={solid} quaternion={initial}>
         <mesh geometry={geometry} material={material} />

@@ -6,7 +6,8 @@ const SERVER0 = 1_000_000;
 function snap(): WorldSnapshot {
   return {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: SERVER0,
-    bounds: { radius: 18, y_min: 1.5, y_max: 8 },
+    map_id: 'e1', creature_scale: 0.5,
+    bounds: { y_min: 1.5, y_max: 8 },
     species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 }],
     organisms: [
       { id: 'MBR-0001', species: 'membrana', born_ms: 0, p: [1, 2, 3], v: [0, 0, 0] },

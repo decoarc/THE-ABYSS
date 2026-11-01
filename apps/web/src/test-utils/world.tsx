@@ -19,7 +19,8 @@ export function renderWithWorld(
   const selection: Selection = createSelection();
   const snapshot: WorldSnapshot = {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: 1_000_000,
-    bounds: { radius: 28, y_min: 1.5, y_max: 8 },
+    map_id: 'e1', creature_scale: 0.5,
+    bounds: { y_min: 1.5, y_max: 8 },
     species: SPECIES,
     organisms: options.organisms ?? [],
   };

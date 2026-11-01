@@ -12,6 +12,8 @@ export interface QualitySettings {
   filamentoSegments: number;
   /** Grânulos dentro de cada Célula. */
   celulaGranules: number;
+  /** Divisões por lado de cada bloco 30 × 30 do leito. */
+  seabedSegments: number;
 }
 
 export const QUALITY: Record<QualityLevel, QualitySettings> = {
@@ -24,6 +26,7 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     crystal: true,
     filamentoSegments: 90,
     celulaGranules: 14,
+    seabedSegments: 64,
   },
   low: {
     maxDpr: 1,
@@ -34,6 +37,7 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     crystal: true,
     filamentoSegments: 48,
     celulaGranules: 8,
+    seabedSegments: 40,
   },
 };
 

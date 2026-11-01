@@ -5,6 +5,8 @@ import { clampDelta } from '../lib/motion';
 import { createRng } from '../lib/random';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { useSceneSettings } from '../settings';
+import { useCreatureCull } from '../scene/cull';
+import { useWorld } from '../services/WorldProvider';
 import { CASCO as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
@@ -90,6 +92,8 @@ export function Casco({ id }: { id: string }) {
   const selectable = useSelectable(id);
   const geometry = getGeometry();
   const group = useRef<THREE.Group>(null);
+  const shown = useCreatureCull(group, pose);
+  const scale = useWorld().store.creatureScale();
   const pulse = useRef(C.nucleus.pulseMin);
   const glow = useRef<THREE.PointLight>(null);
   const phase = useMemo(() => phaseOf(id), [id]);
@@ -116,8 +120,7 @@ export function Casco({ id }: { id: string }) {
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
-    g.visible = pose.has.current;
-    if (!g.visible) return;
+    if (!shown.current) return;
     const s = state;
     const step = clampDelta(dt) * motion;
     s.t += step;
@@ -146,18 +149,18 @@ export function Casco({ id }: { id: string }) {
     // Volta devagar ao ponto de pairar.
     s.drift.multiplyScalar(1 - Math.min(1, step * 0.25));
 
-    // Posição canônica do servidor + deriva cosmética dos trancos e leve flutuação.
+    // Posição canônica do servidor + deriva cosmética dos trancos e leve flutuação, no tamanho da criatura.
     g.position.set(
-      pose.pos.x + s.drift.x,
-      pose.pos.y + s.drift.y + Math.sin(s.t * 0.4) * 0.08,
-      pose.pos.z + s.drift.z,
+      pose.pos.x + s.drift.x * scale,
+      pose.pos.y + (s.drift.y + Math.sin(s.t * 0.4) * 0.08) * scale,
+      pose.pos.z + s.drift.z * scale,
     );
     if (glow.current) glow.current.intensity = 1.2 * pulse.current;
     requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.35 * pulse.current);
   });
 
   return (
-    <group ref={group} visible={false} {...selectable} quaternion={state.initial}>
+    <group ref={group} visible={false} scale={scale} {...selectable} quaternion={state.initial}>
       <mesh geometry={geometry}>
         <meshStandardMaterial color="#10161c" roughness={0.85} metalness={0.05} flatShading />
       </mesh>

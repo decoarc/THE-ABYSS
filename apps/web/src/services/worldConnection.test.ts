@@ -67,7 +67,9 @@ const snap = (world_id: string, n = 2): WorldSnapshot => ({
   tick: 1,
   tick_hz: 10,
   server_ms: 1000,
-  bounds: { radius: 10, y_min: -5, y_max: 5 },
+  map_id: 'e1',
+  creature_scale: 0.5,
+  bounds: { y_min: -5, y_max: 5 },
   species: [],
   organisms: Array.from({ length: n }, (_, i) => ({
     id: `o${i}`,

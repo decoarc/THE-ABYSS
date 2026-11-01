@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { fbm2D } from '../lib/noise';
 import { PALETTE } from '../lib/palette';
-import { SEABED_RADIUS } from './cameraConfig';
+import { useSceneSettings } from '../settings';
+import { CULL_DISTANCE } from './cull';
 import { SHAFTS, shaftFootprint } from './environment/shaftLayout';
 import { MAX_FLOOR_GLOWS, floorGlows } from './floorGlow';
 import { foggyShader } from './glsl/material';
 import { SNOISE } from './glsl/noise';
+import { TILE_SIZE, seabedTiles, type SeabedTile } from './seabedTiles';
 import { seabedHeight, terrainNoise as noise } from './terrain';
 
 const vertex = /* glsl */ `
@@ -75,26 +77,53 @@ void main() {
 }
 `;
 
+/** Um bloco do leito em coordenadas de mundo; normais por diferença central sobre a mesma grade, então os blocos vizinhos casam na emenda. */
+function tileGeometry(tile: SeabedTile, segments: number): THREE.BufferGeometry {
+  const g = new THREE.PlaneGeometry(tile.size, tile.size, segments, segments);
+  g.rotateX(-Math.PI / 2);
+  g.translate(tile.cx, 0, tile.cz);
+  const step = tile.size / segments;
+  const x0 = tile.cx - tile.size / 2;
+  const z0 = tile.cz - tile.size / 2;
+  // Alturas com uma volta extra de amostras em cada lado, para as normais da borda.
+  const side = segments + 3;
+  const heights = new Float64Array(side * side);
+  for (let k = 0; k < side; k++)
+    for (let i = 0; i < side; i++) heights[k * side + i] = seabedHeight(x0 + (i - 1) * step, z0 + (k - 1) * step);
+  const h = (i: number, k: number) => heights[(k + 1) * side + (i + 1)];
+
+  const pos = g.attributes.position as THREE.BufferAttribute;
+  const nor = g.attributes.normal as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 3);
+  const dark = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.bg), 0.4);
+  const mid = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.teal), 0.7);
+  const tmp = new THREE.Color();
+  const n = new THREE.Vector3();
+  for (let v = 0; v < pos.count; v++) {
+    const x = pos.getX(v), z = pos.getZ(v);
+    const i = Math.round((x - x0) / step), k = Math.round((z - z0) / step);
+    pos.setY(v, h(i, k));
+    n.set(h(i - 1, k) - h(i + 1, k), 2 * step, h(i, k - 1) - h(i, k + 1)).normalize();
+    nor.setXYZ(v, n.x, n.y, n.z);
+    const t = THREE.MathUtils.clamp(0.5 + fbm2D(noise, x * 0.12 + 9, z * 0.12, 3) * 0.9, 0, 1);
+    tmp.copy(dark).lerp(mid, t);
+    tmp.toArray(colors, v * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  g.computeBoundingSphere();
+  return g;
+}
+
+/** Distância (horizontal) do centro de um bloco além da qual nem o canto mais próximo fica a menos de `CULL_DISTANCE`. */
+const TILE_HIDE = CULL_DISTANCE + TILE_SIZE * Math.SQRT1_2;
+
 export function Seabed() {
-  const geometry = useMemo(() => {
-    const g = new THREE.RingGeometry(0.001, SEABED_RADIUS, 160, 90);
-    g.rotateX(-Math.PI / 2);
-    const pos = g.attributes.position as THREE.BufferAttribute;
-    const colors = new Float32Array(pos.count * 3);
-    const dark = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.bg), 0.4);
-    const mid = new THREE.Color(PALETTE.navy).lerp(new THREE.Color(PALETTE.teal), 0.7);
-    const tmp = new THREE.Color();
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i), z = pos.getZ(i);
-      pos.setY(i, seabedHeight(x, z));
-      const t = THREE.MathUtils.clamp(0.5 + fbm2D(noise, x * 0.12 + 9, z * 0.12, 3) * 0.9, 0, 1);
-      tmp.copy(dark).lerp(mid, t);
-      tmp.toArray(colors, i * 3);
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    g.computeVertexNormals();
-    return g;
-  }, []);
+  const { q } = useSceneSettings();
+  const camera = useThree((s) => s.camera);
+  const tiles = useMemo(() => seabedTiles(), []);
+  const geometries = useMemo(() => tiles.map((t) => tileGeometry(t, q.seabedSegments)), [tiles, q.seabedSegments]);
+  useEffect(() => () => geometries.forEach((g) => g.dispose()), [geometries]);
+  const meshes = useRef<(THREE.Mesh | null)[]>([]);
 
   const material = useMemo(
     () =>
@@ -126,6 +155,11 @@ export function Seabed() {
   );
 
   useFrame(() => {
+    // Blocos inteiros além da névoa não são desenhados.
+    tiles.forEach((t, i) => {
+      const m = meshes.current[i];
+      if (m) m.visible = Math.hypot(t.cx - camera.position.x, t.cz - camera.position.z) <= TILE_HIDE;
+    });
     const n = floorGlows.pack(packed.pos, packed.col);
     const pos = material.uniforms.uGlowPos.value as THREE.Vector4[];
     const col = material.uniforms.uGlowCol.value as THREE.Color[];
@@ -136,5 +170,18 @@ export function Seabed() {
     material.uniforms.uGlowCount.value = n;
   });
 
-  return <mesh geometry={geometry} material={material} />;
+  return (
+    <>
+      {geometries.map((g, i) => (
+        <mesh
+          key={i}
+          ref={(m) => {
+            meshes.current[i] = m;
+          }}
+          geometry={g}
+          material={material}
+        />
+      ))}
+    </>
+  );
 }

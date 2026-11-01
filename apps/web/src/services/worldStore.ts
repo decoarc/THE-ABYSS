@@ -17,6 +17,8 @@ export interface WorldStore {
   species(): readonly SpeciesInfo[];
   worldId(): string | null;
   bounds(): WorldSnapshot['bounds'] | null;
+  /** Escala do corpo das criaturas vinda do snapshot; 1 antes dele. */
+  creatureScale(): number;
   sample(id: string, localMs: number, outPos: Vec3, outVel: Vec3): boolean;
   serverNow(localMs: number): number;
   status(): ConnectionStatus;
@@ -48,6 +50,7 @@ interface Ring {
 export function createWorldStore(): WorldStore {
   let worldId: string | null = null;
   let bounds: WorldSnapshot['bounds'] | null = null;
+  let creatureScale = 1;
   let tickHz = 10;
   let lastTick = -1;
   let roster: readonly OrganismInfo[] = [];
@@ -106,6 +109,7 @@ export function createWorldStore(): WorldStore {
     applySnapshot(s, localMs) {
       worldId = s.world_id;
       bounds = s.bounds;
+      creatureScale = s.creature_scale;
       tickHz = s.tick_hz;
       lastTick = s.tick;
       roster = s.organisms;
@@ -143,6 +147,7 @@ export function createWorldStore(): WorldStore {
     species: () => species,
     worldId: () => worldId,
     bounds: () => bounds,
+    creatureScale: () => creatureScale,
 
     sample(id, localMs, outPos, outVel) {
       const idx = index.get(id);

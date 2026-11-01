@@ -7,6 +7,8 @@ import { useSceneSettings } from '../settings';
 import { SNOISE } from '../scene/glsl/noise';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
+import { useCreatureCull } from '../scene/cull';
+import { useWorld } from '../services/WorldProvider';
 import { MEMBRANA as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
@@ -73,6 +75,8 @@ export function Membrana({ id }: { id: string }) {
   const pose = useOrganismPose(id);
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
+  const shown = useCreatureCull(group, pose);
+  const scale = useWorld().store.creatureScale();
   const pulse = useRef(C.nucleus.pulseMin);
   const offset = useMemo(() => phaseOf(id) * 1000, [id]);
   const time = useRef(offset);
@@ -110,8 +114,7 @@ export function Membrana({ id }: { id: string }) {
 
     const g = group.current;
     if (!g) return;
-    g.visible = pose.has.current;
-    if (!g.visible) return;
+    if (!shown.current) return;
     // Posição canônica do servidor; a rotação lenta é cosmética.
     g.position.copy(pose.pos);
     g.rotation.set(Math.sin(t * 0.13) * 0.2, t * 0.05, Math.cos(t * 0.11) * 0.15);
@@ -119,7 +122,7 @@ export function Membrana({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false} {...selectable}>
+    <group ref={group} visible={false} scale={scale} {...selectable}>
       <mesh geometry={geometry} material={material} renderOrder={3} />
       <Nucleus config={C.nucleus} pulseRef={pulse} timeOffset={offset} />
     </group>

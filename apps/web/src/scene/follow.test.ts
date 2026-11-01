@@ -5,10 +5,11 @@ import type { Vec3 } from '../services/wire';
 const FRAME = 1 / 60;
 
 it('followTargetBounds cobre o volume do mundo', () => {
-  expect(followTargetBounds({ radius: 18, y_min: 1.5, y_max: 8 })).toEqual({
-    x: [-18, 18],
+  // Retângulo das regiões do mapa e1: Jardim, Floresta e Planície.
+  expect(followTargetBounds({ y_min: 1.5, y_max: 8 })).toEqual({
+    x: [-78, 107],
     y: [1.5, 8],
-    z: [-18, 18],
+    z: [-73, 30],
   });
 });
 

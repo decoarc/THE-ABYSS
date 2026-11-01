@@ -20,6 +20,7 @@ function Ring({ id }: { id: string }) {
   const pose = useOrganismPose(id);
   const camera = useThree((s) => s.camera);
   const group = useRef<THREE.Group>(null);
+  // `body_radius` do snapshot já é o raio efetivo (× creature_scale): o anel acompanha a criatura menor.
   const bodyRadius = useMemo(() => {
     const species = store.roster().find((o) => o.id === id)?.species;
     return store.species().find((s) => s.id === species)?.body_radius ?? 1;

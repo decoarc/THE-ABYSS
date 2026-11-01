@@ -100,7 +100,7 @@ defmodule Abyss.World.SimTest do
 
     for o <- sim.organisms do
       {x, y, z} = o.pos
-      assert WMap.edge_depth(@map, x, z) > -0.5
+      assert WMap.edge_depth(@map, x, z) >= -0.5 - 1.0e-9
       assert y >= 1.5 and y <= 8.0
       assert x == x and y == y and z == z
     end
@@ -164,5 +164,58 @@ defmodule Abyss.World.SimTest do
       |> elem(1)
 
     assert paused
+  end
+
+  describe "cenários forçados" do
+    alias Abyss.World.Organism
+
+    defp solo(sim, pos, vel) do
+      o = %Organism{
+        id: "FIL-0001",
+        species: :filamento,
+        born_ms: 0,
+        pos: pos,
+        vel: vel,
+        yaw: 0.0,
+        mode: :run,
+        mode_left: 0.0
+      }
+
+      %{sim | organisms: [o]}
+    end
+
+    test "esponja no caminho: nunca entra no cilindro" do
+      sp = Enum.max_by(@map.sponges, &WMap.edge_depth(@map, &1.x, &1.z))
+      map = %{@map | sponges: [sp]}
+      sim = Sim.new(%{@opts | map: map})
+      reff = sp.r + Sim.body_radius(sim, :filamento)
+      start = {sp.x - (reff + 0.3), min(2.0, sp.h - 0.2), sp.z}
+
+      Enum.reduce(1..200, solo(sim, start, {0.9, 0.0, 0.0}), fn _, s ->
+        s = Sim.step(s, 0.1)
+        {x, y, z} = hd(s.organisms).pos
+        d = :math.sqrt((x - sp.x) * (x - sp.x) + (z - sp.z) * (z - sp.z))
+        assert y >= sp.h or d >= reff - 0.05
+        s
+      end)
+    end
+
+    test "na borda rumo a fora: fica a >= -0.5 e volta para dentro" do
+      [pl] = Enum.filter(@map.regions, &(&1.id == :planicie))
+      {cx, cz} = pl.center
+      start = {cx + pl.radius + 0.4, 4.0, cz}
+      sim = solo(Sim.new(@opts), start, {0.9, 0.0, 0.0})
+
+      final =
+        Enum.reduce(1..300, sim, fn _, s ->
+          s = Sim.step(s, 0.1)
+          {x, _, z} = hd(s.organisms).pos
+          assert WMap.edge_depth(@map, x, z) >= -0.5 - 1.0e-9
+          s
+        end)
+
+      {x, _, z} = hd(final.organisms).pos
+      assert WMap.edge_depth(@map, x, z) > 0
+    end
   end
 end

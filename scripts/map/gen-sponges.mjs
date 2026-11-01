@@ -35,8 +35,8 @@ for (let tries = 0; sponges.length < TARGET && tries < 20000; tries++) {
   const rad = Math.sqrt(rand()) * floresta.radius;
   const x = floresta.center[0] + Math.cos(ang) * rad;
   const z = floresta.center[1] + Math.sin(ang) * rad;
-  const r = 0.4 + rand() * 0.8;
-  const h = 0.8 + rand() * 1.7;
+  const r = 0.8 + rand() * 1.4;
+  const h = 2.5 + rand() * 3.5;
   const { depth, id } = depthOf(x, z);
   if (id !== 'floresta' || depth <= 3) continue;
   if (sponges.some((s) => Math.hypot(s.x - x, s.z - z) < s.r + r + 0.3)) continue;

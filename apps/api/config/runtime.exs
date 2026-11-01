@@ -22,6 +22,11 @@ end
 
 config :abyss, AbyssWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Caminho do mapa compartilhado (padrão em config.exs).
+if map_path = System.get_env("ABYSS_MAP_PATH") do
+  config :abyss, :map_path, map_path
+end
+
 # População do mundo: padrão em config.exs (45); faixa aceita 5–200 (gate I).
 if population = System.get_env("ABYSS_POPULATION") do
   n = String.to_integer(population)

@@ -47,7 +47,10 @@ defmodule Abyss.World.Server do
         now_ms: now_ms,
         map: map,
         creature_scale: Keyword.get(opts, :creature_scale, 0.5),
-        test_species: Keyword.get(opts, :test_species, true)
+        test_species: Keyword.get(opts, :test_species, true),
+        food:
+          Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
+          |> Map.new()
       })
 
     state = %{
@@ -72,17 +75,18 @@ defmodule Abyss.World.Server do
   def handle_call(:stats, _from, state) do
     sorted = Enum.sort(state.jitters)
 
-    reply = %{
-      world_id: state.world_id,
-      tick: state.sim.tick,
-      tick_hz: state.tick_hz,
-      population: length(state.sim.organisms),
-      uptime_ms: System.system_time(:millisecond) - state.started_ms,
-      jitter_ms_p50: percentile(sorted, 0.50),
-      jitter_ms_p99: percentile(sorted, 0.99),
-      step_us_max: state.step_us_max,
-      observers: Observers.count()
-    }
+    reply =
+      Map.merge(Sim.food_stats(state.sim), %{
+        world_id: state.world_id,
+        tick: state.sim.tick,
+        tick_hz: state.tick_hz,
+        population: length(state.sim.organisms),
+        uptime_ms: System.system_time(:millisecond) - state.started_ms,
+        jitter_ms_p50: percentile(sorted, 0.50),
+        jitter_ms_p99: percentile(sorted, 0.99),
+        step_us_max: state.step_us_max,
+        observers: Observers.count()
+      })
 
     {:reply, reply, state}
   end
@@ -90,9 +94,9 @@ defmodule Abyss.World.Server do
   @impl true
   def handle_info(:tick, state) do
     jitter_ms = max(0.0, (mono_us() - due_us(state)) / 1000)
-    {step_us, sim} = :timer.tc(fn -> Sim.step(state.sim, 1 / state.tick_hz) end)
-
     meta = meta(state)
+    {step_us, sim} = :timer.tc(fn -> Sim.step(state.sim, 1 / state.tick_hz, meta.server_ms) end)
+
     state.broadcast.(Wire.tick(sim, meta))
 
     state = %{

@@ -14,5 +14,10 @@ defmodule AbyssWeb.StatsControllerTest do
     assert Map.has_key?(body, "tick")
     assert Map.has_key?(body, "jitter_ms_p99")
     assert Map.has_key?(body, "observers")
+
+    for k <-
+          ~w(flora_patches flora_level_sum particles eaten_flora_total eaten_particles_total particles_expired_total) do
+      assert is_number(body[k]), "falta #{k}"
+    end
   end
 end

@@ -27,6 +27,14 @@ defmodule Abyss.World.ServerTest do
     assert a.world_id == b.world_id and b.world_id == c.world_id
   end
 
+  test "ticks e snapshot carregam a comida" do
+    pid = start_server()
+    assert_receive {:tick, t}, 2000
+    assert is_list(t.f) and is_list(t.ps) and is_list(t.pr)
+    snap = Server.snapshot(pid)
+    assert length(snap.flora) == 200 and is_list(snap.particles)
+  end
+
   test "snapshot coerente com o tick seguinte" do
     pid = start_server()
     assert_receive {:tick, _}, 2000
@@ -46,6 +54,12 @@ defmodule Abyss.World.ServerTest do
     assert st.tick > 0
     assert is_number(st.jitter_ms_p99) and st.jitter_ms_p99 >= 0
     assert is_number(st.jitter_ms_p50) and st.step_us_max >= 0
+
+    for k <-
+          ~w(flora_patches flora_level_sum particles eaten_flora_total eaten_particles_total particles_expired_total)a,
+        do: assert(is_number(st[k]), "falta #{k}")
+
+    assert st.flora_patches == 200
     assert st.population == 10 and st.tick_hz == 50 and st.uptime_ms >= 0
   end
 

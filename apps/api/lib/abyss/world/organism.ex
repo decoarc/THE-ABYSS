@@ -11,7 +11,9 @@ defmodule Abyss.World.Organism do
           yaw: float,
           pitch: float,
           mode: :run | :pause,
-          mode_left: float
+          mode_left: float,
+          target: nil | {:flora, non_neg_integer} | {:particle, pos_integer},
+          sated_left: float
         }
 
   @enforce_keys [:id, :species, :born_ms, :pos]
@@ -24,6 +26,8 @@ defmodule Abyss.World.Organism do
     yaw: 0.0,
     pitch: 0.0,
     mode: :run,
-    mode_left: 0.0
+    mode_left: 0.0,
+    target: nil,
+    sated_left: 0.0
   ]
 end

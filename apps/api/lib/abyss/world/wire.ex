@@ -3,6 +3,9 @@ defmodule Abyss.World.Wire do
 
   alias Abyss.World.{Sim, Species}
 
+  # Passo de quantização do nível de flora (igual ao de Abyss.World.Flora).
+  @quant 0.02
+
   @type meta :: %{world_id: String.t(), tick_hz: pos_integer, server_ms: integer}
 
   @spec snapshot(Sim.t(), meta) :: map
@@ -33,7 +36,16 @@ defmodule Abyss.World.Wire do
             p: vec(o.pos),
             v: vec(o.vel)
           }
-        end)
+        end),
+      flora:
+        sim.flora.patches
+        |> Tuple.to_list()
+        |> Enum.map(fn p -> [r(p.x), r(p.z), Float.round(p.q * @quant, 2)] end),
+      particles:
+        sim.particles.items
+        |> Map.values()
+        |> Enum.sort_by(& &1.id)
+        |> Enum.map(&particle/1)
     }
   end
 
@@ -43,9 +55,19 @@ defmodule Abyss.World.Wire do
       world_id: meta.world_id,
       tick: sim.tick,
       server_ms: meta.server_ms,
-      o: Enum.map(sim.organisms, fn o -> vec(o.pos) ++ vec(o.vel) end)
+      o: Enum.map(sim.organisms, fn o -> vec(o.pos) ++ vec(o.vel) end),
+      f: Enum.map(sim.food_events.changed, fn {idx, level} -> [idx, level] end),
+      ps: Enum.map(sim.food_events.spawned, &particle/1),
+      pr: sim.food_events.removed
     }
   end
+
+  # [id, x, y, z, vx, vy, vz, born_ms, life_ms]; `rest_y` fica fora (o cliente lê do mapa).
+  defp particle(%{id: id, p0: p0, v: v, born_ms: born, life_ms: life}),
+    do: [id] ++ vec(p0) ++ vec4(v) ++ [born, life]
+
+  defp vec4({x, y, z}),
+    do: [Float.round(x * 1.0, 4), Float.round(y * 1.0, 4), Float.round(z * 1.0, 4)]
 
   defp vec({x, y, z}), do: [r(x), r(y), r(z)]
   defp r(n), do: Float.round(n * 1.0, 3)

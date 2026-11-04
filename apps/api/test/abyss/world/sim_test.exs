@@ -5,13 +5,15 @@ defmodule Abyss.World.SimTest do
   alias Abyss.World.Map, as: WMap
 
   @map WMap.load!("/shared/world/map-e1.json")
+  @food Application.compile_env!(:abyss, :food) |> Map.new()
   @opts %{
     population: 45,
     seed: 7,
     now_ms: 0,
     map: @map,
     creature_scale: 0.5,
-    test_species: true
+    test_species: true,
+    food: @food
   }
 
   defp run(sim, n), do: Enum.reduce(1..n, sim, fn _, s -> Sim.step(s, 0.1) end)
@@ -216,6 +218,129 @@ defmodule Abyss.World.SimTest do
 
       {x, _, z} = hd(final.organisms).pos
       assert WMap.edge_depth(@map, x, z) > 0
+    end
+  end
+
+  describe "comida" do
+    alias Abyss.World.{Organism, Particles}
+
+    # Mundo sem organismos, partículas novas nem flora; os testes põem o que precisam.
+    defp bare do
+      sim = Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
+      %{sim | flora: %{sim.flora | patches: {}}}
+    end
+
+    defp with_patch(sim, x, z, level \\ 1.0) do
+      patch = %{x: x, z: z, level: level, rate: 0.0, q: round(level / 0.02)}
+      %{sim | flora: %{sim.flora | patches: {patch}}}
+    end
+
+    defp with_particle(sim, {x, y, z}) do
+      pt = %{
+        id: 1,
+        p0: {x, y, z},
+        v: {0.0, 0.0, 0.0},
+        born_ms: 0,
+        life_ms: 10_000_000,
+        rest_y: 0.3
+      }
+
+      %{sim | particles: %{sim.particles | items: %{1 => pt}, next_id: 2}}
+    end
+
+    defp with_org(sim, species, pos, extra \\ []) do
+      o = struct!(%Organism{id: "T-0001", species: species, born_ms: 0, pos: pos}, extra)
+      %{sim | organisms: [o]}
+    end
+
+    test "Célula come flora" do
+      sim = bare() |> with_patch(0.0, 0.0) |> with_org(:celula, {3.0, 4.0, 0.0})
+      sim = run(sim, 200)
+      assert elem(sim.flora.patches, 0).level < 1
+      assert hd(sim.organisms).sated_left > 0
+      assert sim.totals.eaten_flora >= 1
+    end
+
+    test "Membrana come partícula" do
+      sim = bare() |> with_particle({3.0, 4.0, 0.0}) |> with_org(:membrana, {0.0, 4.0, 0.0})
+
+      {sim, removed} =
+        Enum.reduce(1..200, {sim, []}, fn _, {s, acc} ->
+          s = Sim.step(s, 0.1)
+          {s, acc ++ s.food_events.removed}
+        end)
+
+      assert 1 in removed
+      assert Particles.count(sim.particles) == 0
+      assert hd(sim.organisms).sated_left > 0
+      assert sim.totals.eaten_particles == 1
+    end
+
+    test "Filamento não come" do
+      sim =
+        bare()
+        |> with_patch(0.0, 0.0)
+        |> with_particle({1.0, 4.0, 0.0})
+        |> with_org(:filamento, {1.0, 4.0, 0.0})
+        |> run(200)
+
+      assert elem(sim.flora.patches, 0).level == 1.0
+      assert Particles.count(sim.particles) == 1
+      assert hd(sim.organisms).sated_left == 0.0 and hd(sim.organisms).target == nil
+    end
+
+    test "saciada ignora comida" do
+      sim =
+        bare()
+        |> with_patch(2.0, 0.0)
+        |> with_org(:celula, {0.0, 4.0, 0.0}, sated_left: 5.0)
+        |> run(10)
+
+      assert hd(sim.organisms).target == nil
+      assert elem(sim.flora.patches, 0).level == 1.0
+      assert hd(sim.organisms).sated_left < 5.0
+    end
+
+    test "faminta e vendo comida, tem alvo" do
+      sim = bare() |> with_patch(5.0, 0.0) |> with_org(:celula, {0.0, 4.0, 0.0}) |> run(1)
+      assert hd(sim.organisms).target == {:flora, 0}
+    end
+
+    test "vai para a região da sua comida" do
+      [pl] = Enum.filter(@map.regions, &(&1.id == :planicie))
+      {cx, cz} = pl.center
+
+      orgs =
+        for k <- 1..10 do
+          a = k * 0.6
+          pos = {cx + 8 * :math.cos(a), 4.0, cz + 8 * :math.sin(a)}
+          %Organism{id: "CEL-#{k}", species: :celula, born_ms: 0, pos: pos, yaw: a}
+        end
+
+      sim = %{bare() | organisms: orgs}
+
+      mean = fn s ->
+        Enum.sum(for %{pos: {x, _, z}} <- s.organisms, do: :math.sqrt(x * x + z * z)) / 10
+      end
+
+      assert mean.(run(sim, 6000)) < mean.(sim)
+    end
+
+    test "comida sem organismos" do
+      sim = Sim.new(%{@opts | test_species: false})
+      assert sim.organisms == []
+      before = Sim.food_stats(sim)
+      st = sim |> run(2000) |> Sim.food_stats()
+
+      assert st.flora_level_sum > before.flora_level_sum
+      assert st.particles > 0
+      assert st.particles_expired_total > 0
+      assert st.eaten_flora_total == 0 and st.eaten_particles_total == 0
+    end
+
+    test "um tick atrasado não gera partículas em massa" do
+      sim = Sim.new(%{@opts | test_species: false}) |> Sim.step(60.0)
+      assert Particles.count(sim.particles) < 20
     end
   end
 end

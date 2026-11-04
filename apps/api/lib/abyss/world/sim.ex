@@ -4,7 +4,7 @@ defmodule Abyss.World.Sim do
   sem leitura de Application env: tudo entra por `new/1` e `step/2`.
   """
 
-  alias Abyss.World.{Organism, Species}
+  alias Abyss.World.{Flora, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
@@ -13,20 +13,48 @@ defmodule Abyss.World.Sim do
   @spawn_tries 50
   @sponge_reach 1.0
   @max_population 400
+  # Passo máximo entregue à comida: um tick atrasado não pode virar um lambda
+  # gigante no Poisson das partículas (Knuth degrada com lambda grande).
+  @max_food_dt 0.5
+  @eat_margin 0.6
+  @drift_weight 0.15
 
-  defstruct organisms: [], rng: nil, tick: 0, bounds: %{}
+  @no_events %{changed: [], spawned: [], removed: []}
+  @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
 
+  defstruct organisms: [],
+            rng: nil,
+            tick: 0,
+            bounds: %{},
+            flora: nil,
+            particles: nil,
+            food_cfg: %{},
+            now_ms: 0,
+            food_events: @no_events,
+            totals: @no_totals
+
+  @type food_events :: %{
+          changed: [{non_neg_integer, float}],
+          spawned: [map],
+          removed: [pos_integer]
+        }
   @type t :: %__MODULE__{
           organisms: [Organism.t()],
           rng: :rand.state(),
           tick: non_neg_integer,
-          bounds: map
+          bounds: map,
+          flora: Flora.t(),
+          particles: Particles.t(),
+          food_cfg: map,
+          now_ms: integer,
+          food_events: food_events,
+          totals: map
         }
 
   @doc """
   `opts`: `population` (5..400), `seed`, `now_ms`, `map` (`Abyss.World.Map`),
-  `creature_scale` (raio efetivo = body_radius × escala) e `test_species`
-  (false = mundo sem organismos).
+  `creature_scale` (raio efetivo = body_radius × escala), `test_species`
+  (false = mundo sem organismos) e `food` (mapa do bloco `:food`).
   """
   @spec new(map) :: t
   def new(%{
@@ -35,7 +63,8 @@ defmodule Abyss.World.Sim do
         now_ms: now_ms,
         map: %WMap{} = map,
         creature_scale: scale,
-        test_species: test_species
+        test_species: test_species,
+        food: food
       })
       when is_integer(pop) and pop >= 5 and pop <= @max_population do
     bounds = %{map: map, creature_scale: scale, y_min: map.y_min, y_max: map.y_max}
@@ -66,7 +95,18 @@ defmodule Abyss.World.Sim do
         {[], rng}
       end
 
-    %__MODULE__{organisms: organisms, rng: rng, tick: 0, bounds: bounds}
+    {flora, rng} = Flora.new(map, rng, food)
+
+    %__MODULE__{
+      organisms: organisms,
+      rng: rng,
+      tick: 0,
+      bounds: bounds,
+      flora: flora,
+      particles: Particles.new(map, food),
+      food_cfg: food,
+      now_ms: now_ms
+    }
   end
 
   def new(%{population: pop}) do
@@ -79,14 +119,61 @@ defmodule Abyss.World.Sim do
   def body_radius(%__MODULE__{bounds: bounds}, species_id),
     do: eff_radius(Species.get!(species_id), bounds)
 
+  @doc "Avança `dt` s; o relógio da comida anda `dt` (testes e simulações offline)."
   @spec step(t, float) :: t
-  def step(%__MODULE__{organisms: orgs, rng: rng, bounds: bounds} = sim, dt) do
+  def step(%__MODULE__{} = sim, dt), do: step(sim, dt, sim.now_ms + round(dt * 1000))
+
+  @doc "Avança `dt` s com o relógio do mundo em `now_ms` (o Server passa o relógio real)."
+  @spec step(t, float, integer) :: t
+  def step(%__MODULE__{organisms: orgs, rng: rng, bounds: bounds} = sim, dt, now_ms) do
+    fdt = min(dt, @max_food_dt)
+    {flora, changed} = Flora.step(sim.flora, fdt)
+    {particles, spawned, expired, rng} = Particles.step(sim.particles, fdt, now_ms, rng)
+
+    env = %{bounds: bounds, cfg: sim.food_cfg, now_ms: now_ms}
+    food = %{flora: flora, particles: particles, eaten_ids: [], bites: 0, takes: 0}
     snapshot = Enum.map(orgs, &{&1.id, &1.pos, eff_radius(Species.get!(&1.species), bounds)})
 
-    {new_orgs, rng} =
-      Enum.map_reduce(orgs, rng, fn o, rng -> step_one(o, snapshot, bounds, dt, rng) end)
+    {new_orgs, {rng, food}} =
+      Enum.map_reduce(orgs, {rng, food}, fn o, {rng, food} ->
+        {o, rng, food} = step_one(o, snapshot, env, dt, rng, food)
+        {o, {rng, food}}
+      end)
 
-    %{sim | organisms: new_orgs, rng: rng, tick: sim.tick + 1}
+    removed = expired ++ Enum.reverse(food.eaten_ids)
+
+    totals = %{
+      eaten_flora: sim.totals.eaten_flora + food.bites,
+      eaten_particles: sim.totals.eaten_particles + food.takes,
+      particles_expired: sim.totals.particles_expired + length(expired)
+    }
+
+    %{
+      sim
+      | organisms: new_orgs,
+        rng: rng,
+        tick: sim.tick + 1,
+        flora: food.flora,
+        particles: food.particles,
+        now_ms: now_ms,
+        food_events: %{changed: changed, spawned: spawned, removed: removed},
+        totals: totals
+    }
+  end
+
+  @doc "Totais de comida para /api/stats."
+  @spec food_stats(t) :: map
+  def food_stats(%__MODULE__{flora: flora, particles: particles, totals: totals}) do
+    patches = Tuple.to_list(flora.patches)
+
+    %{
+      flora_patches: length(patches),
+      flora_level_sum: patches |> Enum.map(& &1.level) |> Enum.sum() |> Float.round(3),
+      particles: Particles.count(particles),
+      eaten_flora_total: totals.eaten_flora,
+      eaten_particles_total: totals.eaten_particles,
+      particles_expired_total: totals.particles_expired
+    }
   end
 
   # --- spawn -----------------------------------------------------------------
@@ -163,7 +250,7 @@ defmodule Abyss.World.Sim do
 
   # --- step ------------------------------------------------------------------
 
-  defp step_one(o, snapshot, bounds, dt, rng) do
+  defp step_one(o, snapshot, %{bounds: bounds} = env, dt, rng, food) do
     sp = Species.get!(o.species)
     r = eff_radius(sp, bounds)
     sdt = :math.sqrt(dt)
@@ -178,12 +265,15 @@ defmodule Abyss.World.Sim do
     target = if mode == :pause, do: 0.0, else: sp.max_speed
     dir = {:math.cos(pitch) * :math.cos(yaw), :math.sin(pitch), :math.cos(pitch) * :math.sin(yaw)}
 
+    {o, seek, food} = forage(o, sp, r, dt, env, food)
+
     desired =
       dir
       |> scale(target)
       |> add(edge_steer(o.pos, bounds, sp.max_speed))
       |> add(sponge_steer(o.pos, r, bounds.map, sp.max_speed))
       |> add(separation(o, sp, r, snapshot))
+      |> add(seek)
 
     k = min(1.0, sp.turn_rate * dt)
     vel = o.vel |> add(scale(sub(desired, o.vel), k)) |> clamp_norm(sp.max_speed)
@@ -194,8 +284,113 @@ defmodule Abyss.World.Sim do
       |> clamp_volume(bounds)
       |> keep_out_sponges(r, bounds.map)
 
-    {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng}
+    {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng,
+     food}
   end
+
+  # --- comida ------------------------------------------------------------------
+  # Devolve {organismo, steer, comida}. Comer não tem efeito no E1 além da
+  # saciedade (que só silencia a busca).
+
+  @zero {0.0, 0.0, 0.0}
+
+  defp forage(o, %{diet: :none}, _r, _dt, _env, food), do: {o, @zero, food}
+
+  defp forage(o, sp, r, dt, env, food) do
+    sated = max(o.sated_left - dt, 0.0)
+
+    if sated > 0 do
+      {%{o | sated_left: sated, target: nil}, @zero, food}
+    else
+      o = %{o | sated_left: 0.0}
+
+      case valid_target(o.target, env, food) || find_target(o, sp, env, food) do
+        nil -> {%{o | target: nil}, drift(o, sp, env.bounds.map), food}
+        target -> approach_or_eat(%{o | target: target}, target, sp, r, env, food)
+      end
+    end
+  end
+
+  defp valid_target({:flora, idx} = t, env, food) do
+    if elem(food.flora.patches, idx).level >= env.cfg.flora_min_edible, do: t
+  end
+
+  defp valid_target({:particle, id} = t, _env, food),
+    do: if(Map.has_key?(food.particles.items, id), do: t)
+
+  defp valid_target(nil, _env, _food), do: nil
+
+  defp find_target(o, %{diet: :flora, perception: range}, env, food) do
+    {x, _, z} = o.pos
+
+    case Flora.edible_near(food.flora, {x, z}, range, env.cfg.flora_min_edible) do
+      nil -> nil
+      idx -> {:flora, idx}
+    end
+  end
+
+  defp find_target(o, %{diet: :particles, perception: range}, env, food) do
+    case Particles.near(food.particles, o.pos, range, env.now_ms) do
+      nil -> nil
+      id -> {:particle, id}
+    end
+  end
+
+  defp approach_or_eat(o, target, sp, r, env, food) do
+    tpos = target_pos(target, o.pos, env, food)
+
+    if dist(o.pos, tpos) <= r + @eat_margin do
+      {o, food} = eat(o, target, sp, env, food)
+      {o, @zero, food}
+    else
+      {o, tpos |> sub(o.pos) |> unit() |> scale(sp.max_speed), food}
+    end
+  end
+
+  # A mancha é plana no leito: só o XZ conta (a criatura flutua acima dela).
+  defp target_pos({:flora, idx}, {_, y, _}, _env, food) do
+    p = elem(food.flora.patches, idx)
+    {p.x, y, p.z}
+  end
+
+  defp target_pos({:particle, id}, _pos, env, food) do
+    {px, py, pz} = Particles.position(Map.fetch!(food.particles.items, id), env.now_ms)
+    {px, max(py, env.bounds.y_min), pz}
+  end
+
+  defp eat(o, {:flora, idx}, sp, env, food) do
+    {flora, _eaten} = Flora.bite(food.flora, idx, env.cfg.flora_bite)
+
+    {%{o | target: nil, sated_left: sp.sated_s * 1.0},
+     %{food | flora: flora, bites: food.bites + 1}}
+  end
+
+  defp eat(o, {:particle, id}, sp, _env, food) do
+    {particles, took?} = Particles.take(food.particles, id)
+
+    food =
+      if took?,
+        do: %{
+          food
+          | particles: particles,
+            takes: food.takes + 1,
+            eaten_ids: [id | food.eaten_ids]
+        },
+        else: food
+
+    {%{o | target: nil, sated_left: sp.sated_s * 1.0}, food}
+  end
+
+  # Faminto e sem nada à vista: deriva rumo ao centro da região mais rica na sua dieta.
+  defp drift(o, sp, map) do
+    {cx, cz} = richest_center(map, sp.diet)
+    {x, _, z} = o.pos
+    {ux, _, uz} = unit({cx - x, 0.0, cz - z})
+    {ux * @drift_weight * sp.max_speed, 0.0, uz * @drift_weight * sp.max_speed}
+  end
+
+  defp richest_center(map, :flora), do: Enum.max_by(map.regions, & &1.flora_patches).center
+  defp richest_center(map, :particles), do: Enum.max_by(map.regions, & &1.particle_share).center
 
   # Só a Célula alterna entre correr e pausar (run_s/pause_s definidos).
   defp advance_mode(%{run_s: nil}, mode, _left, yaw, rng), do: {mode, 0.0, yaw, rng}
@@ -328,6 +523,12 @@ defmodule Abyss.World.Sim do
 
   defp norm({x, y, z}), do: :math.sqrt(x * x + y * y + z * z)
   defp dist(a, b), do: norm(sub(a, b))
+
+  defp unit(v) do
+    n = norm(v)
+    if n > 1.0e-9, do: scale(v, 1 / n), else: {0.0, 0.0, 0.0}
+  end
+
   defp add({a, b, c}, {d, e, f}), do: {a + d, b + e, c + f}
   defp sub({a, b, c}, {d, e, f}), do: {a - d, b - e, c - f}
   defp scale({a, b, c}, k), do: {a * k, b * k, c * k}

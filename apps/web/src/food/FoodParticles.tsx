@@ -21,7 +21,11 @@ export const MAX_FOOD_PARTICLES = 400;
 const AMBER_SHARE = 0.3;
 /** Tamanho no mundo: maior que a neve marinha (0,04–0,07), para a comida se destacar dela. */
 const SIZE = 0.14;
-/** Só as partículas até esta distância da câmera pedem brilho no leito (o pool escolhe as mais próximas). */
+/**
+ * Por quadro, só as GLOW_COUNT partículas mais próximas da câmera (e até GLOW_REACH) pedem brilho no
+ * leito: não inundam o pool dos brilhos de criatura.
+ */
+const GLOW_COUNT = 3;
 const GLOW_REACH = 20;
 const GLOW_RADIUS = 0.9;
 const GLOW_INTENSITY = 0.3;
@@ -110,6 +114,10 @@ export function FoodParticles() {
       lastN: 0,
       out: [0, 0, 0] as Vec3,
       point: { x: 0, y: 0, z: 0 },
+      /** As mais próximas da câmera neste quadro: distância² e slot, em ordem; `glowN` preenchidas. */
+      glowDist: new Float64Array(GLOW_COUNT),
+      glowSlot: new Int32Array(GLOW_COUNT),
+      glowN: 0,
     };
     const pos = attrs.position.array as Float32Array;
     const alpha = attrs.alpha.array as Float32Array;
@@ -135,22 +143,38 @@ export function FoodParticles() {
       warm[n] = w;
       seed[n] = hash01(p.id, 2);
       const dx = point.x - cam.x, dy = point.y - cam.y, dz = point.z - cam.z;
-      if (dx * dx + dy * dy + dz * dz < GLOW_REACH * GLOW_REACH) {
-        requestCreatureGlow('food', w ? AMBER_GLOW : CYAN_GLOW, point.x, point.y, point.z, GLOW_RADIUS, GLOW_INTENSITY * a);
+      const d = dx * dx + dy * dy + dz * dz;
+      if (d >= GLOW_REACH * GLOW_REACH) return;
+      // Inserção no vetor fixo das mais próximas.
+      const { glowDist, glowSlot } = st;
+      if (st.glowN === GLOW_COUNT && d >= glowDist[GLOW_COUNT - 1]) return;
+      let i = st.glowN < GLOW_COUNT ? st.glowN++ : GLOW_COUNT - 1;
+      while (i > 0 && glowDist[i - 1] > d) {
+        glowDist[i] = glowDist[i - 1];
+        glowSlot[i] = glowSlot[i - 1];
+        i--;
       }
+      glowDist[i] = d;
+      glowSlot[i] = n;
     };
-    return { st, alpha, visit };
+    return { st, pos, alpha, warm, visit };
   }, [attrs]);
 
   useFrame((state, dt) => {
     material.uniforms.uTime.value += clampDelta(dt) * motion;
     material.uniforms.uPointScale.value = pointScale(state);
-    const { st, alpha, visit } = pass;
+    const { st, pos, alpha, warm, visit } = pass;
     st.food = store.food();
     st.now = store.serverNow(performance.now());
     st.cam.copy(state.camera.position);
     st.n = 0;
+    st.glowN = 0;
     st.food.particles().forEach(visit);
+    for (let i = 0; i < st.glowN; i++) {
+      const k = st.glowSlot[i];
+      const color = warm[k] ? AMBER_GLOW : CYAN_GLOW;
+      requestCreatureGlow('food', color, pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2], GLOW_RADIUS, GLOW_INTENSITY * alpha[k]);
+    }
     // Slots que ficaram vagos neste quadro se apagam.
     for (let i = st.n; i < st.lastN; i++) alpha[i] = 0;
     if (st.n > 0 || st.lastN > 0) {

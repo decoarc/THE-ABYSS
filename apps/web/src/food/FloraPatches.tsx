@@ -246,10 +246,16 @@ export function FloraPatches() {
           s.base[i * 5 + 4] = hash01(i, 5) * Math.PI * 2;
           s.from[i] = s.to[i] = flora[i * 3 + 2];
           s.start[i] = -Infinity;
+          // A matriz antiga é de outra posição: some até ser reescrita (já neste quadro, se estiver perto;
+          // quando a câmera chegar, se estiver além de CULL_DISTANCE).
+          if (!Number.isNaN(s.drawn[i])) m.setMatrixAt(i, ZERO);
           s.drawn[i] = NaN;
         }
-        for (let i = n; i < s.n; i++) m.setMatrixAt(i, ZERO);
-        if (n < s.n) m.instanceMatrix.needsUpdate = true;
+        for (let i = n; i < s.n; i++) {
+          m.setMatrixAt(i, ZERO);
+          s.drawn[i] = NaN;
+        }
+        m.instanceMatrix.needsUpdate = true;
         s.n = n;
       } else {
         for (let i = 0; i < s.n; i++) {

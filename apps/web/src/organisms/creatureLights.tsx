@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import type * as THREE from 'three';
 import type { Vec3 } from '../services/wire';
-import { pickNearest } from './creatureGlow';
+import { nearestInto } from './creatureGlow';
 
 /**
  * Quantas luzes pontuais de criatura existem na cena, sempre. O número nunca muda: o three.js
@@ -46,6 +46,9 @@ export function createLightPool(): LightPool {
   // Objetos reaproveitados: as criaturas pedem todo quadro.
   const pool: LightRequest[] = [];
   let count = 0;
+  // Rascunho da escolha dos mais próximos, refeito só se o tamanho de `out` mudar.
+  let nearest: LightRequest[] = [];
+  let nearestDist = new Float64Array(0);
   return {
     request(color, x, y, z, intensity) {
       const r = (pool[count] ??= { color, x, y, z, intensity });
@@ -57,10 +60,14 @@ export function createLightPool(): LightPool {
       count++;
     },
     assign(target, out) {
-      const nearest = pickNearest(pool.slice(0, count), target, out.length);
+      if (nearest.length !== out.length) {
+        nearest = new Array(out.length);
+        nearestDist = new Float64Array(out.length);
+      }
+      const found = nearestInto(pool, count, target, nearest, nearestDist);
       out.forEach((s, i) => {
         const r = nearest[i];
-        if (r) {
+        if (i < found) {
           s.x = r.x;
           s.y = r.y;
           s.z = r.z;

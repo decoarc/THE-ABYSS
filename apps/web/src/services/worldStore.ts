@@ -1,3 +1,4 @@
+import { createFoodStore, type FoodStore } from './foodStore';
 import { hermite } from './interpolate';
 import type { OrganismInfo, SpeciesInfo, TickMessage, Vec3, WorldSnapshot } from './wire';
 
@@ -16,6 +17,8 @@ export interface WorldStore {
   roster(): readonly OrganismInfo[];
   species(): readonly SpeciesInfo[];
   worldId(): string | null;
+  /** Flora e partículas canônicas. */
+  food(): FoodStore;
   bounds(): WorldSnapshot['bounds'] | null;
   /** Escala do corpo das criaturas vinda do snapshot; 1 antes dele. */
   creatureScale(): number;
@@ -60,6 +63,7 @@ export function createWorldStore(): WorldStore {
   let history: HistoryEntry[] = [];
   let rosterIds: readonly string[] = [];
   let status: ConnectionStatus = 'connecting';
+  const food = createFoodStore();
   const listeners = new Set<() => void>();
 
   // Janela das últimas diferenças (local - server) para o offset mínimo.
@@ -116,6 +120,7 @@ export function createWorldStore(): WorldStore {
       species = s.species;
       rosterIds = s.organisms.map((o) => o.id);
       history = [];
+      food.applySnapshot(s);
       remember(s.tick, rosterIds, s.organisms.map((o) => [...o.p, ...o.v]));
       diffCount = 0;
       diffHead = 0;
@@ -131,9 +136,14 @@ export function createWorldStore(): WorldStore {
     },
 
     applyTick(t, localMs) {
-      if (worldId === null || t.world_id !== worldId || t.o.length !== rings.length) return 'resync';
+      // Antes do snapshot não há o que aplicar nem o que ressincronizar: o join já vai trazer um.
+      if (worldId === null) return 'stale';
+      if (t.world_id !== worldId || t.o.length !== rings.length) return 'resync';
       if (t.tick <= lastTick) return 'stale';
+      // A comida chega em deltas: perder um tick deixa o estado errado até o próximo snapshot.
+      if (t.tick !== lastTick + 1) return 'resync';
       lastTick = t.tick;
+      food.applyTick(t);
       observe(localMs, t.server_ms);
       for (let i = 0; i < rings.length; i++) {
         const row = t.o[i];
@@ -146,6 +156,7 @@ export function createWorldStore(): WorldStore {
     roster: () => roster,
     species: () => species,
     worldId: () => worldId,
+    food: () => food,
     bounds: () => bounds,
     creatureScale: () => creatureScale,
 

@@ -23,6 +23,7 @@ export function renderWithWorld(
     bounds: { y_min: 1.5, y_max: 8 },
     species: SPECIES,
     organisms: options.organisms ?? [],
+    flora: [], particles: [],
   };
   store.applySnapshot(snapshot, 1_000_000);
   if (options.live) store.setStatus('live');

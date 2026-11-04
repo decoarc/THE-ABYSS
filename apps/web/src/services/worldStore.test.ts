@@ -10,11 +10,12 @@ function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
     bounds: { y_min: 1.5, y_max: 8 },
     species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 }],
     organisms: [{ id: 'MBR-0001', species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [1, 0, 0] }],
+    flora: [], particles: [],
     ...over,
   };
 }
 const tick = (n: number, x: number, over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o: [[x, 0, 0, 1, 0, 0]], ...over,
+  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o: [[x, 0, 0, 1, 0, 0]], f: [], ps: [], pr: [], ...over,
 });
 // Mensagem com latência fixa de 5 ms: local = server_ms + 5.
 const L = (serverMs: number) => serverMs + 5;
@@ -60,6 +61,32 @@ it('world_id diferente pede resync', () => {
 
 it('contagem diferente do roster pede resync', () => {
   expect(ready().applyTick(tick(2, 0, { o: [] }), 0)).toBe('resync');
+});
+
+it('tick antes do snapshot é stale', () => {
+  expect(createWorldStore().applyTick(tick(2, 0), 0)).toBe('stale');
+});
+
+it('lacuna força resync', () => {
+  const s = ready();
+  expect(s.applyTick(tick(3, 0.2), L(SERVER0 + 200))).toBe('resync');
+  expect(s.lastTick()).toBe(1);
+});
+
+it('tick repetido é stale', () => {
+  const s = ready();
+  expect(s.applyTick(tick(2, 0.1), L(SERVER0 + 100))).toBe('ok');
+  expect(s.applyTick(tick(2, 0.1), L(SERVER0 + 100))).toBe('stale');
+});
+
+it('food() recebe o snapshot e os deltas dos ticks válidos', () => {
+  const s = createWorldStore();
+  s.applySnapshot(snap({ flora: [[1, 2, 0.5]] }), L(SERVER0));
+  expect(Array.from(s.food().flora())).toEqual([1, 2, 0.5]);
+  s.applyTick(tick(2, 0, { f: [[0, 0.7]] }), L(SERVER0 + 100));
+  expect(s.food().flora()[2]).toBeCloseTo(0.7, 5);
+  s.applyTick(tick(4, 0, { f: [[0, 0.1]] }), L(SERVER0 + 300));
+  expect(s.food().flora()[2]).toBeCloseTo(0.7, 5);
 });
 
 it('clamps extrapolation', () => {

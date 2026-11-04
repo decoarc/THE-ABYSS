@@ -10,6 +10,7 @@ function snap(ids: string[]): WorldSnapshot {
     bounds: { y_min: 1.5, y_max: 8 },
     species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 }],
     organisms: ids.map((id) => ({ id, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0] })),
+    flora: [], particles: [],
   };
 }
 

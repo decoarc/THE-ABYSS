@@ -29,7 +29,17 @@ export interface WorldSnapshot {
   bounds: { y_min: number; y_max: number };
   species: SpeciesInfo[];
   organisms: OrganismInfo[];
+  /** Manchas de flora na ordem dos índices. */
+  flora: FloraRow[];
+  /** Partículas vivas, com `id` crescente. */
+  particles: ParticleRow[];
 }
+
+/** [x, z, level] */
+export type FloraRow = [number, number, number];
+
+/** [id, x, y, z, vx, vy, vz, born_ms, life_ms]; x, y, z são a posição em `born_ms`. */
+export type ParticleRow = [number, number, number, number, number, number, number, number, number];
 
 /** Linha de `o`: [x, y, z, vx, vy, vz], na mesma ordem de `organisms` do snapshot. */
 export type TickRow = [number, number, number, number, number, number];
@@ -39,4 +49,10 @@ export interface TickMessage {
   tick: number;
   server_ms: number;
   o: TickRow[];
+  /** Manchas cujo nível quantizado mudou: [índice, nível]. */
+  f: [number, number][];
+  /** Partículas nascidas neste tick. */
+  ps: ParticleRow[];
+  /** Ids de partículas removidas (comidas ou expiradas). */
+  pr: number[];
 }

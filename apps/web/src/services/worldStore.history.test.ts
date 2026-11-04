@@ -13,12 +13,14 @@ function snap(): WorldSnapshot {
       { id: 'MBR-0001', species: 'membrana', born_ms: 0, p: [1, 2, 3], v: [0, 0, 0] },
       { id: 'MBR-0002', species: 'membrana', born_ms: 0, p: [4, 5, 6], v: [0, 0, 0] },
     ],
+    flora: [], particles: [],
   };
 }
 
 const tick = (n: number, x: number): TickMessage => ({
   world_id: 'w1', tick: n, server_ms: SERVER0 + n * 100,
   o: [[x, 0, 0, 0, 0, 0], [x + 1, 0, 0, 0, 0, 0]],
+  f: [], ps: [], pr: [],
 });
 
 it('positionsAt devolve as posições do snapshot e dos ticks seguintes', () => {

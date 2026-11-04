@@ -11,6 +11,9 @@ export interface AbyssDebug {
   roster(): string[];
   positionsAt(tick: number): Record<string, Vec3> | null;
   selection(): SelectionState;
+  /** Resumo canônico da comida ao fim do tick (para comparar observadores). */
+  foodDigestAt(tick: number): string | null;
+  foodCounts(): { floraSum: number; particles: number };
   /** Põe a câmera livre em `pos` olhando para `lookAt` (para capturas). */
   setCamera(pos: Vec3, lookAt: Vec3): void;
 }
@@ -31,6 +34,8 @@ export function installDebugBridge(
     roster: () => store.roster().map((o) => o.id),
     positionsAt: (tick) => store.positionsAt(tick),
     selection: () => selection.get(),
+    foodDigestAt: (tick) => store.food().digestAt(tick),
+    foodCounts: () => store.food().counts(),
     setCamera: (pos, lookAt) => requestCameraPose(pos, lookAt),
   };
   return () => {

@@ -40,12 +40,19 @@ interface Intro {
   t: number;
 }
 
-/** Sorteia o ponto de partida perto de vida, com o roster do snapshot. A flora entra na Task 8. */
+/** Manchas de flora como [x, z, nível]; só roda ao nascer, então a alocação não pesa. */
+function floraPatches(flora: Float32Array): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  for (let i = 0; i < flora.length; i += 3) out.push([flora[i], flora[i + 1], flora[i + 2]]);
+  return out;
+}
+
+/** Sorteia o ponto de partida perto de vida, com o roster e a flora do snapshot. */
 function beginIntro(world: WorldStore, reducedMotion: boolean): Intro {
   const spawn = pickSpawn(
     Math.random,
     world.roster().map((o) => o.p),
-    [],
+    floraPatches(world.food().flora()),
   );
   const { pos: to, lookAt } = spawn;
   const from: Vec3 = [

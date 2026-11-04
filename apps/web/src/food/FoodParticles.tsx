@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { clampDelta } from '../lib/motion';
 import { PALETTE } from '../lib/palette';
 import { requestCreatureGlow } from '../organisms/creatureGlow';
-import { glowOf } from '../scene/floorGlow';
+import { MAX_FOOD_LIGHTS, foodLights, glowOf } from '../scene/floorGlow';
 import { isCulled } from '../scene/cull';
 import { foggyShader } from '../scene/glsl/material';
 import { pointScale } from '../scene/glsl/points';
@@ -29,6 +29,16 @@ const GLOW_COUNT = 3;
 const GLOW_REACH = 20;
 const GLOW_RADIUS = 0.9;
 const GLOW_INTENSITY = 0.3;
+/**
+ * Luz da comida no leito (só a Planície usa, ver Seabed): as MAX_FOOD_LIGHTS mais próximas até
+ * LIGHT_REACH. Cada uma se apaga perto da distância da seguinte fora da lista, então uma partícula
+ * entra ou sai da lista com luz zero e as poças nunca piscam.
+ */
+const LIGHT_REACH = 30;
+const LIGHT_RADIUS = 2.6;
+/** Acima do chão a poça se espalha e enfraquece; some a LIGHT_HEIGHT de altura. */
+const LIGHT_HEIGHT = 6;
+const NEAREST = MAX_FOOD_LIGHTS + 1;
 const CYAN_GLOW = glowOf(PALETTE.cyan, 0, 0, 0, 0).color;
 const AMBER_GLOW = glowOf(PALETTE.amber, 0, 0, 0, 0).color;
 
@@ -115,8 +125,8 @@ export function FoodParticles() {
       out: [0, 0, 0] as Vec3,
       point: { x: 0, y: 0, z: 0 },
       /** As mais próximas da câmera neste quadro: distância² e slot, em ordem; `glowN` preenchidas. */
-      glowDist: new Float64Array(GLOW_COUNT),
-      glowSlot: new Int32Array(GLOW_COUNT),
+      glowDist: new Float64Array(NEAREST),
+      glowSlot: new Int32Array(NEAREST),
       glowN: 0,
     };
     const pos = attrs.position.array as Float32Array;
@@ -144,11 +154,11 @@ export function FoodParticles() {
       seed[n] = hash01(p.id, 2);
       const dx = point.x - cam.x, dy = point.y - cam.y, dz = point.z - cam.z;
       const d = dx * dx + dy * dy + dz * dz;
-      if (d >= GLOW_REACH * GLOW_REACH) return;
+      if (d >= LIGHT_REACH * LIGHT_REACH) return;
       // Inserção no vetor fixo das mais próximas.
       const { glowDist, glowSlot } = st;
-      if (st.glowN === GLOW_COUNT && d >= glowDist[GLOW_COUNT - 1]) return;
-      let i = st.glowN < GLOW_COUNT ? st.glowN++ : GLOW_COUNT - 1;
+      if (st.glowN === NEAREST && d >= glowDist[NEAREST - 1]) return;
+      let i = st.glowN < NEAREST ? st.glowN++ : NEAREST - 1;
       while (i > 0 && glowDist[i - 1] > d) {
         glowDist[i] = glowDist[i - 1];
         glowSlot[i] = glowSlot[i - 1];
@@ -170,11 +180,31 @@ export function FoodParticles() {
     st.n = 0;
     st.glowN = 0;
     st.food.particles().forEach(visit);
-    for (let i = 0; i < st.glowN; i++) {
+    // As GLOW_COUNT primeiras até GLOW_REACH entram no pool de brilho das criaturas, como antes.
+    for (let i = 0; i < Math.min(st.glowN, GLOW_COUNT); i++) {
+      if (st.glowDist[i] >= GLOW_REACH * GLOW_REACH) break;
       const k = st.glowSlot[i];
       const color = warm[k] ? AMBER_GLOW : CYAN_GLOW;
       requestCreatureGlow('food', color, pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2], GLOW_RADIUS, GLOW_INTENSITY * alpha[k]);
     }
+    // Luz da comida no leito.
+    const lit = Math.min(st.glowN, MAX_FOOD_LIGHTS);
+    const edge = st.glowN > MAX_FOOD_LIGHTS ? Math.sqrt(st.glowDist[MAX_FOOD_LIGHTS]) : LIGHT_REACH;
+    for (let i = 0; i < lit; i++) {
+      const k = st.glowSlot[i];
+      const x = pos[k * 3], y = pos[k * 3 + 1], z = pos[k * 3 + 2];
+      const h = Math.max(0, y - seabedHeight(x, z));
+      const rank = Math.min(1, Math.max(0, (edge - Math.sqrt(st.glowDist[i])) / (edge * 0.3)));
+      const c = warm[k] ? AMBER_GLOW : CYAN_GLOW;
+      foodLights.pos[i * 4] = x;
+      foodLights.pos[i * 4 + 1] = z;
+      foodLights.pos[i * 4 + 2] = LIGHT_RADIUS + h * 0.5;
+      foodLights.pos[i * 4 + 3] = alpha[k] * rank * Math.max(0, 1 - h / LIGHT_HEIGHT);
+      foodLights.col[i * 3] = c[0];
+      foodLights.col[i * 3 + 1] = c[1];
+      foodLights.col[i * 3 + 2] = c[2];
+    }
+    foodLights.count = lit;
     // Slots que ficaram vagos neste quadro se apagam.
     for (let i = st.n; i < st.lastN; i++) alpha[i] = 0;
     if (st.n > 0 || st.lastN > 0) {

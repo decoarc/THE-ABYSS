@@ -46,12 +46,20 @@ function florestaHeight(x: number, z: number): number {
   return broad + ridge + grit - 0.25;
 }
 
-/** Planície: dunas baixas e largas, com a crista levemente torta. */
+/**
+ * Planície: dunas baixas e largas (comprimento de onda ~20) com a crista torta, encosta suave
+ * de um lado e mais curta do outro, e marcas de ondulação finas (~3 u) que se apagam nos vales.
+ */
 function planicieHeight(x: number, z: number): number {
   const warp = fbm2D(terrainNoise, x * 0.03 + 91, z * 0.03 - 44, 2) * 6;
-  const dunes = Math.sin((x * 0.8 + z * 0.6) * 0.32 + warp) * 0.2;
+  const phase = (x * 0.8 + z * 0.6) * 0.32 + warp;
+  // Onda assimétrica: o seno da fase deslocada pelo próprio seno.
+  const wave = Math.sin(phase - 0.55 * Math.sin(phase));
+  const dunes = wave * 0.24;
+  const crest = 0.5 + 0.5 * wave;
+  const ripples = Math.sin(phase * 6.3 + fbm2D(terrainNoise, x * 0.2 - 7, z * 0.2 + 3, 1) * 2) * 0.035 * crest;
   const swell = fbm2D(terrainNoise, x * 0.025 - 120, z * 0.025 + 80, 2) * 0.3;
-  return dunes + swell + 0.2;
+  return dunes + ripples + swell + 0.15;
 }
 
 const PROFILES: Record<RegionId, (x: number, z: number) => number> = {

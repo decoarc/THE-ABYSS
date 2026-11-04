@@ -14,6 +14,7 @@ import { Rocks } from './environment/Rocks';
 import { Tufts } from './environment/Tufts';
 import { Vents } from './environment/Vents';
 import { Greybox } from './regions/Greybox';
+import { Planicie } from './regions/Planicie';
 
 export function Stage() {
   return (
@@ -28,6 +29,7 @@ export function Stage() {
       <Pads />
       <Tufts />
       <Greybox />
+      <Planicie />
       <FloraPatches />
       <FoodParticles />
       <LightShafts />

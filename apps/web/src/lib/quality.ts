@@ -14,6 +14,10 @@ export interface QualitySettings {
   celulaGranules: number;
   /** Divisões por lado de cada bloco 30 × 30 do leito. */
   seabedSegments: number;
+  /** Hastes com bulbo em cada mancha de flora (o teto de manchas não muda com o perfil). */
+  floraStalks: number;
+  /** Lados do tapete de cada mancha de flora. */
+  floraMatSides: number;
 }
 
 export const QUALITY: Record<QualityLevel, QualitySettings> = {
@@ -27,6 +31,8 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     filamentoSegments: 90,
     celulaGranules: 14,
     seabedSegments: 64,
+    floraStalks: 9,
+    floraMatSides: 20,
   },
   low: {
     maxDpr: 1,
@@ -38,6 +44,8 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     filamentoSegments: 48,
     celulaGranules: 8,
     seabedSegments: 40,
+    floraStalks: 5,
+    floraMatSides: 10,
   },
 };
 

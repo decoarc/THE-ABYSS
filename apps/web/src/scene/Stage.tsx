@@ -1,3 +1,5 @@
+import { FloraPatches } from '../food/FloraPatches';
+import { FoodParticles } from '../food/FoodParticles';
 import { PALETTE } from '../lib/palette';
 import { Creatures } from '../organisms/Creatures';
 import { CameraRig } from './CameraRig';
@@ -26,6 +28,8 @@ export function Stage() {
       <Pads />
       <Tufts />
       <Greybox />
+      <FloraPatches />
+      <FoodParticles />
       <LightShafts />
       <Particles />
       <Creatures />

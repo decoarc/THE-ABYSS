@@ -24,6 +24,23 @@ config :abyss, :world,
   # Raio efetivo = body_radius × creature_scale.
   creature_scale: 0.5
 
+# Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
+config :abyss, :food,
+  # Nível de 0 a 1 em 90 s, longe das fontes.
+  flora_grow_s: 90,
+  # Crescimento × (1 + vent_boost · exp(-d²/(2·8²))), d = distância à fonte mais próxima.
+  vent_boost: 2.0,
+  flora_bite: 0.25,
+  flora_min_edible: 0.05,
+  particle_cap: 400,
+  # Por segundo, divididas entre as regiões por particle_share.
+  particle_rate: 2.0,
+  # Some nos últimos 30 s (só no visual).
+  particle_life_s: 180,
+  # Queda (u/s) e deriva horizontal máxima (u/s).
+  particle_fall: {0.15, 0.3},
+  particle_drift: 0.05
+
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,
   url: [host: "localhost"],

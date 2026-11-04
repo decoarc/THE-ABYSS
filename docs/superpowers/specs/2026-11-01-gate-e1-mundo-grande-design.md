@@ -118,6 +118,13 @@ Como no gate I: em cada parada o construtor mostra capturas ou vídeo e pede uma
 - Transição Jardim → Planície: alongada do lado da Planície, de r 26 até ~40 a partir do centro do Jardim (antes 26 → 32). Névoa, luz, cor do chão, luz da comida e neve usam o mesmo peso. Nada muda dentro de r ≤ 26.
 - Flora no miolo do Jardim: fica. As manchas passam a fazer parte do quadro herói aprovado.
 
+**Parada 3, decidido pelo autor em 2026-11-04** (capturas em `docs/captures/e1/parada-3/`):
+
+- Floresta ("Treliça"): aceita como está, sem ajustes.
+- Vidro: as esponjas continuam como luz na água (brilho aditivo, nunca escondem o que está atrás; as criaturas dentro dos cestos seguem legíveis), em vez de vidro sólido.
+- Forma: o cesto em vaso (barriga larga, cintura e boca aberta) fica, em vez da cúpula pontuda do esboço B.
+- Quadro herói: as esponjas fracas na névoa distante (fora de r 26, onde ficava o greybox) ficam e passam a fazer parte do quadro.
+
 ## 8. Decisões minhas (Claude), a conferir pelo autor
 
 - **O que o "raio 20–50" mede:** a área nadável e composta de cada região, ou seja, o chão com arte própria e o volume onde as criaturas nadam, no mesmo sentido do raio 28 do gate I (`config.exs`). O leito de raio 60 de hoje (`SEABED_RADIUS`) é em grande parte chão engolido pela névoa e não conta.

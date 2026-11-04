@@ -27,3 +27,25 @@ export function adoptPose(state: FlyState, req: PoseRequest): void {
   state.vel = [0, 0, 0];
   aim(state.pos, req.lookAt, state);
 }
+
+/** Onde a câmera está agora, e quanto do percurso fixo (`?flypath=1`) já andou. Só leitura de fora. */
+export interface CameraReadout {
+  pos: Vec3;
+  /** Segundos desde o início do percurso fixo; null fora dele. */
+  pathS: number | null;
+}
+
+const readout: CameraReadout = { pos: [0, 0, 0], pathS: null };
+
+/** A câmera publica a pose a cada quadro (sem alocar). */
+export function publishCamera(pos: Vec3, pathS: number | null): void {
+  readout.pos[0] = pos[0];
+  readout.pos[1] = pos[1];
+  readout.pos[2] = pos[2];
+  readout.pathS = pathS;
+}
+
+/** Cópia da última pose publicada. */
+export function readCamera(): CameraReadout {
+  return { pos: [...readout.pos], pathS: readout.pathS };
+}

@@ -13,7 +13,8 @@ import { stepFollow } from './follow';
 import { createFlyInput } from './flyInput';
 import { WORLD_ENV, aim, constrainCamera, forwardOf, look, stepFreeFly, wasConstrained, type FlyInput, type FlyState } from './freeFly';
 import { pickSpawn } from './spawnPoint';
-import { adoptPose, takeCameraPose } from './cameraPose';
+import { adoptPose, publishCamera, takeCameraPose } from './cameraPose';
+import { flyPathPose, isFlyPathEnabled } from './flyPath';
 
 const INTRO_SECONDS = 3;
 /** A introdução começa este tanto acima do ponto de partida e desce até ele. */
@@ -95,6 +96,7 @@ const scratchOrg: Vec3 = [0, 0, 0];
 const scratchVel: Vec3 = [0, 0, 0];
 const scratchDir: Vec3 = [0, 0, 0];
 const NO_INPUT: FlyInput = { forward: 0, right: 0, up: 0 };
+const scratchPath = { pos: [0, 0, 0] as Vec3, lookAt: [0, 0, 0] as Vec3 };
 
 function FreeRig() {
   const { reducedMotion } = useSceneSettings();
@@ -113,6 +115,10 @@ function FreeRig() {
   const introDone = useRef(false);
   const dragged = useRef(false);
   const input = useRef<ReturnType<typeof createFlyInput> | null>(null);
+  // `?flypath=1` (medições): a câmera segue o percurso fixo e ignora o visitante.
+  const [flyPath] = useState(() => isFlyPathEnabled(window.location.search));
+  /** performance.now() do início do percurso; null até o primeiro snapshot. */
+  const pathStart = useRef<number | null>(null);
 
   useEffect(() => {
     const keys = createFlyInput(window);
@@ -194,6 +200,25 @@ function FreeRig() {
   useFrame((_, rawDelta) => {
     const dt = clampDelta(rawDelta);
     const s = fly.current;
+
+    if (flyPath) {
+      // O percurso começa no primeiro snapshot e anda pelo relógio, não pelos quadros.
+      if (world.worldId() === null) return;
+      const now = performance.now();
+      pathStart.current ??= now;
+      const t = (now - pathStart.current) / 1000;
+      flyPathPose(t, scratchPath);
+      s.pos[0] = scratchPath.pos[0];
+      s.pos[1] = scratchPath.pos[1];
+      s.pos[2] = scratchPath.pos[2];
+      constrainCamera(s.pos, WORLD_ENV);
+      aim(s.pos, scratchPath.lookAt, s);
+      camera.position.set(s.pos[0], s.pos[1], s.pos[2]);
+      camera.rotation.set(s.pitch, s.yaw, 0, 'YXZ');
+      publishCamera(s.pos, t);
+      return;
+    }
+
     const keys = input.current?.read() ?? NO_INPUT;
     const swimming = keys.forward !== 0 || keys.right !== 0 || keys.up !== 0;
 
@@ -209,6 +234,7 @@ function FreeRig() {
       followTarget.current = null;
       camera.position.set(s.pos[0], s.pos[1], s.pos[2]);
       camera.rotation.set(s.pitch, s.yaw, 0, 'YXZ');
+      publishCamera(s.pos, null);
       return;
     }
 
@@ -256,6 +282,7 @@ function FreeRig() {
 
     camera.position.set(s.pos[0], s.pos[1], s.pos[2]);
     camera.rotation.set(s.pitch, s.yaw, 0, 'YXZ');
+    publishCamera(s.pos, null);
   });
 
   return null;

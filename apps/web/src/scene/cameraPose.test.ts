@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { adoptPose, requestCameraPose, takeCameraPose } from './cameraPose';
+import { adoptPose, publishCamera, readCamera, requestCameraPose, takeCameraPose } from './cameraPose';
 import { forwardOf, type FlyState } from './freeFly';
 
 describe('cameraPose', () => {
@@ -17,5 +17,19 @@ describe('cameraPose', () => {
     const f = forwardOf(s.yaw, s.pitch, [0, 0, 0]);
     expect(f[2]).toBeCloseTo(-1);
     expect(f[0]).toBeCloseTo(0);
+  });
+});
+
+describe('readCamera', () => {
+  it('devolve uma cópia da última pose publicada', () => {
+    const pos: [number, number, number] = [1, 2, 3];
+    publishCamera(pos, 4.5);
+    pos[0] = 99;
+    const r = readCamera();
+    expect(r).toEqual({ pos: [1, 2, 3], pathS: 4.5 });
+    r.pos[1] = -1;
+    expect(readCamera().pos).toEqual([1, 2, 3]);
+    publishCamera([0, 0, 0], null);
+    expect(readCamera().pathS).toBeNull();
   });
 });

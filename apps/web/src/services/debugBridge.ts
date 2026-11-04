@@ -1,6 +1,8 @@
 import type { Selection, SelectionState } from './selection';
 import type { ConnectionStatus, WorldStore } from './worldStore';
-import { requestCameraPose } from '../scene/cameraPose';
+import { readCamera, requestCameraPose } from '../scene/cameraPose';
+import { FLY_PATH_LAP_S } from '../scene/flyPath';
+import { seabedHeight } from '../scene/terrain';
 import type { Vec3 } from './wire';
 
 /** Superfície exposta em `window.__abyss` quando a URL tem `?debug=1`, para os testes e2e. */
@@ -16,6 +18,8 @@ export interface AbyssDebug {
   foodCounts(): { floraSum: number; particles: number };
   /** Põe a câmera livre em `pos` olhando para `lookAt` (para capturas). */
   setCamera(pos: Vec3, lookAt: Vec3): void;
+  /** Câmera agora: posição, altura do leito embaixo dela e o andamento do percurso fixo (`?flypath=1`). */
+  camera(): { pos: Vec3; floor: number; pathS: number | null; lapS: number };
 }
 
 export function debugEnabled(search: string): boolean {
@@ -37,6 +41,10 @@ export function installDebugBridge(
     foodDigestAt: (tick) => store.food().digestAt(tick),
     foodCounts: () => store.food().counts(),
     setCamera: (pos, lookAt) => requestCameraPose(pos, lookAt),
+    camera: () => {
+      const { pos, pathS } = readCamera();
+      return { pos, floor: seabedHeight(pos[0], pos[2]), pathS, lapS: FLY_PATH_LAP_S };
+    },
   };
   return () => {
     delete target.__abyss;

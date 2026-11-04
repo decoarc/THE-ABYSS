@@ -9,6 +9,7 @@ import { useCreatureCull } from '../scene/cull';
 import { useWorld } from '../services/WorldProvider';
 import { CASCO as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
+import { requestCreatureLight } from './creatureLights';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
@@ -95,7 +96,6 @@ export function Casco({ id }: { id: string }) {
   const shown = useCreatureCull(group, pose);
   const scale = useWorld().store.creatureScale();
   const pulse = useRef(C.nucleus.pulseMin);
-  const glow = useRef<THREE.PointLight>(null);
   const phase = useMemo(() => phaseOf(id), [id]);
   const state = useMemo(() => {
     // Semente por instância: os trancos de cascos diferentes não coincidem.
@@ -155,7 +155,7 @@ export function Casco({ id }: { id: string }) {
       pose.pos.y + (s.drift.y + Math.sin(s.t * 0.4) * 0.08) * scale,
       pose.pos.z + s.drift.z * scale,
     );
-    if (glow.current) glow.current.intensity = 1.2 * pulse.current;
+    requestCreatureLight(glowColor, g.position.x, g.position.y, g.position.z, 1.2 * pulse.current);
     requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.35 * pulse.current);
   });
 
@@ -165,7 +165,6 @@ export function Casco({ id }: { id: string }) {
         <meshStandardMaterial color="#10161c" roughness={0.85} metalness={0.05} flatShading />
       </mesh>
       <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} timeOffset={phase * 1000} />
-      <pointLight ref={glow} color={glowColor} distance={3.5} decay={2} />
     </group>
   );
 }

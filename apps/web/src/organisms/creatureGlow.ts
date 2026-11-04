@@ -15,10 +15,12 @@ export interface GlowRequest {
   intensity: number;
 }
 
-const dist2 = (r: GlowRequest, t: Vec3) => (r.x - t[0]) ** 2 + (r.y - t[1]) ** 2 + (r.z - t[2]) ** 2;
+type Placed = { x: number; y: number; z: number };
+
+const dist2 = (r: Placed, t: Vec3) => (r.x - t[0]) ** 2 + (r.y - t[1]) ** 2 + (r.z - t[2]) ** 2;
 
 /** Os `n` pedidos mais próximos de `target`, do mais perto ao mais longe. Não altera `reqs`. */
-export function pickNearest(reqs: readonly GlowRequest[], target: Vec3, n: number): GlowRequest[] {
+export function pickNearest<T extends Placed>(reqs: readonly T[], target: Vec3, n: number): T[] {
   return reqs
     .map((r) => ({ r, d: dist2(r, target) }))
     .sort((a, b) => a.d - b.d)

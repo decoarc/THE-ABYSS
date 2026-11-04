@@ -3,6 +3,7 @@ import { useRoster } from '../services/WorldProvider';
 import { Casco } from './Casco';
 import { Celula } from './Celula';
 import { CreatureGlows } from './creatureGlow';
+import { CreatureLights } from './creatureLights';
 import { Filamento } from './Filamento';
 import { Membrana } from './Membrana';
 import { Poliedro } from './Poliedro';
@@ -33,6 +34,7 @@ export function Creatures() {
         return Creature ? <Creature key={o.id} id={o.id} /> : null;
       })}
       <CreatureGlows />
+      <CreatureLights />
       <SelectionRing />
     </>
   );

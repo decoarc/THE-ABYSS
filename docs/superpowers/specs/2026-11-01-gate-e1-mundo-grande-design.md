@@ -109,7 +109,8 @@ Como no gate I: em cada parada o construtor mostra capturas ou vídeo e pede uma
 
 - Tamanho das criaturas: `creature_scale` 0,5 (metade do gate I).
 - Tamanho do mapa: mantido (Jardim r 30, Floresta r 30, Planície r 45).
-- Sensação da câmera: o autor vai testar à mão na próxima sessão. Até lá ficam os valores atuais (velocidade máxima 6, aceleração 8, arrasto 2,5; W anda na direção do olhar; borda macia a 6 da borda).
+- Sensação da câmera (testada à mão em 2026-11-04): aprovada com os valores atuais (velocidade máxima 6, aceleração 8, arrasto 2,5; W anda na direção do olhar; borda macia a 6 da borda).
+- Travamentos no voo (achados no mesmo teste, corrigidos e aprovados em 2026-11-04): congelamentos de 0,3 a 1,5 s eram shaders recompilados porque cada Casco tinha uma luz pontual dentro do grupo descartado por distância, e o número de luzes da cena mudava a cada Casco que entrava ou saía do alcance. Agora há uma reserva fixa de 4 luzes (`organisms/creatureLights.tsx`) que vai para os Cascos mais próximos. Fica em aberto, sem bloquear: um material visto pela primeira vez no meio do voo ainda compila ali (até ~250 ms, uma vez por sessão); a pré-compilação na tela de carregamento é candidata para depois.
 
 ## 8. Decisões minhas (Claude), a conferir pelo autor
 

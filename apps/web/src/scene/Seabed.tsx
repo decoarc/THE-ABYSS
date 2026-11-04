@@ -4,12 +4,13 @@ import * as THREE from 'three';
 import { fbm2D } from '../lib/noise';
 import { PALETTE } from '../lib/palette';
 import { useSceneSettings } from '../settings';
+import { MAP } from '../world/map';
 import { CULL_DISTANCE } from './cull';
 import { SHAFTS, shaftFootprint } from './environment/shaftLayout';
 import { MAX_FLOOR_GLOWS, MAX_FOOD_LIGHTS, floorGlows, foodLights } from './floorGlow';
 import { foggyShader } from './glsl/material';
 import { SNOISE } from './glsl/noise';
-import { planicieWeight, regionTint } from './regionTint';
+import { florestaWeight, planicieWeight, regionTint } from './regionTint';
 import { TILE_SIZE, seabedTiles, type SeabedTile } from './seabedTiles';
 import { seabedHeight, terrainNoise as noise } from './terrain';
 
@@ -109,6 +110,14 @@ void main() {
 const PLAIN_SEDIMENT_DARK = '#16323a';
 const PLAIN_SEDIMENT = '#2c5258';
 
+/** Sedimento da Floresta (vértices): rocha escura puxando para o violeta das esponjas. */
+const FOREST_SEDIMENT_DARK = '#0b0a1c';
+const FOREST_SEDIMENT = '#1d1a3a';
+/** Luz presa dentro das esponjas, gravada no chão sob cada cesto (sem custo por quadro). */
+const SPONGE_FLOOR_LIGHT = '#6a52b8';
+const SPONGE_FLOOR_REACH = 1.25;
+const SPONGE_FLOOR_STRENGTH = 0.55;
+
 /** Um bloco do leito em coordenadas de mundo; normais por diferença central sobre a mesma grade, então os blocos vizinhos casam na emenda. */
 function tileGeometry(tile: SeabedTile, segments: number): THREE.BufferGeometry {
   const g = new THREE.PlaneGeometry(tile.size, tile.size, segments, segments);
@@ -134,6 +143,11 @@ function tileGeometry(tile: SeabedTile, segments: number): THREE.BufferGeometry 
   const plainMid = new THREE.Color(PLAIN_SEDIMENT);
   const plainTmp = new THREE.Color();
   const plain = new Float32Array(pos.count);
+  const forestDark = new THREE.Color(FOREST_SEDIMENT_DARK);
+  const forestMid = new THREE.Color(FOREST_SEDIMENT);
+  const spongeLight = new THREE.Color(SPONGE_FLOOR_LIGHT);
+  const half = tile.size / 2 + 3;
+  const sponges = MAP.sponges.filter((sp) => Math.abs(sp.x - tile.cx) < half && Math.abs(sp.z - tile.cz) < half);
   const tmp = new THREE.Color();
   const n = new THREE.Vector3();
   for (let v = 0; v < pos.count; v++) {
@@ -146,6 +160,12 @@ function tileGeometry(tile: SeabedTile, segments: number): THREE.BufferGeometry 
     tmp.copy(dark).lerp(mid, t);
     const w = planicieWeight(x, z);
     if (w > 0) tmp.lerp(plainTmp.copy(plainDark).lerp(plainMid, 0.55 + (t - 0.5) * 0.5), w);
+    const fw = florestaWeight(x, z);
+    if (fw > 0) tmp.lerp(plainTmp.copy(forestDark).lerp(forestMid, t), fw);
+    for (const sp of sponges) {
+      const f = Math.max(0, 1 - Math.hypot(x - sp.x, z - sp.z) / (sp.r * SPONGE_FLOOR_REACH));
+      if (f > 0) tmp.lerp(spongeLight, Math.min(1, f * f * SPONGE_FLOOR_STRENGTH));
+    }
     plain[v] = w;
     tmp.toArray(colors, v * 3);
   }

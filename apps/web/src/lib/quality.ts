@@ -18,6 +18,8 @@ export interface QualitySettings {
   floraStalks: number;
   /** Lados do tapete de cada mancha de flora. */
   floraMatSides: number;
+  /** Detalhe da treliça das esponjas da Floresta (fios e amostras por fio, 0–1). */
+  spongeDetail: number;
 }
 
 export const QUALITY: Record<QualityLevel, QualitySettings> = {
@@ -33,6 +35,7 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     seabedSegments: 64,
     floraStalks: 9,
     floraMatSides: 20,
+    spongeDetail: 1,
   },
   low: {
     maxDpr: 1,
@@ -46,6 +49,7 @@ export const QUALITY: Record<QualityLevel, QualitySettings> = {
     seabedSegments: 40,
     floraStalks: 5,
     floraMatSides: 10,
+    spongeDetail: 0.6,
   },
 };
 

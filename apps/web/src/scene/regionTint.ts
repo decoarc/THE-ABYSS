@@ -22,13 +22,17 @@ const def = (fog: string, sky: string, ambient: number): TintDef => ({
   ambient,
 });
 
+/** Floresta: névoa índigo quase preta e céu violeta apagado. */
+const FLORESTA_FOG = '#070514';
+const FLORESTA_SKY = '#3d3170';
+
 /** Jardim: os valores aprovados no gate I (ART_DIRECTION, "Luz" e "Névoa"). */
 const JARDIM = def(PALETTE.bg, '#2c6f80', 0.5);
 
 const TINTS: Record<RegionId, TintDef> = {
   jardim: JARDIM,
-  // Até a arte da Floresta (Task 11), ela usa a luz do Jardim.
-  floresta: JARDIM,
+  // "Treliça": água violeta e mais fechada; a luz que sobra é a presa dentro das esponjas.
+  floresta: def(FLORESTA_FOG, FLORESTA_SKY, 0.38),
   // "Neve silenciosa": água mais escura e mais fria; quem acende o chão é a comida.
   planicie: def('#01060d', '#1a4560', 0.3),
 };
@@ -54,11 +58,17 @@ export const outsideJardimCore = (x: number, z: number): number =>
 /** Rascunho dos pesos: as funções abaixo rodam a cada quadro e não alocam. */
 const weights: Record<RegionId, number> = { jardim: 0, floresta: 0, planicie: 0 };
 
-/** Quanto (0–1) o ponto é Planície, para o leito e a neve; zero no miolo do Jardim. */
-export function planicieWeight(x: number, z: number): number {
+/** Peso (0–1) de uma região fora do miolo do Jardim, com a mesma mistura da luz. */
+function outerWeight(id: RegionId, x: number, z: number): number {
   const out = outsideJardimCore(x, z);
-  return out === 0 ? 0 : regionWeightsInto(x, z, weights, TINT_BLEND).planicie * out;
+  return out === 0 ? 0 : regionWeightsInto(x, z, weights, TINT_BLEND)[id] * out;
 }
+
+/** Quanto (0–1) o ponto é Planície, para o leito e a neve; zero no miolo do Jardim. */
+export const planicieWeight = (x: number, z: number): number => outerWeight('planicie', x, z);
+
+/** Quanto (0–1) o ponto é Floresta, para a cor do leito; zero no miolo do Jardim. */
+export const florestaWeight = (x: number, z: number): number => outerWeight('floresta', x, z);
 
 /**
  * Luz e névoa misturadas pelos pesos das regiões em (x, z). Lido a cada quadro na posição da câmera:

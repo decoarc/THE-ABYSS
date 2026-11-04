@@ -1,13 +1,16 @@
 import { Color } from 'three';
 import { PALETTE } from '../lib/palette';
 import { MAP } from '../world/map';
-import { planicieWeight, regionTint } from './regionTint';
+import { florestaWeight, planicieWeight, regionTint } from './regionTint';
 
 const luminance = (c: Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 /** Quanto do total é azul: maior = mais frio. */
 const blueShare = (c: Color) => c.b / (c.r + c.g + c.b);
 
 const planicie = MAP.regions.find((r) => r.id === 'planicie')!;
+const floresta = MAP.regions.find((r) => r.id === 'floresta')!;
+/** Quanto do total é vermelho + azul contra o verde: maior = mais violeta. */
+const violetShare = (c: Color) => (c.r + c.b) / (c.r + c.g + c.b);
 
 it('no Jardim devolve exatamente a luz e a névoa aprovadas', () => {
   const t = regionTint(0, 0);
@@ -29,6 +32,19 @@ it('na Planície é mais escuro e mais frio que no Jardim', () => {
   expect(p.ambient).toBeLessThan(j.ambient);
   expect(blueShare(p.fog)).toBeGreaterThan(blueShare(j.fog));
   expect(blueShare(p.sky)).toBeGreaterThan(blueShare(j.sky));
+});
+
+it('na Floresta é violeta e escura, diferente do Jardim e da Planície', () => {
+  const j = regionTint(0, 0);
+  const f = regionTint(floresta.center[0], floresta.center[1]);
+  const p = regionTint(planicie.center[0], planicie.center[1]);
+  expect(violetShare(f.fog)).toBeGreaterThan(violetShare(j.fog) + 0.1);
+  expect(violetShare(f.sky)).toBeGreaterThan(violetShare(j.sky) + 0.1);
+  expect(f.sky.r).toBeGreaterThan(f.sky.g);
+  expect(luminance(f.sky)).toBeLessThan(luminance(j.sky));
+  expect(f.ambient).toBeLessThan(j.ambient);
+  expect(f.sky.equals(p.sky)).toBe(false);
+  expect(f.fog.equals(p.fog)).toBe(false);
 });
 
 it('contínuo entre as regiões', () => {
@@ -66,6 +82,10 @@ it('contínuo entre as regiões', () => {
   const total = Math.max(...(['fog', 'sky'] as const).flatMap((k) => [j[k].r - p[k].r, j[k].g - p[k].g, j[k].b - p[k].b].map(Math.abs)));
   expect(worstColor).toBeLessThan(total / 10);
   expect(worstAmbient).toBeLessThan((j.ambient - p.ambient) / 10);
+  // Também em relação à diferença (menor) Jardim → Floresta.
+  const f = regionTint(floresta.center[0], floresta.center[1]);
+  const totalF = Math.max(...(['fog', 'sky'] as const).flatMap((k) => [j[k].r - f[k].r, j[k].g - f[k].g, j[k].b - f[k].b].map(Math.abs)));
+  expect(worstColor).toBeLessThan(totalF / 4);
 });
 
 it('escreve em `out` sem alocar quando recebe um', () => {
@@ -79,6 +99,38 @@ it('escreve em `out` sem alocar quando recebe um', () => {
   // O mesmo `out` reaproveitado na costura e no Jardim continua dando os valores certos.
   expect(regionTint(27, -12, out)).toEqual(regionTint(27, -12));
   expect(regionTint(0, 0, out)).toEqual(regionTint(0, 0));
+});
+
+describe('florestaWeight', () => {
+  const towardForest = (r: number): [number, number] => {
+    const [cx, cz] = floresta.center;
+    const len = Math.hypot(cx, cz);
+    return [(cx / len) * r, (cz / len) * r];
+  };
+
+  it('é exatamente 0 no miolo aprovado do Jardim, e lá a luz é a aprovada', () => {
+    for (let r = 0; r <= 26; r += 0.5)
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
+        const [x, z] = [Math.cos(a) * r, Math.sin(a) * r];
+        if (Math.hypot(x, z) > 26) continue;
+        expect(florestaWeight(x, z)).toBe(0);
+        const t = regionTint(x, z);
+        expect(t.fog.equals(new Color(PALETTE.bg))).toBe(true);
+        expect(t.sky.equals(new Color('#2c6f80'))).toBe(true);
+        expect(t.ambient).toBe(0.5);
+      }
+  });
+
+  it('passa devagar do miolo do Jardim para a Floresta e chega a 1 dentro dela', () => {
+    const w = (r: number) => florestaWeight(...towardForest(r));
+    expect(w(26)).toBe(0);
+    expect(w(32)).toBeGreaterThan(0.1);
+    expect(w(32)).toBeLessThan(0.7);
+    expect(w(44)).toBeGreaterThan(0.95);
+    for (let r = 26; r < 50; r += 0.5) expect(w(r + 0.5)).toBeGreaterThanOrEqual(w(r) - 1e-12);
+    expect(florestaWeight(floresta.center[0], floresta.center[1])).toBeGreaterThan(0.99);
+    expect(florestaWeight(planicie.center[0], planicie.center[1])).toBeLessThan(0.01);
+  });
 });
 
 describe('planicieWeight', () => {

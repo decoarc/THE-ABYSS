@@ -1,6 +1,6 @@
-// E2E de consistência e reinício do gate I.
+// E2E de consistência e reinício do gate I, mais a comida e a câmera livre do gate E1.
 // Pré-requisitos: `pnpm api:up` e `pnpm build` (o script sobe o preview em E2E_PORT).
-// Uso: node scripts/e2e/run.mjs   (E2E_NEGATE=1 inverte a asserção de consistência, para ver falhar)
+// Uso: node scripts/e2e/run.mjs   (E2E_NEGATE=1 inverte as asserções de consistência, para ver falhar)
 import { spawn, execFile } from 'node:child_process';
 import { once } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -87,10 +87,48 @@ try {
     await b.close();
   });
 
+  await scenario('duas abas veem a mesma comida', async () => {
+    const a = await openWorld(context);
+    const b = await openWorld(context);
+    await delay(1500);
+    const lastA = await a.evaluate(() => window.__abyss.lastTick());
+    const lastB = await b.evaluate(() => window.__abyss.lastTick());
+    const tick = Math.min(lastA, lastB) - 3;
+    // Resumo canônico do tick: soma da flora e ids das partículas vivas.
+    const digestA = await a.evaluate((t) => window.__abyss.foodDigestAt(t), tick);
+    const digestB = await b.evaluate((t) => window.__abyss.foodDigestAt(t), tick);
+    assert.ok(digestA && digestB, `tick ${tick} ausente no histórico da comida`);
+    const countsA = await a.evaluate(() => window.__abyss.foodCounts());
+    assert.ok(countsA.particles > 0 && countsA.floraSum > 0, `comida vazia: ${JSON.stringify(countsA)}`);
+    const same = digestA === digestB;
+    if (NEGATE) assert.ok(!same, 'NEGATE: esperava diferença (deve falhar)');
+    else assert.ok(same, `comida difere no tick ${tick}:
+  ${digestA.slice(0, 120)}
+  ${digestB.slice(0, 120)}`);
+    await a.close();
+    await b.close();
+  });
+
+  await scenario('câmera livre: W nada e a câmera fica acima do chão', async () => {
+    const page = await openWorld(context);
+    await delay(4000); // a introdução (3 s) termina
+    const before = await page.evaluate(() => window.__abyss.camera());
+    await page.keyboard.down('w');
+    await delay(2000);
+    await page.keyboard.up('w');
+    await delay(200);
+    const after = await page.evaluate(() => window.__abyss.camera());
+    const moved = Math.hypot(...after.pos.map((v, i) => v - before.pos[i]));
+    if (NEGATE) assert.ok(moved <= 2, `NEGATE: esperava a câmera parada (deve falhar), andou ${moved.toFixed(2)} u`);
+    else assert.ok(moved > 2, `a câmera andou só ${moved.toFixed(2)} u`);
+    assert.ok(after.pos[1] > after.floor, `câmera em y ${after.pos[1].toFixed(2)}, leito em ${after.floor.toFixed(2)}`);
+    await page.close();
+  });
+
   await scenario('selecionar pelo índice seleciona o certo', async () => {
     const page = await openWorld(context);
     await page.getByRole('button', { name: /NO TERRÁRIO/ }).click();
-    await page.getByRole('button', { name: /Membrana\s+9/ }).click();
+    await page.getByRole('button', { name: /Membrana\s+\d+/ }).click();
     const pick = page.getByRole('button', { name: /^MBR-\d{4}$/ }).first();
     const id = (await pick.innerText()).trim();
     await pick.click();

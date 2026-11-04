@@ -66,6 +66,32 @@ export function regionWeights(x: number, z: number, blend: number = BLEND): Reco
   return out;
 }
 
+/**
+ * O mesmo que `regionWeights`, escrito em `out` e sem alocar (para chamadas a cada quadro).
+ * Devolve `out`.
+ */
+export function regionWeightsInto(
+  x: number,
+  z: number,
+  out: Record<RegionId, number>,
+  blend: number = BLEND,
+): Record<RegionId, number> {
+  const regions = MAP.regions;
+  let top = -Infinity;
+  for (let i = 0; i < regions.length; i++) top = Math.max(top, depthIn(regions[i], x, z));
+  out.jardim = 0;
+  out.floresta = 0;
+  out.planicie = 0;
+  let sum = 0;
+  for (let i = 0; i < regions.length; i++) {
+    const w = Math.exp((depthIn(regions[i], x, z) - top) / blend);
+    out[regions[i].id] = w;
+    sum += w;
+  }
+  for (let i = 0; i < regions.length; i++) out[regions[i].id] /= sum;
+  return out;
+}
+
 /** Vetor unitário rumo ao centro da região mais profunda ([0, 0] no próprio centro). */
 export function inward(x: number, z: number): [number, number] {
   const { region } = deepest(x, z);

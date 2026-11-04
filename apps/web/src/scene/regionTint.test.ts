@@ -70,7 +70,13 @@ it('contínuo entre as regiões', () => {
 
 it('escreve em `out` sem alocar quando recebe um', () => {
   const out = { fog: new Color(), sky: new Color(), ambient: 0 };
+  const { fog, sky } = out;
   const r = regionTint(planicie.center[0], planicie.center[1], out);
   expect(r).toBe(out);
+  expect(r.fog).toBe(fog);
+  expect(r.sky).toBe(sky);
   expect(r.ambient).toBeLessThan(0.5);
+  // O mesmo `out` reaproveitado na costura e no Jardim continua dando os valores certos.
+  expect(regionTint(27, -12, out)).toEqual(regionTint(27, -12));
+  expect(regionTint(0, 0, out)).toEqual(regionTint(0, 0));
 });

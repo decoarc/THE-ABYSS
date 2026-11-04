@@ -1,6 +1,6 @@
 import { Color } from 'three';
 import { PALETTE } from '../lib/palette';
-import { MAP, regionWeights, type RegionId } from '../world/map';
+import { MAP, regionWeightsInto, type RegionId } from '../world/map';
 import { JARDIM_CORE, JARDIM_FADE } from './terrain';
 
 /** Névoa (e fundo), céu da luz hemisférica e intensidade da luz ambiente num ponto do mapa. */
@@ -45,10 +45,13 @@ const smoothstep = (a: number, b: number, x: number) => {
 export const outsideJardimCore = (x: number, z: number): number =>
   smoothstep(JARDIM_CORE, JARDIM_CORE + JARDIM_FADE, Math.hypot(x, z));
 
+/** Rascunho dos pesos: as funções abaixo rodam a cada quadro e não alocam. */
+const weights: Record<RegionId, number> = { jardim: 0, floresta: 0, planicie: 0 };
+
 /** Quanto (0–1) o ponto é Planície, para o leito e a neve; zero no miolo do Jardim. */
 export function planicieWeight(x: number, z: number): number {
   const out = outsideJardimCore(x, z);
-  return out === 0 ? 0 : regionWeights(x, z, TINT_BLEND).planicie * out;
+  return out === 0 ? 0 : regionWeightsInto(x, z, weights, TINT_BLEND).planicie * out;
 }
 
 /**
@@ -66,11 +69,12 @@ export function regionTint(
   const k = outsideJardimCore(x, z);
   if (k === 0) return out;
 
-  const w = regionWeights(x, z, TINT_BLEND);
+  const w = regionWeightsInto(x, z, weights, TINT_BLEND);
   let fr = 0, fg = 0, fb = 0, sr = 0, sg = 0, sb = 0, amb = 0;
-  for (const r of MAP.regions) {
-    const t = TINTS[r.id];
-    const wi = w[r.id];
+  for (let i = 0; i < MAP.regions.length; i++) {
+    const id = MAP.regions[i].id;
+    const t = TINTS[id];
+    const wi = w[id];
     fr += t.fog.r * wi;
     fg += t.fog.g * wi;
     fb += t.fog.b * wi;

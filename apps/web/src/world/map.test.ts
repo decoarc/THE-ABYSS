@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAP, edgeDepth, inward, regionAt, regionWeights } from './map';
+import { MAP, edgeDepth, inward, regionAt, regionWeights, regionWeightsInto, type RegionId } from './map';
 
 describe('mapa compartilhado', () => {
   it('carrega 3 regiões com raio entre 20 e 50', () => {
@@ -39,5 +39,19 @@ describe('mapa compartilhado', () => {
   it('esponjas dentro da Floresta', () => {
     expect(MAP.sponges.length).toBeGreaterThan(0);
     for (const s of MAP.sponges) expect(regionAt(s.x, s.z)).toBe('floresta');
+  });
+
+  it('regionWeightsInto dá os mesmos pesos que regionWeights, no mesmo objeto', () => {
+    const out = { jardim: 0, floresta: 0, planicie: 0 } as Record<RegionId, number>;
+    // Centros, costura Jardim/Planície, fora do mapa; com a largura padrão e com outra.
+    const points: [number, number][] = [[0, 0], [-48, -30], [62, -28], [27, -12], [200, 200]];
+    for (const blend of [undefined, 5]) {
+      for (const [x, z] of points) {
+        const r = regionWeightsInto(x, z, out, blend);
+        expect(r).toBe(out);
+        const ref = regionWeights(x, z, blend);
+        for (const id of ['jardim', 'floresta', 'planicie'] as const) expect(r[id]).toBeCloseTo(ref[id], 12);
+      }
+    }
   });
 });

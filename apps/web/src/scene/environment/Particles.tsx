@@ -5,10 +5,9 @@ import { clampDelta } from '../../lib/motion';
 import { PALETTE } from '../../lib/palette';
 import { createRng } from '../../lib/random';
 import { useSceneSettings } from '../../settings';
-import { MAP } from '../../world/map';
 import { foggyShader } from '../glsl/material';
 import { pointScale } from '../glsl/points';
-import { JARDIM_CORE, JARDIM_FADE } from '../terrain';
+import { PLANICIE_WEIGHT_GLSL } from '../regionTint';
 
 /**
  * Volume onde a neve marinha deriva. Anda com a câmera em x e z (a faixa de altura é fixa),
@@ -33,17 +32,11 @@ const LAYERS = [
  * e caem de verdade, devagar. Ficam sempre no mesmo Points; fora da Planície têm tamanho zero.
  */
 const PLAIN_EXTRA = 1.5;
-const PLAIN = MAP.regions.find((r) => r.id === 'planicie')!;
-/** Passagem da neve da Planície na borda dela (unidades para fora e para dentro do raio). */
-const PLAIN_EDGE_OUT = 4;
-const PLAIN_EDGE_IN = 10;
 
 const vertex = /* glsl */ `
 attribute float aSize;
 attribute float aSeed;
 attribute float aPlain;
-uniform vec3 uPlain;
-uniform vec2 uCore;
 uniform float uTime;
 uniform float uPointScale;
 uniform vec3 uBoxMin;
@@ -51,6 +44,7 @@ uniform vec3 uBoxSize;
 varying float vTwinkle;
 varying float vNear;
 #include <fog_pars_vertex>
+${PLANICIE_WEIGHT_GLSL}
 void main() {
   // Os flocos da Planície caem (~0,1 u/s); os outros quase só derivam.
   vec3 current = mix(vec3(0.12, -0.035, 0.05), vec3(0.05, -0.11, 0.03), aPlain) * (0.6 + aSeed);
@@ -59,9 +53,9 @@ void main() {
   p.y += cos(uTime * 0.23 + aSeed * 17.0) * 0.2;
   p = uBoxMin + mod(p - uBoxMin, uBoxSize);
   vTwinkle = 0.55 + 0.45 * sin(uTime * (0.6 + aSeed) + aSeed * 60.0);
-  // Quanto este ponto do mundo é Planície (nunca no miolo do Jardim); lá a neve é mais densa no alto.
-  float plain = (1.0 - smoothstep(uPlain.z - ${PLAIN_EDGE_IN.toFixed(1)}, uPlain.z + ${PLAIN_EDGE_OUT.toFixed(1)}, distance(p.xz, uPlain.xy)))
-    * smoothstep(uCore.x, uCore.y, length(p.xz));
+  // Quanto este ponto do mundo é Planície: o mesmo peso do leito, da luz e da névoa (zero no miolo
+  // do Jardim). Lá a neve é mais densa no alto.
+  float plain = planicieWeight(p.xz);
   float high = mix(0.55, 1.0, clamp((p.y - uBoxMin.y) / uBoxSize.y, 0.0, 1.0));
   float show = mix(1.0, plain * high, aPlain);
   vTwinkle *= show;
@@ -138,8 +132,6 @@ export function Particles() {
         uPointScale: { value: 1 },
         uBoxMin: { value: new THREE.Vector3(-BOX_SIZE.x / 2, BOX_Y_MIN, -BOX_SIZE.z / 2) },
         uBoxSize: { value: BOX_SIZE },
-        uPlain: { value: new THREE.Vector3(PLAIN.center[0], PLAIN.center[1], PLAIN.radius) },
-        uCore: { value: new THREE.Vector2(JARDIM_CORE, JARDIM_CORE + JARDIM_FADE) },
         uColor: { value: new THREE.Color(PALETTE.fg).lerp(new THREE.Color(PALETTE.cyan), 0.35) },
       },
     });

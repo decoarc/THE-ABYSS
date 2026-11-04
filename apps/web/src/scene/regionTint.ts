@@ -1,7 +1,7 @@
 import { Color } from 'three';
 import { PALETTE } from '../lib/palette';
 import { MAP, regionWeightsInto, type RegionId } from '../world/map';
-import { JARDIM_CORE, JARDIM_FADE } from './terrain';
+import { JARDIM_CORE } from './terrain';
 
 /** Névoa (e fundo), céu da luz hemisférica e intensidade da luz ambiente num ponto do mapa. */
 export interface RegionTint {
@@ -41,9 +41,15 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-/** 0 no miolo aprovado do Jardim, 1 a partir do fim da passagem do leito: nada lá dentro muda. */
+/**
+ * Fim da passagem do miolo do Jardim para as outras regiões (luz, névoa, cor do leito, luz da comida e
+ * neve). Mais longa que a do relevo (JARDIM_CORE + JARDIM_FADE = 32): a Planície chega aos poucos.
+ */
+export const REGION_FADE_END = 40;
+
+/** 0 no miolo aprovado do Jardim, 1 a partir de REGION_FADE_END: nada lá dentro muda. */
 export const outsideJardimCore = (x: number, z: number): number =>
-  smoothstep(JARDIM_CORE, JARDIM_CORE + JARDIM_FADE, Math.hypot(x, z));
+  smoothstep(JARDIM_CORE, REGION_FADE_END, Math.hypot(x, z));
 
 /** Rascunho dos pesos: as funções abaixo rodam a cada quadro e não alocam. */
 const weights: Record<RegionId, number> = { jardim: 0, floresta: 0, planicie: 0 };
@@ -89,3 +95,29 @@ export function regionTint(
   out.ambient = JARDIM.ambient + (amb - JARDIM.ambient) * k;
   return out;
 }
+
+/**
+ * `planicieWeight` em GLSL, gerado a partir do mesmo mapa e das mesmas constantes, para shaders que
+ * precisam do peso por ponto do mundo (a neve que cai). Define `float planicieWeight(vec2 p)`.
+ */
+export const PLANICIE_WEIGHT_GLSL = (() => {
+  const f = (v: number) => v.toFixed(4);
+  const regions = MAP.regions;
+  const depth = regions
+    .map((r, i) => `  float d${i} = ${f(r.radius)} - distance(p, vec2(${f(r.center[0])}, ${f(r.center[1])}));`)
+    .join('\n');
+  const top = regions.map((_, i) => `d${i}`).reduce((a, b) => `max(${a}, ${b})`);
+  const exps = regions.map((_, i) => `  float e${i} = exp((d${i} - top) / ${f(TINT_BLEND)});`).join('\n');
+  const sum = regions.map((_, i) => `e${i}`).join(' + ');
+  const plain = regions.findIndex((r) => r.id === 'planicie');
+  return `
+float planicieWeight(vec2 p) {
+  float core = smoothstep(${f(JARDIM_CORE)}, ${f(REGION_FADE_END)}, length(p));
+  if (core <= 0.0) return 0.0;
+${depth}
+  float top = ${top};
+${exps}
+  return e${plain} / (${sum}) * core;
+}
+`;
+})();

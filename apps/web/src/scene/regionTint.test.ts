@@ -1,7 +1,7 @@
 import { Color } from 'three';
 import { PALETTE } from '../lib/palette';
 import { MAP } from '../world/map';
-import { regionTint } from './regionTint';
+import { planicieWeight, regionTint } from './regionTint';
 
 const luminance = (c: Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 /** Quanto do total é azul: maior = mais frio. */
@@ -79,4 +79,33 @@ it('escreve em `out` sem alocar quando recebe um', () => {
   // O mesmo `out` reaproveitado na costura e no Jardim continua dando os valores certos.
   expect(regionTint(27, -12, out)).toEqual(regionTint(27, -12));
   expect(regionTint(0, 0, out)).toEqual(regionTint(0, 0));
+});
+
+describe('planicieWeight', () => {
+  /** Ponto a distância `r` da origem, na direção do centro da Planície. */
+  const towardPlain = (r: number): [number, number] => {
+    const [cx, cz] = planicie.center;
+    const len = Math.hypot(cx, cz);
+    return [(cx / len) * r, (cz / len) * r];
+  };
+
+  it('é exatamente 0 no miolo aprovado do Jardim', () => {
+    for (let r = 0; r <= 26; r += 0.5)
+      for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
+        const [x, z] = [Math.cos(a) * r, Math.sin(a) * r];
+        // Em ponto flutuante cos·26, sin·26 pode cair um fio além de 26: só vale o que está dentro.
+        if (Math.hypot(x, z) <= 26) expect(planicieWeight(x, z)).toBe(0);
+      }
+    expect(planicieWeight(...towardPlain(26))).toBe(0);
+  });
+
+  it('passa devagar de r 26 a ~40, só chegando ao platô bem dentro', () => {
+    const w = (r: number) => planicieWeight(...towardPlain(r));
+    // Na borda da passagem antiga (r 32) ainda é parcial.
+    expect(w(32)).toBeGreaterThan(0.2);
+    expect(w(32)).toBeLessThan(0.6);
+    expect(w(36)).toBeLessThan(0.95);
+    expect(w(42)).toBeGreaterThan(0.95);
+    for (let r = 26; r < 42; r += 0.5) expect(w(r + 0.5)).toBeGreaterThanOrEqual(w(r));
+  });
 });

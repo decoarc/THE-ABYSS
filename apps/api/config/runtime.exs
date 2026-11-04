@@ -38,6 +38,14 @@ if population = System.get_env("ABYSS_POPULATION") do
   config :abyss, :world, population: n
 end
 
+# Semente do mundo: um inteiro deixa o mundo repetível (medições de desempenho);
+# sem ela (ou vazia), a semente do config.exs (nil = aleatória na partida).
+case System.get_env("ABYSS_SEED") do
+  nil -> :ok
+  "" -> :ok
+  seed -> config :abyss, :world, seed: String.to_integer(seed)
+end
+
 # Espécies de teste: "false" liga o mundo vazio (só flora e partículas).
 if System.get_env("ABYSS_TEST_SPECIES") do
   config :abyss, :world, test_species: System.get_env("ABYSS_TEST_SPECIES") != "false"

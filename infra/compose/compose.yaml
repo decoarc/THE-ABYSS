@@ -10,6 +10,8 @@ services:
       # Padrão 150 (faixa 5-400); ABYSS_TEST_SPECIES=false liga o mundo vazio.
       - ABYSS_POPULATION=${ABYSS_POPULATION:-150}
       - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-true}
+      # Semente fixa opcional (mundo repetível); vazia = aleatória.
+      - ABYSS_SEED=${ABYSS_SEED:-}
     ports:
       - "4000:4000"
     volumes:

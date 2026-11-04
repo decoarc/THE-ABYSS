@@ -112,6 +112,12 @@ Como no gate I: em cada parada o construtor mostra capturas ou vídeo e pede uma
 - Sensação da câmera (testada à mão em 2026-11-04): aprovada com os valores atuais (velocidade máxima 6, aceleração 8, arrasto 2,5; W anda na direção do olhar; borda macia a 6 da borda).
 - Travamentos no voo (achados no mesmo teste, corrigidos e aprovados em 2026-11-04): congelamentos de 0,3 a 1,5 s eram shaders recompilados porque cada Casco tinha uma luz pontual dentro do grupo descartado por distância, e o número de luzes da cena mudava a cada Casco que entrava ou saía do alcance. Agora há uma reserva fixa de 4 luzes (`organisms/creatureLights.tsx`) que vai para os Cascos mais próximos. Fica em aberto, sem bloquear: um material visto pela primeira vez no meio do voo ainda compila ali (até ~250 ms, uma vez por sessão); a pré-compilação na tela de carregamento é candidata para depois.
 
+**Parada 2, decidido pelo autor em 2026-11-04** (capturas em `docs/captures/e1/parada-2/`):
+
+- Planície ("Neve silenciosa"): aceita como está. O chão fica escuro e aberto, e a luz vem das partículas de comida perto da câmera; a neve que cai é 1,5× a do Jardim, e as poças âmbar grandes ficam.
+- Transição Jardim → Planície: alongada do lado da Planície, de r 26 até ~40 a partir do centro do Jardim (antes 26 → 32). Névoa, luz, cor do chão, luz da comida e neve usam o mesmo peso. Nada muda dentro de r ≤ 26.
+- Flora no miolo do Jardim: fica. As manchas passam a fazer parte do quadro herói aprovado.
+
 ## 8. Decisões minhas (Claude), a conferir pelo autor
 
 - **O que o "raio 20–50" mede:** a área nadável e composta de cada região, ou seja, o chão com arte própria e o volume onde as criaturas nadam, no mesmo sentido do raio 28 do gate I (`config.exs`). O leito de raio 60 de hoje (`SEABED_RADIUS`) é em grande parte chão engolido pela névoa e não conta.

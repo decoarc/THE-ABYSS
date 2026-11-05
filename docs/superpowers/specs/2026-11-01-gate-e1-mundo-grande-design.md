@@ -125,6 +125,12 @@ Como no gate I: em cada parada o construtor mostra capturas ou vídeo e pede uma
 - Forma: o cesto em vaso (barriga larga, cintura e boca aberta) fica, em vez da cúpula pontuda do esboço B.
 - Quadro herói: as esponjas fracas na névoa distante (fora de r 26, onde ficava o greybox) ficam e passam a fazer parte do quadro.
 
+**Parada 4, decidido pelo autor em 2026-11-05** (materiais em `docs/captures/e1/parada-4/`):
+
+- Comida: aprovada como está ("eu aprovo"), sem ajustes. Vídeo `comida.webm` com a flora sendo comida no Jardim e as partículas caindo e sendo comidas na Planície; números de 10 min com e sem comedores em `resumo.md`. Fecha os critérios 1 e 2.
+- Medidas: sem comedores a flora chega ao teto (200) em menos de 1 min e fica; as partículas não passam de 400 e expiram. Com 150 organismos a flora fica em 192,4–195,9 (97 mordidas/min) e as partículas em 301–355 (27,5 comidas/min).
+- Pacote de aceite do gate: `docs/GATE_E1_ACCEPTANCE.md`.
+
 ## 8. Decisões minhas (Claude), a conferir pelo autor
 
 - **O que o "raio 20–50" mede:** a área nadável e composta de cada região, ou seja, o chão com arte própria e o volume onde as criaturas nadam, no mesmo sentido do raio 28 do gate I (`config.exs`). O leito de raio 60 de hoje (`SEABED_RADIUS`) é em grande parte chão engolido pela névoa e não conta.

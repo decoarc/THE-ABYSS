@@ -54,7 +54,7 @@ export function Nucleus({
   const { motion } = useSceneSettings();
   const time = useRef(timeOffset);
   const core = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: config.color, toneMapped: false, transparent: true }),
+    () => new THREE.MeshBasicMaterial({ color: config.color, toneMapped: false, alphaHash: true }),
     [config.color],
   );
   const halo = useMemo(

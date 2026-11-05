@@ -25,6 +25,8 @@ export function energyGlow(energy: number, t: number): number {
 
 /** Escala de vida: jovem pequeno, crescendo suave (smoothstep) por GROW_MS depois de amadurecer. */
 export function lifeScale(v: Vitals, nowMs: number, juvenileScale: number): number {
+  // Fantasma: o tamanho congela no instante da morte, o desfazer parte do que estava na tela.
+  if (v.dyingSinceMs !== null) nowMs = Math.min(nowMs, v.dyingSinceMs);
   if (v.juvenile) return juvenileScale;
   if (v.maturedAtMs === null) return 1;
   const k = clamp01((nowMs - v.maturedAtMs) / GROW_MS);
@@ -34,6 +36,7 @@ export function lifeScale(v: Vitals, nowMs: number, juvenileScale: number): numb
 
 /** Alongamento no eixo da velocidade: 1 -> STRETCH_MAX ao longo de `divideS` desde que a divisão começou. */
 export function stretch(v: Vitals, nowMs: number, divideS: number): number {
+  if (v.dyingSinceMs !== null) nowMs = Math.min(nowMs, v.dyingSinceMs);
   if (!v.dividing || v.dividingSinceMs === null) return 1;
   const k = clamp01((nowMs - v.dividingSinceMs) / (divideS * 1000));
   return 1 + (STRETCH_MAX - 1) * k;

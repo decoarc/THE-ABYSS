@@ -190,3 +190,16 @@ it('vitals: dividingSinceMs marca quando o bit de divisão ligou', () => {
   s.vitals('a', out);
   expect(out.dividingSinceMs).toBeNull();
 });
+
+it('fantasma guarda juvenil/divisão do momento da morte', () => {
+  const s = createWorldStore();
+  s.applySnapshot(snap(['a', 'b'], { organisms: [org('a', { stage: 'juvenile' }), org('b')] }), L(1));
+  s.applyTick(tick(2, [row(0, 0.5, 1), row(1, 0.5, 2)]), L(2));
+  s.applyTick(tick(3, [row(0, 0.5, 1), row(1, 0.5, 2)]), L(3));
+  s.applyTick(tick(4, [], { d: [['a', 'starvation'], ['b', 'old_age']] }), L(4));
+  const out = vit();
+  s.vitals('a', out);
+  expect(out).toMatchObject({ juvenile: true, dividing: false, dyingSinceMs: L(4) });
+  s.vitals('b', out);
+  expect(out).toMatchObject({ juvenile: false, dividing: true, dividingSinceMs: L(2), dyingSinceMs: L(4) });
+});

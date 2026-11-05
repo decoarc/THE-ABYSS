@@ -77,3 +77,22 @@ describe('dissolve', () => {
     }
   });
 });
+
+describe('fantasma congela tamanho e alongamento', () => {
+  it('jovem que morre mantém juvenileScale', () => {
+    const g = vit({ juvenile: true, dyingSinceMs: 2000 });
+    expect(lifeScale(g, 2000 + 700, 0.45)).toBe(0.45);
+  });
+  it('crescendo na morte fica onde estava', () => {
+    const g = vit({ maturedAtMs: 1000, dyingSinceMs: 2000 });
+    const at = lifeScale(vit({ maturedAtMs: 1000 }), 2000, 0.45);
+    expect(lifeScale(g, 2000, 0.45)).toBeCloseTo(at, 10);
+    expect(lifeScale(g, 9000, 0.45)).toBeCloseTo(at, 10);
+  });
+  it('dividindo na morte mantém o alongamento', () => {
+    const g = vit({ dividing: true, dividingSinceMs: 1000, dyingSinceMs: 5000 });
+    const at = stretch(vit({ dividing: true, dividingSinceMs: 1000 }), 5000, 8);
+    expect(at).toBeCloseTo(1.4, 10);
+    expect(stretch(g, 5000 + 1200, 8)).toBeCloseTo(at, 10);
+  });
+});

@@ -64,7 +64,7 @@ export function Poliedro({ id }: { id: string }) {
             // Brilho interno do núcleo difundido no cristal: as faces nunca ficam escuras.
             emissive: new THREE.Color(C.nucleus.color).multiplyScalar(0.07),
             flatShading: true,
-            transparent: true,
+            alphaHash: true,
           })
         : new THREE.MeshStandardMaterial({
             color: '#151b24',
@@ -72,7 +72,7 @@ export function Poliedro({ id }: { id: string }) {
             metalness: 0.35,
             emissive: new THREE.Color(C.nucleus.color).multiplyScalar(0.06),
             flatShading: true,
-            transparent: true,
+            alphaHash: true,
           }),
     [q.crystal],
   );

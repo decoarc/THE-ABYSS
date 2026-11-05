@@ -176,8 +176,8 @@ export function Casco({ id }: { id: string }) {
       <group ref={counter}>
         <group ref={group} visible={false} quaternion={state.initial}>
           <mesh geometry={geometry}>
-            {/* Transparente desde a criação (constante): o desfazer só mexe na opacidade, sem recompilar. */}
-            <meshStandardMaterial ref={shellMaterial} color="#10161c" roughness={0.85} metalness={0.05} flatShading transparent />
+            {/* Opaco com alphaHash desde a criação: o desfazer só mexe na opacidade, sem recompilar nem sair do passe opaco. */}
+            <meshStandardMaterial ref={shellMaterial} color="#10161c" roughness={0.85} metalness={0.05} flatShading alphaHash />
           </mesh>
           <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={4} timeOffset={phase * 1000} />
         </group>

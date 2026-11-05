@@ -260,7 +260,7 @@ export function Celula({ id }: { id: string }) {
     <group ref={group} visible={false} {...selectable}>
       {/* Conteúdo interno primeiro; a pele translúcida é desenhada por cima. */}
       <instancedMesh ref={granules} key={granuleCount} args={[granuleGeometry, undefined, granuleCount]} renderOrder={1}>
-        <meshBasicMaterial ref={granuleMaterial} transparent />
+        <meshBasicMaterial ref={granuleMaterial} alphaHash />
       </instancedMesh>
       <group position={[0, shaft * 0.2, 0]}>
         <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={4} timeOffset={offset} />

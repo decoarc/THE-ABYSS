@@ -91,6 +91,11 @@ interface Ghost {
   pos: Vec3;
   energy: number;
   dyingSinceMs: number;
+  /** Estado vital no instante da morte: o desfazer parte do tamanho e do alongamento que estavam na tela. */
+  juvenile: boolean;
+  dividing: boolean;
+  maturedAtMs: number | null;
+  dividingSinceMs: number | null;
 }
 
 const makeLive = (info: OrganismInfo, localMs: number): Live => ({
@@ -252,7 +257,10 @@ export function createWorldStore(): WorldStore {
           // Congela onde o cliente a desenhava agora (atrasada no tempo), não na amostra mais nova: sem salto.
           const pos: Vec3 = [0, 0, 0];
           store.sample(l.info.id, localMs, pos, [0, 0, 0]);
-          ghosts.push({ info: l.info, pos, energy: l.energy, dyingSinceMs: localMs });
+          ghosts.push({
+            info: l.info, pos, energy: l.energy, dyingSinceMs: localMs,
+            juvenile: l.juvenile, dividing: l.dividing, maturedAtMs: l.maturedAtMs, dividingSinceMs: l.dividingSinceMs,
+          });
         }
         lives = lives.filter((l) => !dead.has(l.info.id));
       }
@@ -318,10 +326,10 @@ export function createWorldStore(): WorldStore {
       const g = findGhost(id);
       if (!g) return false;
       out.energy = g.energy;
-      out.juvenile = false;
-      out.dividing = false;
-      out.maturedAtMs = null;
-      out.dividingSinceMs = null;
+      out.juvenile = g.juvenile;
+      out.dividing = g.dividing;
+      out.maturedAtMs = g.maturedAtMs;
+      out.dividingSinceMs = g.dividingSinceMs;
       out.dyingSinceMs = g.dyingSinceMs;
       return true;
     },

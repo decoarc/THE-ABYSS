@@ -6,18 +6,22 @@ defmodule Abyss.World.Flora do
 
   Cada mancha guarda `q`, o degrau inteiro (passo de 0,02) do último nível
   reportado, para que `step/2` só liste o que mudou de fato.
+
+  As manchas não se movem: a grade espacial (`grid`, índices por célula) é
+  montada uma vez. Quem troca `patches` por outro conjunto usa `put_patches/2`.
   """
 
+  alias Abyss.World.Grid
   alias Abyss.World.Map, as: WMap
 
   @quant 0.02
   @sponge_margin 0.5
   @tries 100
 
-  defstruct patches: {}, cfg: %{}
+  defstruct patches: {}, cfg: %{}, grid: %{}
 
   @type patch :: %{x: float, z: float, level: float, rate: float, q: non_neg_integer}
-  @type t :: %__MODULE__{patches: tuple, cfg: map}
+  @type t :: %__MODULE__{patches: tuple, cfg: map, grid: Grid.t()}
 
   @doc "`cfg`: mapa com `flora_grow_s` e `vent_boost` (bloco `:food`)."
   @spec new(WMap.t(), :rand.state(), map) :: {t, :rand.state()}
@@ -29,7 +33,19 @@ defmodule Abyss.World.Flora do
         end)
       end)
 
-    {%__MODULE__{patches: groups |> List.flatten() |> List.to_tuple(), cfg: cfg}, rng}
+    {put_patches(%__MODULE__{cfg: cfg}, groups |> List.flatten() |> List.to_tuple()), rng}
+  end
+
+  @doc "Troca o conjunto de manchas e remonta a grade."
+  @spec put_patches(t, tuple) :: t
+  def put_patches(%__MODULE__{} = flora, patches) do
+    grid =
+      patches
+      |> Tuple.to_list()
+      |> Enum.with_index(fn p, idx -> {p.x, p.z, idx} end)
+      |> Grid.build()
+
+    %{flora | patches: patches, grid: grid}
   end
 
   @doc "Cresce todas as manchas por `dt` s; devolve `[{idx, level_q}]` das que mudaram de degrau."
@@ -60,15 +76,22 @@ defmodule Abyss.World.Flora do
     {%{flora | patches: put_elem(patches, idx, %{p | level: level})}, eaten}
   end
 
-  @doc "Índice da mancha mais próxima (XZ) dentro de `range` com nível >= `min_level`, ou nil."
+  @doc """
+  Índice da mancha mais próxima (XZ) dentro de `range` com nível >= `min_level`,
+  ou nil. Empate na distância: o menor índice (o mesmo da varredura linear).
+  Só olha as células da grade que cobrem o alcance.
+  """
   @spec edible_near(t, {number, number}, number, number) :: non_neg_integer | nil
-  def edible_near(%__MODULE__{patches: patches}, {x, z}, range, min_level) do
-    patches
-    |> Tuple.to_list()
-    |> Enum.with_index()
-    |> Enum.reduce({nil, range}, fn {p, idx}, {best, best_d} = acc ->
+  def edible_near(%__MODULE__{patches: patches, grid: grid}, {x, z}, range, min_level) do
+    grid
+    |> Grid.near(x, z, range)
+    |> Enum.reduce({nil, range}, fn idx, {best, best_d} = acc ->
+      p = elem(patches, idx)
       d = :math.sqrt((p.x - x) * (p.x - x) + (p.z - z) * (p.z - z))
-      if p.level >= min_level and d <= best_d and (best == nil or d < best_d), do: {idx, d}, else: acc
+
+      if p.level >= min_level and d <= best_d and (best == nil or d < best_d or idx < best),
+        do: {idx, d},
+        else: acc
     end)
     |> elem(0)
   end

@@ -12,7 +12,10 @@ defmodule Abyss.World.FloraTest do
 
   # Flora de uma só mancha, com a taxa que Flora.new daria àquele ponto.
   defp one(level, x, z) do
-    %{new() | patches: {%{x: x, z: z, level: level, rate: rate(x, z), q: round(level / 0.02)}}}
+    Flora.put_patches(
+      new(),
+      {%{x: x, z: z, level: level, rate: rate(x, z), q: round(level / 0.02)}}
+    )
   end
 
   defp level(f), do: elem(f.patches, 0).level
@@ -88,13 +91,13 @@ defmodule Abyss.World.FloraTest do
   end
 
   test "edible_near devolve a mais próxima comestível" do
-    f = %{
-      new()
-      | patches:
-          {%{x: 0.0, z: 0.0, level: 0.01, rate: 0.0, q: 1},
-           %{x: 3.0, z: 0.0, level: 0.5, rate: 0.0, q: 25},
-           %{x: 1.0, z: 1.0, level: 0.5, rate: 0.0, q: 25}}
-    }
+    f =
+      Flora.put_patches(
+        new(),
+        {%{x: 0.0, z: 0.0, level: 0.01, rate: 0.0, q: 1},
+         %{x: 3.0, z: 0.0, level: 0.5, rate: 0.0, q: 25},
+         %{x: 1.0, z: 1.0, level: 0.5, rate: 0.0, q: 25}}
+      )
 
     assert Flora.edible_near(f, {0.0, 0.0}, 5.0, 0.05) == 2
     assert Flora.edible_near(f, {0.0, 0.0}, 0.5, 0.05) == nil

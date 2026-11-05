@@ -6,8 +6,13 @@ defmodule Abyss.World.Particles do
   `{p0, v, born_ms, rest_y}`; só nascimento e remoção trafegam.
 
   A partícula leva `rest_y` para que `position/2` não dependa do mapa.
+
+  A busca da mais próxima usa um índice (`index/2`): as posições de todas as
+  partículas num instante, calculadas uma vez e postas numa grade espacial.
+  O Sim monta um por tick e o consulta para cada criatura faminta.
   """
 
+  alias Abyss.World.Grid
   alias Abyss.World.Map, as: WMap
 
   defstruct [:map, :cfg, items: %{}, next_id: 1]
@@ -20,7 +25,14 @@ defmodule Abyss.World.Particles do
           life_ms: integer,
           rest_y: number
         }
-  @type t :: %__MODULE__{map: WMap.t(), cfg: map, items: %{pos_integer => particle}, next_id: pos_integer}
+  @type t :: %__MODULE__{
+          map: WMap.t(),
+          cfg: map,
+          items: %{pos_integer => particle},
+          next_id: pos_integer
+        }
+  @typedoc "Posições num instante (y já limitado a >= y_min), numa grade XZ."
+  @type index :: Grid.t()
 
   @spawn_height 2.0
 
@@ -69,17 +81,38 @@ defmodule Abyss.World.Particles do
     if Map.has_key?(items, id), do: {%{p | items: Map.delete(items, id)}, true}, else: {p, false}
   end
 
+  @doc "Índice das posições em `now_ms` (vale enquanto o relógio não andar)."
+  @spec index(t, integer) :: index
+  def index(%__MODULE__{items: items, map: map}, now_ms) do
+    items
+    |> Enum.map(fn {id, pt} ->
+      {px, py, pz} = position(pt, now_ms)
+      {px, pz, {id, px, max(py, map.y_min), pz}}
+    end)
+    |> Grid.build()
+  end
+
   @doc "Id da partícula mais próxima dentro de `range` (y de quem come limitado a >= y_min), ou nil."
   @spec near(t, {number, number, number}, number, integer) :: pos_integer | nil
-  def near(%__MODULE__{items: items, map: map}, {x, y, z}, range, now_ms) do
+  def near(%__MODULE__{} = p, pos, range, now_ms), do: near_in(p, index(p, now_ms), pos, range)
+
+  @doc """
+  Como `near/4`, consultando um índice pronto. Partículas do índice que já
+  saíram de `items` (comidas neste tick) são ignoradas. Empate na distância:
+  o menor id.
+  """
+  @spec near_in(t, index, {number, number, number}, number) :: pos_integer | nil
+  def near_in(%__MODULE__{items: items, map: map}, index, {x, y, z}, range) do
     y = max(y, map.y_min)
 
-    items
-    |> Enum.reduce({nil, range}, fn {id, pt}, {best, best_d} = acc ->
-      {px, py, pz} = position(pt, now_ms)
-      py = max(py, map.y_min)
+    index
+    |> Grid.near(x, z, range)
+    |> Enum.reduce({nil, range}, fn {id, px, py, pz}, {best, best_d} = acc ->
       d = :math.sqrt((px - x) * (px - x) + (py - y) * (py - y) + (pz - z) * (pz - z))
-      if d <= best_d and (best == nil or d < best_d), do: {id, d}, else: acc
+
+      if d <= best_d and (best == nil or d < best_d or id < best) and Map.has_key?(items, id),
+        do: {id, d},
+        else: acc
     end)
     |> elem(0)
   end
@@ -100,10 +133,12 @@ defmodule Abyss.World.Particles do
 
     pt = %{
       id: id,
-      p0: {cx + rho * :math.cos(2 * :math.pi() * a), map.y_max + @spawn_height,
-           cz + rho * :math.sin(2 * :math.pi() * a)},
-      v: {drift * :math.cos(2 * :math.pi() * b), -(fall_lo + f * (fall_hi - fall_lo)),
-          drift * :math.sin(2 * :math.pi() * b)},
+      p0:
+        {cx + rho * :math.cos(2 * :math.pi() * a), map.y_max + @spawn_height,
+         cz + rho * :math.sin(2 * :math.pi() * a)},
+      v:
+        {drift * :math.cos(2 * :math.pi() * b), -(fall_lo + f * (fall_hi - fall_lo)),
+         drift * :math.sin(2 * :math.pi() * b)},
       born_ms: now_ms,
       life_ms: round(cfg.particle_life_s * 1000),
       rest_y: map.particle_rest_y
@@ -118,7 +153,9 @@ defmodule Abyss.World.Particles do
 
     {region, _} =
       Enum.reduce_while(regions, {nil, u * total}, fn r, {_, left} ->
-        if left < r.particle_share, do: {:halt, {r, 0.0}}, else: {:cont, {r, left - r.particle_share}}
+        if left < r.particle_share,
+          do: {:halt, {r, 0.0}},
+          else: {:cont, {r, left - r.particle_share}}
       end)
 
     {region, rng}

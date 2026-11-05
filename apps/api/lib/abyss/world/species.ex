@@ -89,12 +89,17 @@ defmodule Abyss.World.Species do
     }
   ]
 
+  # Consulta por id em tempo constante: get!/1 roda várias vezes por organismo por tick.
+  @by_id Map.new(@species, &{&1.id, &1})
+
   @spec all() :: [t]
   def all, do: @species
 
   @spec get!(atom) :: t
   def get!(id) do
-    Enum.find(@species, &(&1.id == id)) ||
-      raise ArgumentError, "espécie desconhecida: #{inspect(id)}"
+    case @by_id do
+      %{^id => sp} -> sp
+      _ -> raise ArgumentError, "espécie desconhecida: #{inspect(id)}"
+    end
   end
 end

@@ -2,9 +2,14 @@ defmodule Abyss.World.Sim do
   @moduledoc """
   Núcleo puro e determinístico do movimento. Sem processos, sem RNG global,
   sem leitura de Application env: tudo entra por `new/1` e `step/2`.
+
+  Buscas por vizinhança usam grades espaciais de célula 8 (`Abyss.World.Grid`):
+  esponjas (fixas, montada em `new/1`), organismos para a separação e
+  partículas (remontadas a cada tick). A grade só corta candidatos; a ordem de
+  soma e o desempate são os da varredura linear, então o resultado é idêntico.
   """
 
-  alias Abyss.World.{Flora, Organism, Particles, Species}
+  alias Abyss.World.{Flora, Grid, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
@@ -67,7 +72,7 @@ defmodule Abyss.World.Sim do
         food: food
       })
       when is_integer(pop) and pop >= 5 and pop <= @max_population do
-    bounds = %{map: map, creature_scale: scale, y_min: map.y_min, y_max: map.y_max}
+    bounds = bounds(map, scale)
     rng = :rand.seed_s(:exsss, seed)
 
     {organisms, rng} =
@@ -114,6 +119,31 @@ defmodule Abyss.World.Sim do
           "população deve estar entre 5 e #{@max_population}, recebido: #{inspect(pop)}"
   end
 
+  # Fixos do mapa, calculados uma vez: esponjas numa grade de discos (alcance
+  # máximo de sponge_steer/keep_out_sponges) e o centro mais rico por dieta.
+  defp bounds(map, scale) do
+    max_r = Species.all() |> Enum.map(& &1.body_radius) |> Enum.max() |> Kernel.*(scale)
+
+    sponge_grid =
+      map.sponges
+      |> Enum.with_index(fn sp, i -> {sp.x, sp.z, sp.r + max_r + @sponge_reach, i} end)
+      |> Grid.build_discs()
+
+    %{
+      map: map,
+      creature_scale: scale,
+      y_min: map.y_min,
+      y_max: map.y_max,
+      max_r: max_r,
+      sponges: List.to_tuple(map.sponges),
+      sponge_grid: sponge_grid,
+      richest: %{
+        flora: Enum.max_by(map.regions, & &1.flora_patches).center,
+        particles: Enum.max_by(map.regions, & &1.particle_share).center
+      }
+    }
+  end
+
   @doc "Raio efetivo (body_radius × creature_scale) da espécie."
   @spec body_radius(t, atom) :: float
   def body_radius(%__MODULE__{bounds: bounds}, species_id),
@@ -130,9 +160,23 @@ defmodule Abyss.World.Sim do
     {flora, changed} = Flora.step(sim.flora, fdt)
     {particles, spawned, expired, rng} = Particles.step(sim.particles, fdt, now_ms, rng)
 
-    env = %{bounds: bounds, cfg: sim.food_cfg, now_ms: now_ms}
+    env = %{
+      bounds: bounds,
+      cfg: sim.food_cfg,
+      now_ms: now_ms,
+      particle_index: Particles.index(particles, now_ms)
+    }
+
     food = %{flora: flora, particles: particles, eaten_ids: [], bites: 0, takes: 0}
-    snapshot = Enum.map(orgs, &{&1.id, &1.pos, eff_radius(Species.get!(&1.species), bounds)})
+
+    # {i, id, pos, r}: i é a ordem da lista, para a separação somar na mesma ordem.
+    snapshot =
+      orgs
+      |> Enum.with_index(fn o, i ->
+        {x, _, z} = o.pos
+        {x, z, {i, o.id, o.pos, eff_radius(Species.get!(o.species), bounds)}}
+      end)
+      |> Grid.build()
 
     {new_orgs, {rng, food}} =
       Enum.map_reduce(orgs, {rng, food}, fn o, {rng, food} ->
@@ -206,7 +250,7 @@ defmodule Abyss.World.Sim do
       end) and not in_sponge?(pos, r, bounds.map)
 
     if free? or tries <= 1,
-      do: {keep_out_sponges(pos, r, bounds.map), rng},
+      do: {keep_out_sponges(pos, r, bounds), rng},
       else: pick_position(sp, bounds, placed, rng, tries - 1)
   end
 
@@ -271,8 +315,8 @@ defmodule Abyss.World.Sim do
       dir
       |> scale(target)
       |> add(edge_steer(o.pos, bounds, sp.max_speed))
-      |> add(sponge_steer(o.pos, r, bounds.map, sp.max_speed))
-      |> add(separation(o, sp, r, snapshot))
+      |> add(sponge_steer(o.pos, r, bounds, sp.max_speed))
+      |> add(separation(o, sp, r, snapshot, bounds.max_r))
       |> add(seek)
 
     k = min(1.0, sp.turn_rate * dt)
@@ -282,7 +326,7 @@ defmodule Abyss.World.Sim do
       o.pos
       |> add(scale(vel, dt))
       |> clamp_volume(bounds)
-      |> keep_out_sponges(r, bounds.map)
+      |> keep_out_sponges(r, bounds)
 
     {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng,
      food}
@@ -305,7 +349,7 @@ defmodule Abyss.World.Sim do
       o = %{o | sated_left: 0.0}
 
       case valid_target(o.target, env, food) || find_target(o, sp, env, food) do
-        nil -> {%{o | target: nil}, drift(o, sp, env.bounds.map), food}
+        nil -> {%{o | target: nil}, drift(o, sp, env.bounds), food}
         target -> approach_or_eat(%{o | target: target}, target, sp, r, env, food)
       end
     end
@@ -330,7 +374,7 @@ defmodule Abyss.World.Sim do
   end
 
   defp find_target(o, %{diet: :particles, perception: range}, env, food) do
-    case Particles.near(food.particles, o.pos, range, env.now_ms) do
+    case Particles.near_in(food.particles, env.particle_index, o.pos, range) do
       nil -> nil
       id -> {:particle, id}
     end
@@ -382,15 +426,12 @@ defmodule Abyss.World.Sim do
   end
 
   # Faminto e sem nada à vista: deriva rumo ao centro da região mais rica na sua dieta.
-  defp drift(o, sp, map) do
-    {cx, cz} = richest_center(map, sp.diet)
+  defp drift(o, sp, bounds) do
+    {cx, cz} = Map.fetch!(bounds.richest, sp.diet)
     {x, _, z} = o.pos
     {ux, _, uz} = unit({cx - x, 0.0, cz - z})
     {ux * @drift_weight * sp.max_speed, 0.0, uz * @drift_weight * sp.max_speed}
   end
-
-  defp richest_center(map, :flora), do: Enum.max_by(map.regions, & &1.flora_patches).center
-  defp richest_center(map, :particles), do: Enum.max_by(map.regions, & &1.particle_share).center
 
   # Só a Célula alterna entre correr e pausar (run_s/pause_s definidos).
   defp advance_mode(%{run_s: nil}, mode, _left, yaw, rng), do: {mode, 0.0, yaw, rng}
@@ -431,9 +472,13 @@ defmodule Abyss.World.Sim do
     {sx, sy, sz}
   end
 
-  # Esponjas (cilindros verticais de altura h): afastamento radial no XZ.
-  defp sponge_steer({x, y, z}, r, map, gain) do
-    Enum.reduce(map.sponges, {0.0, 0.0, 0.0}, fn sp, acc ->
+  # Esponjas (cilindros verticais de altura h): afastamento radial no XZ. Só as
+  # da célula do ponto podem alcançá-lo; vêm em ordem crescente, como na lista.
+  defp sponge_steer({x, y, z}, r, %{sponges: sponges, sponge_grid: grid}, gain) do
+    grid
+    |> Grid.at(x, z)
+    |> Enum.reduce({0.0, 0.0, 0.0}, fn i, acc ->
+      sp = elem(sponges, i)
       limit = sp.r + r + @sponge_reach
       {ux, uz, d} = away(x, z, sp)
 
@@ -450,16 +495,38 @@ defmodule Abyss.World.Sim do
     end)
   end
 
-  # Projeção dura para fora do cilindro da esponja.
-  defp keep_out_sponges(pos, r, map) do
-    Enum.reduce(map.sponges, pos, fn sp, {px, py, pz} = acc ->
-      {ux, uz, d} = away(px, pz, sp)
-      min_d = sp.r + r
+  # Projeção dura para fora do cilindro da esponja, esponja a esponja na ordem
+  # da lista. Equivale à varredura linear: a partir da posição atual, acha a
+  # próxima esponja (índice >= from) que a contém — todas estão na célula da
+  # grade —, projeta e segue dali com a nova posição.
+  defp keep_out_sponges(pos, r, bounds), do: keep_out_sponges(pos, r, bounds, 0)
 
-      if py < sp.h and d < min_d,
-        do: {sp.x + ux * min_d, py, sp.z + uz * min_d},
-        else: acc
-    end)
+  defp keep_out_sponges(
+         {px, py, pz} = pos,
+         r,
+         %{sponges: sponges, sponge_grid: grid} = bounds,
+         from
+       ) do
+    hit =
+      grid
+      |> Grid.at(px, pz)
+      |> Enum.find_value(fn i ->
+        sp = elem(sponges, i)
+
+        if i >= from and py < sp.h do
+          {ux, uz, d} = away(px, pz, sp)
+          if d < sp.r + r, do: {i, sp, ux, uz}
+        end
+      end)
+
+    case hit do
+      nil ->
+        pos
+
+      {i, sp, ux, uz} ->
+        min_d = sp.r + r
+        keep_out_sponges({sp.x + ux * min_d, py, sp.z + uz * min_d}, r, bounds, i + 1)
+    end
   end
 
   # {ux, uz, d}: direção unitária da esponja para o ponto e a distância no XZ.
@@ -470,8 +537,14 @@ defmodule Abyss.World.Sim do
     if d > 1.0e-9, do: {dx / d, dz / d, d}, else: {1.0, 0.0, d}
   end
 
-  defp separation(o, sp, r0, snapshot) do
-    Enum.reduce(snapshot, {0.0, 0.0, 0.0}, fn {id, pos, r}, acc ->
+  # Vizinhos pela grade (todo r <= max_r), somados na ordem da lista.
+  defp separation(o, sp, r0, grid, max_r) do
+    {x, _, z} = o.pos
+
+    grid
+    |> Grid.near(x, z, r0 + max_r + @sep_gap)
+    |> Enum.sort()
+    |> Enum.reduce({0.0, 0.0, 0.0}, fn {_i, id, pos, r}, acc ->
       if id == o.id do
         acc
       else

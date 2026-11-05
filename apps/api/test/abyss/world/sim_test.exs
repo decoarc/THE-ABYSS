@@ -222,17 +222,17 @@ defmodule Abyss.World.SimTest do
   end
 
   describe "comida" do
-    alias Abyss.World.{Organism, Particles}
+    alias Abyss.World.{Flora, Organism, Particles}
 
     # Mundo sem organismos, partículas novas nem flora; os testes põem o que precisam.
     defp bare do
       sim = Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
-      %{sim | flora: %{sim.flora | patches: {}}}
+      %{sim | flora: Flora.put_patches(sim.flora, {})}
     end
 
     defp with_patch(sim, x, z, level \\ 1.0) do
       patch = %{x: x, z: z, level: level, rate: 0.0, q: round(level / 0.02)}
-      %{sim | flora: %{sim.flora | patches: {patch}}}
+      %{sim | flora: Flora.put_patches(sim.flora, {patch})}
     end
 
     defp with_particle(sim, {x, y, z}) do

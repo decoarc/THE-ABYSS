@@ -37,6 +37,13 @@ defmodule Abyss.World.Life do
     end
   end
 
+  @doc "Adulto com energia cheia e sem divisão em curso."
+  @spec wants_divide?(Organism.t(), map) :: boolean
+  def wants_divide?(%Organism{stage: :adult, energy: e, dividing_left: left}, sp),
+    do: e >= sp.energy_max and left == 0
+
+  def wants_divide?(_o, _sp), do: false
+
   @doc "Raio efetivo: `body_radius × scale`, vezes `juvenile_scale` se jovem."
   @spec radius(Organism.t(), map, number, map) :: float
   def radius(%Organism{stage: stage}, sp, scale, eco) do

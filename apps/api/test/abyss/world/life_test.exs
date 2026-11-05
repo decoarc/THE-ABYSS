@@ -53,4 +53,11 @@ defmodule Abyss.World.LifeTest do
     assert_in_delta adult, @sp.body_radius * 0.5, 1.0e-9
     assert_in_delta Life.radius(org(stage: :juvenile), @sp, 0.5, @eco), adult * 0.45, 1.0e-9
   end
+
+  test "wants_divide? só para adulto cheio sem divisão em curso" do
+    assert Life.wants_divide?(org(stage: :adult, energy: 100.0), @sp)
+    refute Life.wants_divide?(org(stage: :adult, energy: 99.9), @sp)
+    refute Life.wants_divide?(org(stage: :juvenile, energy: 100.0), @sp)
+    refute Life.wants_divide?(org(stage: :adult, energy: 100.0, dividing_left: 1.0), @sp)
+  end
 end

@@ -31,7 +31,7 @@ end
 if population = System.get_env("ABYSS_POPULATION") do
   n = String.to_integer(population)
 
-  if n < 5 or n > 400 do
+  if n < 5 or n > 250 do
     raise "ABYSS_POPULATION fora da faixa aceita (5–400): #{n}"
   end
 

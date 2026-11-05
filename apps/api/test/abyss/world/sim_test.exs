@@ -75,10 +75,22 @@ defmodule Abyss.World.SimTest do
     assert %Sim{} = run(sim, 100)
   end
 
-  test "aceita 5..400" do
-    assert length(Sim.new(%{@opts | population: 400}).organisms) == 400
+  test "aceita 5..pop_cap" do
+    assert length(Sim.new(%{@opts | population: 250}).organisms) == 250
     assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 4}) end
-    assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 401}) end
+    assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 251}) end
+
+    eco = Map.new(Application.fetch_env!(:abyss, :ecology)) |> Map.put(:pop_cap, 400)
+    assert length(Sim.new(Map.put(%{@opts | population: 400}, :ecology, eco)).organisms) == 400
+
+    big = Map.put(eco, :pop_cap, 401)
+    assert_raise ArgumentError, fn -> Sim.new(Map.put(%{@opts | population: 45}, :ecology, big)) end
+  end
+
+  test "população inicial respeita o teto" do
+    eco = Map.new(Application.fetch_env!(:abyss, :ecology)) |> Map.put(:pop_cap, 20)
+    assert length(Sim.new(Map.put(%{@opts | population: 20}, :ecology, eco)).organisms) == 20
+    assert_raise ArgumentError, fn -> Sim.new(Map.put(%{@opts | population: 21}, :ecology, eco)) end
   end
 
   test "mundo vazio" do
@@ -521,6 +533,150 @@ defmodule Abyss.World.SimTest do
     test "um tick atrasado não gera partículas em massa" do
       sim = Sim.new(%{@opts | test_species: false}) |> Sim.step(60.0)
       assert Particles.count(sim.particles) < 20
+    end
+  end
+
+  describe "divisão" do
+    alias Abyss.World.{Flora, Organism}
+
+    defp bare_world(cap \\ 250) do
+      sim =
+        Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
+
+      # Um fundador de cada espécie é posto à mão como "-0001": o próximo é o 2.
+      seq = Map.new(sim.next_seq, fn {sp, _} -> {sp, 2} end)
+
+      %{
+        sim
+        | flora: Flora.put_patches(sim.flora, {}),
+          ecology: %{sim.ecology | pop_cap: cap},
+          next_seq: seq
+      }
+    end
+
+    defp adult(id, species, pos, extra \\ []) do
+      struct!(
+        %Organism{id: id, species: species, born_ms: 0, pos: pos, energy: 100.0, stage: :adult},
+        extra
+      )
+    end
+
+    defp step_until_birth(sim, max) do
+      Enum.reduce_while(1..max, {sim, []}, fn _, {s, hist} ->
+        s = Sim.step(s, 0.1)
+        if s.life_events.births != [], do: {:halt, {s, [s | hist]}}, else: {:cont, {s, [s | hist]}}
+      end)
+    end
+
+    test "divide quando enche" do
+      sim = %{bare_world() | organisms: [adult("CEL-0001", :celula, {1.0, 4.0, 0.0})]}
+      sp = Enum.find(Species.all(), &(&1.id == :celula))
+      eco = sim.ecology
+
+      # Há flora ao alcance: dividindo, ele não procura comida.
+      patch = %{x: 2.0, z: 0.0, level: 1.0, rate: 0.0, q: 50}
+      sim = %{sim | flora: Flora.put_patches(sim.flora, {patch})}
+
+      s1 = Sim.step(sim, 0.1)
+      assert [%{dividing_left: left}] = s1.organisms
+      assert left == eco.divide_s
+
+      {final, hist} = step_until_birth(s1, 40)
+      assert length(hist) == 20
+      assert final.totals.eaten_flora == 0
+
+      for s <- hist, o <- s.organisms, o.dividing_left > 0 do
+        assert norm(o.vel) <= sp.max_speed * 0.3 + 1.0e-9
+      end
+
+      assert [child] = final.life_events.births
+      [parent, last] = final.organisms
+      assert last == child
+      assert parent.id == "CEL-0001" and parent.dividing_left == 0
+      assert_in_delta parent.energy, 0.5 * sp.energy_max, 1.0e-9
+      assert child.id == "CEL-0002" and final.next_seq.celula == 3
+      assert child.stage == :juvenile and child.stage_ms == final.now_ms
+      assert child.generation == 2 and child.parent_id == "CEL-0001"
+      assert_in_delta child.energy, 0.35 * sp.energy_max, 1.0e-9
+      assert child.vel == parent.vel
+      assert final.eco_totals.births == %{celula: 1}
+
+      {px, py, pz} = parent.pos
+      {cx, cy, cz} = child.pos
+      r = Sim.body_radius(final, :celula)
+      assert_in_delta :math.sqrt((cx - px) ** 2 + (cz - pz) ** 2), r, 1.0e-9
+      assert_in_delta cy, py, 1.0e-9
+      side = parent.yaw + :math.pi() / 2
+      assert_in_delta cx - px, r * :math.cos(side), 1.0e-9
+      assert_in_delta cz - pz, r * :math.sin(side), 1.0e-9
+    end
+
+    test "jovem não divide" do
+      o = adult("CEL-0001", :celula, {1.0, 4.0, 0.0}, stage: :juvenile)
+      sim = %{bare_world() | organisms: [o]}
+      sim = Enum.reduce(1..100, sim, fn _, s -> Sim.step(%{s | organisms: Enum.map(s.organisms, &%{&1 | energy: 100.0})}, 0.1) end)
+      assert [%{dividing_left: +0.0, stage: :juvenile}] = sim.organisms
+      assert sim.eco_totals.births == %{}
+    end
+
+    test "filho herda as características" do
+      sim = %{bare_world() | organisms: [adult("POL-0001", :poliedro, {1.0, 4.0, 0.0})]}
+      {final, _} = step_until_birth(sim, 40)
+      [child] = final.life_events.births
+      assert child.species == :poliedro
+      assert Map.fetch!(final.bounds.species, child.species) == Map.fetch!(sim.bounds.species, :poliedro)
+    end
+
+    test "ids não se repetem" do
+      sim = bare_world()
+
+      parents =
+        for {sp, i} <- Enum.with_index([:celula, :membrana, :casco]),
+            do: adult("#{String.upcase(String.slice("#{sp}", 0, 3))}-0001", sp, {1.0 + i * 8, 4.0, 0.0})
+
+      sim = %{sim | organisms: parents}
+      codes = Map.new(Species.all(), &{&1.id, &1.code})
+      sim = %{sim | organisms: Enum.map(parents, &%{&1 | id: "#{codes[&1.species]}-0001"})}
+
+      {sim, ids, births} =
+        Enum.reduce(1..400, {sim, MapSet.new(Enum.map(sim.organisms, & &1.id)), 0}, fn i, {s, ids, b} ->
+          s = %{s | organisms: Enum.map(s.organisms, fn o -> if o.stage == :adult, do: %{o | energy: 100.0}, else: o end)}
+          s = Sim.step(s, 0.1)
+          new_ids = Enum.map(s.life_events.births, & &1.id)
+          assert Enum.all?(new_ids, &(not MapSet.member?(ids, &1)))
+          ids = Enum.reduce(new_ids, ids, &MapSet.put(&2, &1))
+          # morte intercalada: some com o filho mais novo a cada 10 passos
+          s =
+            if rem(i, 10) == 0 do
+              %{s | organisms: Enum.reject(s.organisms, &(&1.id == List.last(new_ids || [nil])))}
+            else
+              s
+            end
+
+          {s, ids, b + length(new_ids)}
+        end)
+
+      assert births >= 50
+      assert MapSet.size(ids) >= 50
+      assert Enum.sum(Enum.map(Species.all(), &(sim.next_seq[&1.id] - 1))) >= 50 + 5
+    end
+
+    test "teto segura a divisão" do
+      orgs = for i <- 1..20, do: adult("CEL-#{String.pad_leading("#{i}", 4, "0")}", :celula, {1.0 + i * 1.0, 4.0, 0.0})
+      sim = %{bare_world(20) | organisms: orgs}
+
+      full = fn s -> %{s | organisms: Enum.map(s.organisms, &%{&1 | energy: 100.0})} end
+      sim = Enum.reduce(1..100, sim, fn _, s -> s |> full.() |> Sim.step(0.1) end)
+
+      assert length(sim.organisms) == 20
+      assert sim.eco_totals.cap_holds > 0
+      assert Enum.all?(sim.organisms, &(&1.dividing_left == 0))
+      assert sim.eco_totals.births == %{}
+
+      # Abre uma vaga: um deles começa a dividir no passo seguinte.
+      sim = %{sim | organisms: tl(sim.organisms)}
+      s = sim |> full.() |> Sim.step(0.1)
+      assert Enum.count(s.organisms, &(&1.dividing_left > 0)) == 1
     end
   end
 end

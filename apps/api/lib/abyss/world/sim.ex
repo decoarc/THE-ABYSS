@@ -18,6 +18,9 @@ defmodule Abyss.World.Sim do
   @spawn_tries 50
   @sponge_reach 1.0
   @max_population 400
+  @divide_speed 0.3
+  @zero {0.0, 0.0, 0.0}
+  @divide_eps 1.0e-9
   # Passo máximo entregue à comida: um tick atrasado não pode virar um lambda
   # gigante no Poisson das partículas (Knuth degrada com lambda grande).
   @max_food_dt 0.5
@@ -41,7 +44,8 @@ defmodule Abyss.World.Sim do
             food_events: @no_events,
             totals: @no_totals,
             life_events: @no_life,
-            eco_totals: @no_eco
+            eco_totals: @no_eco,
+            next_seq: %{}
 
   @type food_events :: %{
           changed: [{non_neg_integer, float}],
@@ -61,11 +65,12 @@ defmodule Abyss.World.Sim do
           food_events: food_events,
           totals: map,
           life_events: %{deaths: [{String.t(), atom}], births: [Organism.t()], extinct: [tuple]},
-          eco_totals: map
+          eco_totals: map,
+          next_seq: %{atom => pos_integer}
         }
 
   @doc """
-  `opts`: `population` (5..400), `seed`, `now_ms`, `map` (`Abyss.World.Map`),
+  `opts`: `population` (5..`pop_cap`, e `pop_cap` <= 400), `seed`, `now_ms`, `map` (`Abyss.World.Map`),
   `creature_scale` (raio efetivo = body_radius × escala), `test_species`
   (false = mundo sem organismos), `food` (mapa do bloco `:food`), `species`
   (tabela de espécies, padrão `Species.all/0`) e `ecology` (mapa do bloco
@@ -83,12 +88,13 @@ defmodule Abyss.World.Sim do
           food: food
         } = opts
       )
-      when is_integer(pop) and pop >= 5 and pop <= @max_population do
+      when is_integer(pop) and pop >= 5 do
     species = Map.get_lazy(opts, :species, &Species.all/0)
 
     ecology =
       Map.get_lazy(opts, :ecology, fn -> Map.new(Application.fetch_env!(:abyss, :ecology)) end)
 
+    validate_population!(pop, ecology)
     bounds = bounds(map, scale, species)
     rng = :rand.seed_s(:exsss, seed)
 
@@ -117,8 +123,11 @@ defmodule Abyss.World.Sim do
       end
 
     {flora, rng} = Flora.new(map, rng, food)
+    founders = Enum.frequencies_by(organisms, & &1.species)
+    next_seq = Map.new(species, &{&1.id, Map.get(founders, &1.id, 0) + 1})
 
     %__MODULE__{
+      next_seq: next_seq,
       organisms: organisms,
       rng: rng,
       tick: 0,
@@ -134,6 +143,16 @@ defmodule Abyss.World.Sim do
   def new(%{population: pop}) do
     raise ArgumentError,
           "população deve estar entre 5 e #{@max_population}, recebido: #{inspect(pop)}"
+  end
+
+  defp validate_population!(pop, eco) do
+    cap = Map.get(eco, :pop_cap, @max_population)
+
+    if cap > @max_population,
+      do: raise(ArgumentError, "pop_cap deve ser no máximo #{@max_population}, recebido: #{cap}")
+
+    if pop > cap,
+      do: raise(ArgumentError, "população deve estar entre 5 e #{cap} (pop_cap), recebido: #{pop}")
   end
 
   # Fixos do mapa, calculados uma vez: esponjas numa grade de discos (alcance
@@ -193,7 +212,7 @@ defmodule Abyss.World.Sim do
       particle_index: Particles.index(particles, now_ms)
     }
 
-    food = %{flora: flora, particles: particles, eaten_ids: [], bites: 0, takes: 0}
+    food = %{flora: flora, particles: particles, eaten_ids: [], bites: 0, takes: 0, wants: []}
 
     # {i, id, pos, r}: i é a ordem da lista, para a separação somar na mesma ordem.
     snapshot =
@@ -210,6 +229,12 @@ defmodule Abyss.World.Sim do
         {o, rng, food} = step_one(o, snapshot, env, dt, rng, food)
         {o, {rng, food}}
       end)
+
+    # Divisões: concluem (nascidos no fim da lista) antes de remover os mortos,
+    # então o filho de um pai que morre neste passo nasce mesmo assim.
+    {new_orgs, births, next_seq} = complete_divisions(orgs, new_orgs, sim, now_ms)
+    {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim.ecology)
+    new_orgs = new_orgs ++ births
 
     {survivors, dead} =
       Enum.split_with(new_orgs, &(Life.death_cause(&1, spec(bounds, &1.species), now_ms) == nil))
@@ -235,9 +260,89 @@ defmodule Abyss.World.Sim do
         now_ms: now_ms,
         food_events: %{changed: changed, spawned: spawned, removed: removed},
         totals: totals,
-        life_events: %{@no_life | deaths: corpse_events.deaths},
-        eco_totals: count_deaths(sim.eco_totals, corpse_events.dead_by)
+        next_seq: next_seq,
+        life_events: %{@no_life | deaths: corpse_events.deaths, births: births},
+        eco_totals:
+          sim.eco_totals
+          |> count_deaths(corpse_events.dead_by)
+          |> count_births(births)
+          |> Map.update!(:cap_holds, &(&1 + cap_holds))
     }
+  end
+
+  # Quem tinha `dividing_left > 0` e zerou neste passo termina a divisão: o pai
+  # fica com split_parent × energy_max e nasce um jovem ao lado dele.
+  defp complete_divisions(old_orgs, new_orgs, sim, now_ms) do
+    old_orgs
+    |> Enum.zip(new_orgs)
+    |> Enum.map_reduce({[], sim.next_seq}, fn {old, o}, {born, seq} ->
+      if old.dividing_left > 0 and o.dividing_left == 0 do
+        sp = spec(sim.bounds, o.species)
+        n = Map.fetch!(seq, o.species)
+        child = newborn(o, sp, n, sim, now_ms)
+        parent = %{o | energy: sim.ecology.split_parent * sp.energy_max}
+        {parent, {[child | born], Map.put(seq, o.species, n + 1)}}
+      else
+        {o, {born, seq}}
+      end
+    end)
+    |> then(fn {orgs, {born, seq}} -> {orgs, Enum.reverse(born), seq} end)
+  end
+
+  defp newborn(parent, sp, n, sim, now_ms) do
+    r = Life.radius(parent, sp, sim.bounds.creature_scale, sim.ecology)
+    side = parent.yaw + :math.pi() / 2
+    {x, y, z} = parent.pos
+
+    %Organism{
+      id: "#{sp.code}-#{n |> Integer.to_string() |> String.pad_leading(4, "0")}",
+      species: parent.species,
+      born_ms: now_ms,
+      pos: {x + r * :math.cos(side), y, z + r * :math.sin(side)},
+      vel: parent.vel,
+      yaw: parent.yaw,
+      pitch: parent.pitch,
+      mode: parent.mode,
+      mode_left: parent.mode_left,
+      energy: sim.ecology.split_child * sp.energy_max,
+      stage: :juvenile,
+      stage_ms: now_ms,
+      generation: parent.generation + 1,
+      parent_id: parent.id,
+      dividing_left: 0.0
+    }
+  end
+
+  # Quem quer dividir (energia cheia) começa se houver vaga: população mais
+  # divisões em curso (e nascidos deste passo) abaixo de pop_cap. Sem vaga, conta
+  # um cap_hold e tenta de novo no passo seguinte.
+  defp start_divisions(orgs, _births, [], _eco), do: {orgs, 0}
+
+  defp start_divisions(orgs, births, wants, eco) do
+    in_course = Enum.count(orgs, &(&1.dividing_left > 0))
+    used = length(orgs) + length(births) + in_course
+
+    {started, holds, _} =
+      wants
+      |> Enum.reverse()
+      |> Enum.reduce({MapSet.new(), 0, used}, fn id, {set, holds, n} ->
+        if n < eco.pop_cap,
+          do: {MapSet.put(set, id), holds, n + 1},
+          else: {set, holds + 1, n}
+      end)
+
+    {Enum.map(orgs, fn o ->
+       if MapSet.member?(started, o.id), do: %{o | dividing_left: eco.divide_s * 1.0}, else: o
+     end), holds}
+  end
+
+  defp count_births(eco_totals, births) do
+    by_sp =
+      Enum.reduce(births, eco_totals.births, fn o, acc ->
+        Map.update(acc, o.species, 1, &(&1 + 1))
+      end)
+
+    %{eco_totals | births: by_sp}
   end
 
   # Fome e velhice: o corpo vira partículas (round(base + k × raio efetivo)),
@@ -386,10 +491,27 @@ defmodule Abyss.World.Sim do
 
     {mode, mode_left, yaw, rng} = advance_mode(sp, o.mode, o.mode_left - dt, yaw, rng)
 
-    target = if mode == :pause, do: 0.0, else: sp.max_speed
+    dividing? = o.dividing_left > 0
+
+    target =
+      cond do
+        mode == :pause -> 0.0
+        dividing? -> sp.max_speed * @divide_speed
+        true -> sp.max_speed
+      end
+
     dir = {:math.cos(pitch) * :math.cos(yaw), :math.sin(pitch), :math.cos(pitch) * :math.sin(yaw)}
 
-    {o, seek, food} = forage(o, sp, r, dt, env, food)
+    {o, seek, food} =
+      if dividing? do
+        left = o.dividing_left - dt
+        {%{o | dividing_left: if(left <= @divide_eps, do: 0.0, else: left), target: nil}, @zero, food}
+      else
+        forage(o, sp, r, dt, env, food)
+      end
+
+    food =
+      if not dividing? and Life.wants_divide?(o, sp), do: %{food | wants: [o.id | food.wants]}, else: food
 
     desired =
       dir
@@ -416,8 +538,6 @@ defmodule Abyss.World.Sim do
   # --- comida ------------------------------------------------------------------
   # Devolve {organismo, steer, comida}. Comer não tem efeito no E1 além da
   # saciedade (que só silencia a busca).
-
-  @zero {0.0, 0.0, 0.0}
 
   defp forage(o, %{diet: {:prey, _}}, _r, _dt, _env, food), do: {o, @zero, food}
 

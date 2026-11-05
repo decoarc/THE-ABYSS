@@ -447,14 +447,13 @@ defmodule Abyss.World.Sim do
 
   defp advance_mode(_sp, mode, left, yaw, rng), do: {mode, left, yaw, rng}
 
+  # Borda macia só na fronteira externa da união das regiões: na faixa onde duas
+  # regiões se sobrepõem não há borda (senão a faixa estreita Jardim–Floresta vira
+  # parede). Longe das sobreposições, é a mesma conta de antes.
   defp edge_steer({x, y, z}, %{map: map, y_min: y0, y_max: y1}, gain) do
-    depth = WMap.edge_depth(map, x, z)
-
     {sx, sz} =
-      if depth < @edge_margin do
-        {ix, iz} = WMap.inward(map, x, z)
-        f = (@edge_margin - depth) * gain
-        {ix * f, iz * f}
+      if WMap.edge_depth(map, x, z) < @edge_margin do
+        soft_edge(WMap.outer_edge(map, x, z), gain)
       else
         {0.0, 0.0}
       end
@@ -470,6 +469,15 @@ defmodule Abyss.World.Sim do
       end
 
     {sx, sy, sz}
+  end
+
+  defp soft_edge({depth, {ix, iz}}, gain) do
+    if depth < @edge_margin do
+      f = (@edge_margin - depth) * gain
+      {ix * f, iz * f}
+    else
+      {0.0, 0.0}
+    end
   end
 
   # Esponjas (cilindros verticais de altura h): afastamento radial no XZ. Só as

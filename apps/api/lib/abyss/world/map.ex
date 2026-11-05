@@ -70,6 +70,91 @@ defmodule Abyss.World.Map do
     if len == 0.0, do: {0.0, 0.0}, else: {dx / len, dz / len}
   end
 
+  @doc """
+  Borda externa da união das regiões: `{profundidade, {ix, iz}}`, com a
+  distância até o ponto mais próximo da fronteira da união e o vetor unitário que
+  se afasta dele. Faixas de sobreposição entre regiões não são borda.
+
+  Fora da união, ou quando o ponto mais próximo é o da própria região mais
+  profunda, devolve exatamente `{edge_depth/3, inward/3}`.
+  """
+  @spec outer_edge(t, number, number) :: {float, {float, float}}
+  def outer_edge(%__MODULE__{regions: regions} = map, x, z) do
+    {depth, own} = deepest(map, x, z)
+
+    if depth < 0 do
+      {depth, inward(map, x, z)}
+    else
+      # A fronteira da união é feita de arcos não cobertos por outra região. O
+      # ponto mais próximo dela é a projeção radial num círculo que contém o ponto
+      # ou uma das pontas desses arcos (interseções de dois círculos).
+      own_edge =
+        if covered?(radial(own, x, z), regions, [own]), do: [], else: [{depth, inward(map, x, z)}]
+
+      others =
+        for r <- regions,
+            r != own,
+            inside?(r, x, z),
+            q <- [radial(r, x, z)],
+            not covered?(q, regions, [r]),
+            do: away(x, z, q)
+
+      cusps =
+        for {a, i} <- Enum.with_index(regions),
+            {b, j} <- Enum.with_index(regions),
+            i < j,
+            q <- intersections(a, b),
+            not covered?(q, regions, [a, b]),
+            do: away(x, z, q)
+
+      case own_edge ++ others ++ cusps do
+        [] -> {depth, inward(map, x, z)}
+        candidates -> Enum.min_by(candidates, &elem(&1, 0))
+      end
+    end
+  end
+
+  defp inside?(%{center: {cx, cz}, radius: r}, x, z),
+    do: (x - cx) * (x - cx) + (z - cz) * (z - cz) <= r * r
+
+  # Projeção radial de (x, z) no círculo da região (nil no próprio centro).
+  defp radial(%{center: {cx, cz}, radius: r}, x, z) do
+    dx = x - cx
+    dz = z - cz
+    len = :math.sqrt(dx * dx + dz * dz)
+    if len == 0.0, do: nil, else: {cx + dx / len * r, cz + dz / len * r}
+  end
+
+  defp covered?(nil, _regions, _skip), do: true
+
+  defp covered?({qx, qz}, regions, skip) do
+    Enum.any?(regions, fn %{center: {cx, cz}, radius: r} = reg ->
+      reg not in skip and (qx - cx) * (qx - cx) + (qz - cz) * (qz - cz) < r * r
+    end)
+  end
+
+  defp away(x, z, {qx, qz}) do
+    dx = x - qx
+    dz = z - qz
+    len = :math.sqrt(dx * dx + dz * dz)
+    if len == 0.0, do: {0.0, {0.0, 0.0}}, else: {len, {dx / len, dz / len}}
+  end
+
+  defp intersections(%{center: {ax, az}, radius: ra}, %{center: {bx, bz}, radius: rb}) do
+    dx = bx - ax
+    dz = bz - az
+    d = :math.sqrt(dx * dx + dz * dz)
+
+    if d == 0.0 or d >= ra + rb or d <= abs(ra - rb) do
+      []
+    else
+      a = (ra * ra - rb * rb + d * d) / (2 * d)
+      h = :math.sqrt(max(ra * ra - a * a, 0.0))
+      {mx, mz} = {ax + a * dx / d, az + a * dz / d}
+      [{mx - h * dz / d, mz + h * dx / d}, {mx + h * dz / d, mz - h * dx / d}]
+    end
+  end
+
   defp deepest(%__MODULE__{regions: regions}, x, z) do
     regions
     |> Enum.map(fn %{center: {cx, cz}, radius: r} = region ->

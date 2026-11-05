@@ -19,6 +19,7 @@ defmodule Abyss.World.SimTest do
   defp run(sim, n), do: Enum.reduce(1..n, sim, fn _, s -> Sim.step(s, 0.1) end)
   defp norm({x, y, z}), do: :math.sqrt(x * x + y * y + z * z)
   defp dist({a, b, c}, {d, e, f}), do: norm({a - d, b - e, c - f})
+  defp xz({x, z}), do: {x, 0.0, z}
   defp count(sim, sp), do: Enum.count(sim.organisms, &(&1.species == sp))
   defp max_speed(sp), do: Enum.find(Species.all(), &(&1.id == sp)).max_speed
 
@@ -219,14 +220,51 @@ defmodule Abyss.World.SimTest do
       {x, _, z} = hd(final.organisms).pos
       assert WMap.edge_depth(@map, x, z) > 0
     end
+
+    # A faixa de sobreposição Jardim–Floresta tem profundidade de borda ~1,7, menos
+    # que a margem da borda macia (3,0): ali a borda não pode empurrar de volta.
+    # Começa a 3 da borda da origem, sobre o eixo entre os centros, rumo ao destino;
+    # chegar = estar na região de destino com profundidade >= 3 nela.
+    for {from, to} <- [{:jardim, :floresta}, {:floresta, :jardim}] do
+      test "atravessa de #{from} para #{to}" do
+        [a] = Enum.filter(@map.regions, &(&1.id == unquote(from)))
+        [b] = Enum.filter(@map.regions, &(&1.id == unquote(to)))
+        {ax, az} = a.center
+        {bx, bz} = b.center
+        len = :math.sqrt((bx - ax) * (bx - ax) + (bz - az) * (bz - az))
+        {ux, uz} = {(bx - ax) / len, (bz - az) / len}
+        start = {ax + ux * (a.radius - 3), 4.0, az + uz * (a.radius - 3)}
+        vel = {ux * 0.9, 0.0, uz * 0.9}
+
+        arrived? = fn {x, _, z} ->
+          WMap.region_at(@map, x, z) == b.id and
+            b.radius - :math.sqrt((x - bx) * (x - bx) + (z - bz) * (z - bz)) >= 3.0
+        end
+
+        crossed =
+          Enum.count(1..20, fn seed ->
+            s0 = solo(Sim.new(%{@opts | seed: seed}), start, vel)
+            s0 = %{s0 | organisms: [%{hd(s0.organisms) | yaw: :math.atan2(uz, ux)}]}
+
+            Enum.reduce_while(1..600, s0, fn _, s ->
+              s = Sim.step(s, 0.1)
+              if arrived?.(hd(s.organisms).pos), do: {:halt, :arrived}, else: {:cont, s}
+            end) == :arrived
+          end)
+
+        assert crossed >= 12
+      end
+    end
   end
 
   describe "comida" do
     alias Abyss.World.{Flora, Organism, Particles}
 
     # Mundo sem organismos, partículas novas nem flora; os testes põem o que precisam.
-    defp bare do
-      sim = Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
+    defp bare(seed \\ 7) do
+      sim =
+        Sim.new(%{@opts | seed: seed, test_species: false, food: %{@food | particle_rate: 0.0}})
+
       %{sim | flora: Flora.put_patches(sim.flora, {})}
     end
 
@@ -306,24 +344,58 @@ defmodule Abyss.World.SimTest do
       assert hd(sim.organisms).target == {:flora, 0}
     end
 
-    test "vai para a região da sua comida" do
-      [pl] = Enum.filter(@map.regions, &(&1.id == :planicie))
-      {cx, cz} = pl.center
+    # Famintas e sem comida à vista, derivam rumo à região mais rica na dieta
+    # (lida de bounds.richest, não fixada no Jardim), partindo de cada outra região.
+    # Das regiões que se sobrepõem à mais rica, parte delas tem de chegar lá
+    # (inclui Floresta -> Jardim, pela faixa estreita).
+    for {sp, prefix} <- [{:celula, "CEL"}, {:membrana, "MBR"}] do
+      test "#{sp} vai para a região da sua comida" do
+        sp = unquote(sp)
+        diet = Enum.find(Species.all(), &(&1.id == sp)).diet
+        {rx, rz} = bare().bounds.richest[diet]
+        rich = Enum.find(@map.regions, &(&1.id == WMap.region_at(@map, rx, rz)))
 
-      orgs =
-        for k <- 1..10 do
-          a = k * 0.6
-          pos = {cx + 8 * :math.cos(a), 4.0, cz + 8 * :math.sin(a)}
-          %Organism{id: "CEL-#{k}", species: :celula, born_ms: 0, pos: pos, yaw: a}
+        neighbour? = fn %{center: c, radius: r} ->
+          dist(xz(c), xz(rich.center)) < r + rich.radius
         end
 
-      sim = %{bare() | organisms: orgs}
+        arrived =
+          for seed <- 1..3, %{center: {cx, cz}} = from <- @map.regions, from != rich do
+            orgs =
+              for k <- 1..12 do
+                a = k * 0.52
+                pos = {cx + 8 * :math.cos(a), 4.0, cz + 8 * :math.sin(a)}
 
-      mean = fn s ->
-        Enum.sum(for %{pos: {x, _, z}} <- s.organisms, do: :math.sqrt(x * x + z * z)) / 10
+                %Organism{
+                  id: "#{unquote(prefix)}-#{k}",
+                  species: sp,
+                  born_ms: 0,
+                  pos: pos,
+                  yaw: a
+                }
+              end
+
+            s0 = %{bare(seed) | organisms: orgs}
+            s1 = run(s0, 6000)
+
+            mean = fn s ->
+              Enum.sum(for %{pos: {x, _, z}} <- s.organisms, do: dist({x, 0, z}, xz(rich.center))) /
+                12
+            end
+
+            assert mean.(s1) < mean.(s0) - 3
+
+            if neighbour?.(from) do
+              Enum.count(s1.organisms, fn %{pos: {x, _, z}} ->
+                WMap.region_at(@map, x, z) == rich.id
+              end)
+            else
+              0
+            end
+          end
+
+        assert Enum.sum(arrived) >= 5
       end
-
-      assert mean.(run(sim, 6000)) < mean.(sim)
     end
 
     test "comida sem organismos" do

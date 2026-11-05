@@ -1,7 +1,8 @@
 import { Color } from 'three';
 import { PALETTE } from '../lib/palette';
 import { MAP } from '../world/map';
-import { florestaWeight, planicieWeight, regionTint } from './regionTint';
+import { florestaWeight, PLANICIE_WEIGHT_GLSL, planicieWeight, regionTint } from './regionTint';
+import { JARDIM_CORE } from './terrain';
 
 const luminance = (c: Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
 /** Quanto do total é azul: maior = mais frio. */
@@ -159,5 +160,15 @@ describe('planicieWeight', () => {
     expect(w(36)).toBeLessThan(0.95);
     expect(w(42)).toBeGreaterThan(0.95);
     for (let r = 26; r < 42; r += 0.5) expect(w(r + 0.5)).toBeGreaterThanOrEqual(w(r));
+  });
+});
+
+describe('PLANICIE_WEIGHT_GLSL (neve)', () => {
+  it('também é exatamente 0 no miolo aprovado do Jardim (r <= 26)', () => {
+    expect(JARDIM_CORE).toBe(26);
+    // smoothstep(26, 40, |p|) é 0 para |p| <= 26 e a função sai com 0 antes de misturar as regiões.
+    expect(PLANICIE_WEIGHT_GLSL).toContain('float core = smoothstep(26.0000, 40.0000, length(p));');
+    expect(PLANICIE_WEIGHT_GLSL).toContain('if (core <= 0.0) return 0.0;');
+    expect(PLANICIE_WEIGHT_GLSL).toMatch(/return e\d \/ \(.*\) \* core;/);
   });
 });

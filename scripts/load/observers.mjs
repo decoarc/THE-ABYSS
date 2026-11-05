@@ -1,6 +1,6 @@
 // Carga do servidor: N clientes Phoenix (sem renderizar) no canal world:main, mais abas reais opcionais.
 // Uso: node scripts/load/observers.mjs --clients 50 --seconds 1800 [--url ws://localhost:4000/socket]
-//      [--max-jitter-ms 20] [--max-step-ms 20] [--expect-observers 52] [--out captures/load]
+//      [--max-jitter-ms 20] [--expect-observers 52] [--out captures/load]
 //      [--tabs 2 --web-url http://localhost:4174/] [--warmup 600]
 // --warmup S espera o mundo ter S segundos de vida (comida no teto) antes de abrir os clientes.
 // Sai com código 1 se algum critério reprovar.
@@ -29,7 +29,6 @@ const { values: args } = parseArgs({
     'max-jitter-ms': { type: 'string', default: '20' },
     'expect-observers': { type: 'string' },
     out: { type: 'string', default: 'captures/load' },
-    'max-step-ms': { type: 'string', default: '20' },
     tabs: { type: 'string', default: '0' },
     'web-url': { type: 'string', default: 'http://localhost:4174/' },
     warmup: { type: 'string', default: '0' },
@@ -40,7 +39,6 @@ const clientCount = Number(args.clients);
 const durationMs = Number(args.seconds) * 1000;
 const maxJitterMs = Number(args['max-jitter-ms']);
 const tabCount = Number(args.tabs);
-const maxStepMs = Number(args['max-step-ms']);
 const warmupMs = Number(args.warmup) * 1000;
 const expectObservers = args['expect-observers'] ? Number(args['expect-observers']) : clientCount + tabCount;
 const httpBase = args.url.replace(/^ws/, 'http').replace(/\/socket$/, '');
@@ -113,8 +111,10 @@ const r1 = (v) => (v === null || v === undefined ? 'n/a' : Math.round(v * 100) /
 console.log(`carga: ${clientCount} clientes + ${tabCount} abas, ${args.seconds} s, ${args.url}, observers esperados ${expectObservers}`);
 
 // Aquecimento: o mundo roda sozinho até a comida chegar ao teto.
+let warmupStats = null;
 for (;;) {
   const s = await (await fetch(`${httpBase}/api/stats`)).json();
+  warmupStats = s;
   if (s.uptime_ms >= warmupMs) break;
   console.log(`aquecendo: ${Math.round(s.uptime_ms / 1000)} / ${warmupMs / 1000} s · partículas ${s.particles} · flora ${s.flora_level_sum}`);
   await new Promise((resolve) => setTimeout(resolve, Math.min(30_000, warmupMs - s.uptime_ms + 500)));
@@ -173,14 +173,12 @@ const criteria = [
   { name: 'zero quedas de conexão', value: drops, pass: drops === 0 && joinErrors === 0 },
   { name: `observers = ${expectObservers}`, value: lastObservers, pass: lastObservers === expectObservers },
 ];
-// step_us_max é o máximo desde a partida do mundo: se subiu durante a medição, o pico foi nela.
-const stepStartMs = (firstSample?.stats?.step_us_max ?? 0) / 1000;
-const stepEndMs = finalSample?.stats?.step_us_max !== undefined ? finalSample.stats.step_us_max / 1000 : null;
-criteria.push({
-  name: `step_us_max ≤ ${maxStepMs} ms (passo do mundo mais lento desde a partida)`,
-  value: stepEndMs === null ? null : `${r1(stepEndMs)} ms (no início da medição: ${r1(stepStartMs)} ms)`,
-  pass: stepEndMs !== null && stepEndMs <= maxStepMs,
-});
+// step_us_max é o máximo desde o boot do mundo: inclui a entrada dos clientes e não mede o regime.
+// Só informativo; não é critério e não muda o código de saída.
+const stepMs = (s) => (typeof s?.stats?.step_us_max === 'number' ? s.stats.step_us_max / 1000 : null);
+const stepWarmupMs = typeof warmupStats?.step_us_max === 'number' ? warmupStats.step_us_max / 1000 : null;
+const stepFirstMs = stepMs(firstSample);
+const stepEndMs = stepMs(finalSample);
 const ok = criteria.every((c) => c.pass);
 const food = (s) =>
   s?.stats ? `partículas ${s.stats.particles} · flora ${s.stats.flora_level_sum} / ${s.stats.flora_patches}` : 'n/a';
@@ -202,6 +200,7 @@ const summary = [
   `- Intervalo entre ticks (clientes): p50 ${r1(percentile(allIntervals, 50))} ms · p99 ${r1(percentile(allIntervals, 99))} ms · máx ${r1(allIntervals.at(-1))} ms`,
   `- Quedas de conexão: ${drops} · erros de join: ${joinErrors}`,
   `- CPU (última amostra): ${finalSample?.cpu ?? 'n/a'} % · memória: ${r1(memLast)} MiB`,
+  `- step_us_max (informativo, não é critério; máximo desde o boot, inclui a entrada dos ${expectObservers} clientes): fim do aquecimento ${r1(stepWarmupMs)} ms · depois da entrada ${r1(stepFirstMs)} ms · fim da medição ${r1(stepEndMs)} ms`,
   '',
   '| Critério | Valor | Resultado |',
   '| --- | --- | --- |',

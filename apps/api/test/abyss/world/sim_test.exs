@@ -16,6 +16,16 @@ defmodule Abyss.World.SimTest do
     food: @food
   }
 
+  # Testes de movimento não podem perder organismos para fome ou velhice.
+  defp immortal(sim) do
+    species =
+      Map.new(sim.bounds.species, fn {id, sp} ->
+        {id, %{sp | metabolism: 0.0, adult_life_s: 1.0e9}}
+      end)
+
+    %{sim | bounds: %{sim.bounds | species: species}}
+  end
+
   defp run(sim, n), do: Enum.reduce(1..n, sim, fn _, s -> Sim.step(s, 0.1) end)
   defp norm({x, y, z}), do: :math.sqrt(x * x + y * y + z * z)
   defp dist({a, b, c}, {d, e, f}), do: norm({a - d, b - e, c - f})
@@ -161,7 +171,7 @@ defmodule Abyss.World.SimTest do
     # deslocamento = distância percorrida (soma dos passos): o líquido do Filamento
     # é diluído pelo seu vagar errático, o que não diz nada sobre o ritmo.
     {_, path} =
-      Enum.reduce(1..600, {Sim.new(@opts), %{}}, fn _, {s, acc} ->
+      Enum.reduce(1..600, {immortal(Sim.new(@opts)), %{}}, fn _, {s, acc} ->
         s2 = Sim.step(s, 0.1)
 
         acc =
@@ -215,7 +225,7 @@ defmodule Abyss.World.SimTest do
         mode_left: 0.0
       }
 
-      %{sim | organisms: [o]}
+      %{immortal(sim) | organisms: [o]}
     end
 
     test "esponja no caminho: nunca entra no cilindro" do
@@ -322,6 +332,73 @@ defmodule Abyss.World.SimTest do
       %{sim | organisms: [o]}
     end
 
+    defp run_collect(sim, n) do
+      Enum.reduce(1..n, {sim, [], []}, fn _, {s, d, sp} ->
+        s = Sim.step(s, 0.1)
+        {s, d ++ s.life_events.deaths, sp ++ s.food_events.spawned}
+      end)
+    end
+
+    test "comer dá energia" do
+      base = bare() |> with_org(:celula, {1.0, 4.0, 0.0}, energy: 50.0)
+      fed = base |> with_patch(0.0, 0.0) |> run(50)
+      control = run(base, 50)
+      assert hd(fed.organisms).energy > hd(control.organisms).energy
+    end
+
+    test "morre de fome e vira partículas" do
+      sim = bare() |> with_org(:celula, {3.0, 4.0, 0.0}, energy: 0.1)
+      {sim, deaths, spawned} = run_collect(sim, 30)
+      assert sim.organisms == []
+      assert [{"T-0001", :starvation}] = deaths
+      r = Sim.body_radius(sim, :celula)
+      n = round(3 + 4 * r)
+      assert length(spawned) == n
+      assert Enum.all?(spawned, fn %{p0: p0} -> dist(p0, {3.0, 4.0, 0.0}) < 2.0 end)
+      assert Particles.count(sim.particles) == n
+      assert sim.eco_totals.deaths == %{celula: %{starvation: 1}}
+    end
+
+    test "morre de velhice" do
+      sim =
+        bare()
+        |> with_org(:celula, {3.0, 4.0, 0.0}, energy: 90.0, stage: :adult, stage_ms: -700_000)
+
+      {sim, deaths, spawned} = run_collect(sim, 5)
+      assert sim.organisms == []
+      assert [{"T-0001", :old_age}] = deaths
+      assert spawned != []
+      assert sim.eco_totals.deaths == %{celula: %{old_age: 1}}
+    end
+
+    test "fundadores são adultos com energia e idade sorteadas" do
+      sim = Sim.new(%{@opts | now_ms: 1_000_000})
+
+      for o <- sim.organisms do
+        sp = Species.get!(o.species)
+        assert o.stage == :adult and o.generation == 1 and o.parent_id == nil
+        assert o.dividing_left == 0.0
+        assert o.energy >= 0.5 * sp.energy_max and o.energy <= 0.8 * sp.energy_max
+        age = (1_000_000 - o.stage_ms) / 1000
+        assert age >= 0 and age <= 0.5 * sp.adult_life_s
+      end
+
+      assert sim.organisms |> Enum.map(& &1.energy) |> Enum.uniq() |> length() > 10
+      assert sim.life_events == %{deaths: [], births: [], extinct: []}
+    end
+
+    test "forrageia até encher" do
+      hungry =
+        bare() |> with_patch(5.0, 0.0) |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 50.0) |> run(1)
+
+      assert hd(hungry.organisms).target == {:flora, 0}
+
+      full =
+        bare() |> with_patch(5.0, 0.0) |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 100.0) |> run(1)
+
+      assert hd(full.organisms).target == nil
+    end
+
     test "Célula come flora" do
       sim = bare() |> with_patch(0.0, 0.0) |> with_org(:celula, {3.0, 4.0, 0.0})
       sim = run(sim, 200)
@@ -406,7 +483,7 @@ defmodule Abyss.World.SimTest do
                 }
               end
 
-            s0 = %{bare(seed) | organisms: orgs}
+            s0 = %{immortal(bare(seed)) | organisms: orgs}
             s1 = run(s0, 6000)
 
             mean = fn s ->

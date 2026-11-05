@@ -13,7 +13,13 @@ defmodule Abyss.World.Organism do
           mode: :run | :pause,
           mode_left: float,
           target: nil | {:flora, non_neg_integer} | {:particle, pos_integer},
-          sated_left: float
+          sated_left: float,
+          energy: float,
+          stage: :juvenile | :adult,
+          stage_ms: integer,
+          generation: pos_integer,
+          parent_id: String.t() | nil,
+          dividing_left: float
         }
 
   @enforce_keys [:id, :species, :born_ms, :pos]
@@ -28,6 +34,12 @@ defmodule Abyss.World.Organism do
     mode: :run,
     mode_left: 0.0,
     target: nil,
-    sated_left: 0.0
+    sated_left: 0.0,
+    energy: 50.0,
+    stage: :adult,
+    stage_ms: 0,
+    generation: 1,
+    parent_id: nil,
+    dividing_left: 0.0
   ]
 end

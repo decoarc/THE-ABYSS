@@ -9,7 +9,7 @@ defmodule Abyss.World.Sim do
   soma e o desempate são os da varredura linear, então o resultado é idêntico.
   """
 
-  alias Abyss.World.{Flora, Grid, Organism, Particles, Species}
+  alias Abyss.World.{Flora, Grid, Life, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
@@ -26,6 +26,8 @@ defmodule Abyss.World.Sim do
 
   @no_events %{changed: [], spawned: [], removed: []}
   @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
+  @no_life %{deaths: [], births: [], extinct: []}
+  @no_eco %{births: %{}, deaths: %{}, hunts_ok: 0, hunts_abandoned: 0, cap_holds: 0}
 
   defstruct organisms: [],
             rng: nil,
@@ -37,7 +39,9 @@ defmodule Abyss.World.Sim do
             ecology: %{},
             now_ms: 0,
             food_events: @no_events,
-            totals: @no_totals
+            totals: @no_totals,
+            life_events: @no_life,
+            eco_totals: @no_eco
 
   @type food_events :: %{
           changed: [{non_neg_integer, float}],
@@ -55,7 +59,9 @@ defmodule Abyss.World.Sim do
           ecology: map,
           now_ms: integer,
           food_events: food_events,
-          totals: map
+          totals: map,
+          life_events: %{deaths: [{String.t(), atom}], births: [Organism.t()], extinct: [tuple]},
+          eco_totals: map
         }
 
   @doc """
@@ -101,7 +107,7 @@ defmodule Abyss.World.Sim do
 
         {placed, rng} =
           Enum.reduce(roster, {[], rng}, fn {sp, k}, {acc, rng} ->
-            {o, rng} = spawn_one(sp, k, now_ms, bounds, acc, rng)
+            {o, rng} = spawn_one(sp, k, now_ms, bounds, ecology, acc, rng)
             {[o | acc], rng}
           end)
 
@@ -181,6 +187,7 @@ defmodule Abyss.World.Sim do
 
     env = %{
       bounds: bounds,
+      eco: sim.ecology,
       cfg: sim.food_cfg,
       now_ms: now_ms,
       particle_index: Particles.index(particles, now_ms)
@@ -193,7 +200,8 @@ defmodule Abyss.World.Sim do
       orgs
       |> Enum.with_index(fn o, i ->
         {x, _, z} = o.pos
-        {x, z, {i, o.id, o.pos, eff_radius(spec(bounds, o.species), bounds)}}
+        r = Life.radius(o, spec(bounds, o.species), bounds.creature_scale, sim.ecology)
+        {x, z, {i, o.id, o.pos, r}}
       end)
       |> Grid.build()
 
@@ -203,7 +211,13 @@ defmodule Abyss.World.Sim do
         {o, {rng, food}}
       end)
 
+    {survivors, dead} =
+      Enum.split_with(new_orgs, &(Life.death_cause(&1, spec(bounds, &1.species), now_ms) == nil))
+
+    {food, corpse_events, rng} = bury(dead, food, sim, now_ms, rng)
+
     removed = expired ++ Enum.reverse(food.eaten_ids)
+    spawned = spawned ++ corpse_events.spawned
 
     totals = %{
       eaten_flora: sim.totals.eaten_flora + food.bites,
@@ -213,15 +227,53 @@ defmodule Abyss.World.Sim do
 
     %{
       sim
-      | organisms: new_orgs,
+      | organisms: survivors,
         rng: rng,
         tick: sim.tick + 1,
         flora: food.flora,
         particles: food.particles,
         now_ms: now_ms,
         food_events: %{changed: changed, spawned: spawned, removed: removed},
-        totals: totals
+        totals: totals,
+        life_events: %{@no_life | deaths: corpse_events.deaths},
+        eco_totals: count_deaths(sim.eco_totals, corpse_events.dead_by)
     }
+  end
+
+  # Fome e velhice: o corpo vira partículas (round(base + k × raio efetivo)),
+  # que entram também em `spawned` para o fio mandá-las.
+  defp bury(dead, food, sim, now_ms, rng) do
+    {base, per_r} = sim.ecology.corpse_particles
+
+    acc0 = {food, %{deaths: [], spawned: [], dead_by: []}, rng}
+
+    {food, events, rng} =
+      Enum.reduce(dead, acc0, fn o, {food, ev, rng} ->
+        sp = spec(sim.bounds, o.species)
+        cause = Life.death_cause(o, sp, now_ms)
+        r = Life.radius(o, sp, sim.bounds.creature_scale, sim.ecology)
+        n = round(base + per_r * r)
+        {particles, born, rng} = Particles.add_corpse(food.particles, o.pos, n, now_ms, rng)
+
+        {%{food | particles: particles},
+         %{
+           ev
+           | deaths: [{o.id, cause} | ev.deaths],
+             spawned: ev.spawned ++ born,
+             dead_by: [{o.species, cause} | ev.dead_by]
+         }, rng}
+      end)
+
+    {food, %{events | deaths: Enum.reverse(events.deaths)}, rng}
+  end
+
+  defp count_deaths(eco_totals, dead_by) do
+    deaths =
+      Enum.reduce(dead_by, eco_totals.deaths, fn {sp, cause}, acc ->
+        Map.update(acc, sp, %{cause => 1}, &Map.update(&1, cause, 1, fn n -> n + 1 end))
+      end)
+
+    %{eco_totals | deaths: deaths}
   end
 
   @doc "Totais de comida para /api/stats."
@@ -241,12 +293,21 @@ defmodule Abyss.World.Sim do
 
   # --- spawn -----------------------------------------------------------------
 
-  defp spawn_one(sp, k, now_ms, bounds, placed, rng) do
+  defp spawn_one(sp, k, now_ms, bounds, eco, placed, rng) do
     {pos, rng} = pick_position(sp, bounds, placed, rng, @spawn_tries)
     {yaw, rng} = uniform_range(rng, -:math.pi(), :math.pi())
     {mode_left, rng} = initial_mode_left(sp, rng)
+    {e_lo, e_hi} = eco.founder_energy
+    {frac, rng} = uniform_range(rng, e_lo * 1.0, e_hi * 1.0)
+    {age, rng} = uniform_range(rng, 0.0, eco.founder_age * sp.adult_life_s)
 
     o = %Organism{
+      energy: frac * sp.energy_max,
+      stage: :adult,
+      stage_ms: now_ms - round(age * 1000),
+      generation: 1,
+      parent_id: nil,
+      dividing_left: 0.0,
       id: "#{sp.code}-#{k |> Integer.to_string() |> String.pad_leading(4, "0")}",
       species: sp.id,
       born_ms: now_ms,
@@ -315,7 +376,7 @@ defmodule Abyss.World.Sim do
 
   defp step_one(o, snapshot, %{bounds: bounds} = env, dt, rng, food) do
     sp = spec(env.bounds, o.species)
-    r = eff_radius(sp, bounds)
+    r = Life.radius(o, sp, bounds.creature_scale, env.eco)
     sdt = :math.sqrt(dt)
 
     {n1, rng} = :rand.normal_s(rng)
@@ -347,8 +408,9 @@ defmodule Abyss.World.Sim do
       |> clamp_volume(bounds)
       |> keep_out_sponges(r, bounds)
 
-    {%{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}, rng,
-     food}
+    o = %{o | pos: pos, vel: vel, yaw: yaw, pitch: pitch, mode: mode, mode_left: mode_left}
+    o = %{o | energy: Life.drain(o, sp, env.eco, dt)}
+    {Life.advance_stage(o, sp, env.now_ms), rng, food}
   end
 
   # --- comida ------------------------------------------------------------------
@@ -362,7 +424,7 @@ defmodule Abyss.World.Sim do
   defp forage(o, sp, r, dt, env, food) do
     sated = max(o.sated_left - dt, 0.0)
 
-    if sated > 0 do
+    if sated > 0 or o.energy >= sp.energy_max do
       {%{o | sated_left: sated, target: nil}, @zero, food}
     else
       o = %{o | sated_left: 0.0}
@@ -422,14 +484,16 @@ defmodule Abyss.World.Sim do
   end
 
   defp eat(o, {:flora, idx}, sp, env, food) do
-    {flora, _eaten} = Flora.bite(food.flora, idx, env.cfg.flora_bite)
+    {flora, eaten} = Flora.bite(food.flora, idx, env.cfg.flora_bite)
+    o = Life.gain(o, sp, eaten * env.eco.flora_energy)
 
     {%{o | target: nil, sated_left: sp.sated_s * 1.0},
      %{food | flora: flora, bites: food.bites + 1}}
   end
 
-  defp eat(o, {:particle, id}, sp, _env, food) do
+  defp eat(o, {:particle, id}, sp, env, food) do
     {particles, took?} = Particles.take(food.particles, id)
+    o = if took?, do: Life.gain(o, sp, env.eco.particle_energy), else: o
 
     food =
       if took?,

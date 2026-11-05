@@ -102,4 +102,23 @@ defmodule Abyss.World.ParticlesTest do
     b = run(Particles.new(@map, @cfg), rng(), 50)
     assert a == b
   end
+
+  test "corpo ignora o teto mas conta nele" do
+    cap = 10
+    p = Particles.new(@map, %{@cfg | particle_rate: 1000.0, particle_cap: cap})
+    {p, _, _, rng} = Particles.step(p, 1.0, 0, rng())
+    assert Particles.count(p) == cap
+
+    {p, born, rng} = Particles.add_corpse(p, {1.0, 4.0, 2.0}, 5, 0, rng)
+    assert Particles.count(p) == cap + 5
+    assert length(born) == 5
+    assert Enum.all?(born, fn %{p0: p0, v: {vx, vy, vz}} ->
+             h = :math.sqrt(vx * vx + vz * vz)
+             p0 == {1.0, 4.0, 2.0} and h >= 0.1 - 1.0e-9 and h <= 0.2 + 1.0e-9 and vy < 0
+           end)
+
+    {p, spawned, _, _} = Particles.step(p, 1.0, 1000, rng)
+    assert spawned == []
+    assert Particles.count(p) == cap + 5
+  end
 end

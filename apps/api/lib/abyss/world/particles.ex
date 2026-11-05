@@ -61,6 +61,41 @@ defmodule Abyss.World.Particles do
     {%{p | items: items, next_id: next_id}, born, Enum.sort(expired), rng}
   end
 
+  @doc """
+  Corpo: `n` partículas no ponto `pos`, com velocidade horizontal para fora
+  (0,1..0,2 u/s), queda `particle_fall` e vida `particle_life_s`. Ignoram o
+  teto, mas contam nele (o nascimento natural espera enquanto estiver acima).
+  """
+  @spec add_corpse(t, {float, float, float}, non_neg_integer, integer, :rand.state()) ::
+          {t, [particle], :rand.state()}
+  def add_corpse(%__MODULE__{cfg: cfg, map: map} = p, {x, y, z}, n, now_ms, rng) do
+    {fall_lo, fall_hi} = cfg.particle_fall
+
+    {born, {next_id, rng}} =
+      Enum.map_reduce(1..n//1, {p.next_id, rng}, fn _, {id, rng} ->
+        {a, rng} = :rand.uniform_s(rng)
+        {h, rng} = :rand.uniform_s(rng)
+        {f, rng} = :rand.uniform_s(rng)
+        speed = 0.1 + 0.1 * h
+
+        pt = %{
+          id: id,
+          p0: {x, y, z},
+          v:
+            {speed * :math.cos(2 * :math.pi() * a), -(fall_lo + f * (fall_hi - fall_lo)),
+             speed * :math.sin(2 * :math.pi() * a)},
+          born_ms: now_ms,
+          life_ms: round(cfg.particle_life_s * 1000),
+          rest_y: map.particle_rest_y
+        }
+
+        {pt, {id + 1, rng}}
+      end)
+
+    items = Enum.reduce(born, p.items, &Map.put(&2, &1.id, &1))
+    {%{p | items: items, next_id: next_id}, born, rng}
+  end
+
   @doc "Posição no instante `now_ms`: queda linear até `rest_y`, depois parada."
   @spec position(particle, integer) :: {float, float, float}
   def position(%{p0: {x0, y0, z0}, v: {vx, vy, vz}, born_ms: born, rest_y: rest_y}, now_ms) do

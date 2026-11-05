@@ -1,30 +1,40 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { formatAge, formatPosition } from '../lib/format';
+import { formatAge, formatDiet, formatPosition } from '../lib/format';
 import { PALETTE } from '../lib/palette';
 import { useRoster, useSelection, useWorld } from '../services/WorldProvider';
+import type { Vitals } from '../services/worldStore';
 import type { Vec3 } from '../services/wire';
 
 const MONO = 'ui-monospace, SFMono-Regular, Consolas, monospace';
 const SERIF = 'Georgia, "Times New Roman", serif';
-/** A posição no painel é atualizada a 4 Hz: legível, e barata. */
-const POSITION_INTERVAL_MS = 250;
+/** Posição e energia no painel é atualizada a 4 Hz: legível, e barata. */
+const SAMPLE_INTERVAL_MS = 250;
 
-/** Posição do organismo amostrada do store a 4 Hz; null sem amostra. */
-function useSampledPosition(id: string | null): Vec3 | null {
+interface Sampled {
+  position: Vec3 | null;
+  energy: number;
+  juvenile: boolean;
+}
+
+/** Posição, energia e fase amostradas do store a 4 Hz; null sem amostra. */
+function useSampled(id: string | null): Sampled | null {
   const { store } = useWorld();
-  const [pos, setPos] = useState<Vec3 | null>(null);
+  const [sampled, setSampled] = useState<Sampled | null>(null);
   useEffect(() => {
     if (id === null) return;
+    const p: Vec3 = [0, 0, 0];
+    const v: Vec3 = [0, 0, 0];
+    const vitals: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
     const read = () => {
-      const p: Vec3 = [0, 0, 0];
-      const v: Vec3 = [0, 0, 0];
-      setPos(store.sample(id, performance.now(), p, v) ? p : null);
+      if (!store.vitals(id, vitals)) return setSampled(null);
+      const hasPos = store.sample(id, performance.now(), p, v);
+      setSampled({ position: hasPos ? ([p[0], p[1], p[2]] as Vec3) : null, energy: vitals.energy, juvenile: vitals.juvenile });
     };
     read();
-    const timer = setInterval(read, POSITION_INTERVAL_MS);
+    const timer = setInterval(read, SAMPLE_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [id, store]);
-  return pos;
+  return sampled;
 }
 
 const row: CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 12, font: `12px/1.7 ${MONO}` };
@@ -45,7 +55,7 @@ export function InspectPanel() {
   const roster = useRoster();
   const { store, selection } = useWorld();
   const org = id === null ? undefined : roster.find((o) => o.id === id);
-  const position = useSampledPosition(org ? org.id : null);
+  const sampled = useSampled(org ? org.id : null);
   if (!org) return null;
 
   const species = store.species().find((s) => s.id === org.species);
@@ -77,12 +87,32 @@ export function InspectPanel() {
         <span>{species?.code ?? org.species}</span>
       </div>
       <div style={row}>
+        <span style={label}>FASE</span>
+        <span>{sampled ? (sampled.juvenile ? 'jovem' : 'adulto') : org.stage === 'juvenile' ? 'jovem' : 'adulto'}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>ENERGIA</span>
+        <span>{`${Math.round((sampled ? sampled.energy : org.e) * 100)}%`}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>GERAÇÃO</span>
+        <span>{org.gen}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>COME</span>
+        <span>{species ? formatDiet(species.diet, store.species()) : '—'}</span>
+      </div>
+      <div style={row}>
+        <span style={label}>NASCEU DE</span>
+        <span>{org.parent ?? '—'}</span>
+      </div>
+      <div style={row}>
         <span style={label}>SURGIU</span>
         <span>{age}</span>
       </div>
       <div style={row}>
         <span style={label}>POSIÇÃO</span>
-        <span>{position ? formatPosition(position) : '—'}</span>
+        <span>{sampled?.position ? formatPosition(sampled.position) : '—'}</span>
       </div>
       <button type="button" onClick={() => selection.setFollowing(!following)} style={{ ...button, width: '100%', marginTop: 12 }}>
         {following ? 'DEIXAR DE SEGUIR' : 'SEGUIR'}

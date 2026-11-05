@@ -36,12 +36,12 @@ defmodule Abyss.World.Species do
       pause_s: nil,
       diet: :particles,
       perception: 6.0,
-      sated_s: 20,
+      sated_s: 10,
       school: false,
       shelter: false,
       burst: 1.0,
       energy_max: 100.0,
-      metabolism: 0.30,
+      metabolism: 0.18,
       mature_s: 150,
       adult_life_s: 900
     },
@@ -62,7 +62,7 @@ defmodule Abyss.World.Species do
       shelter: true,
       burst: 1.6,
       energy_max: 100.0,
-      metabolism: 0.60,
+      metabolism: 0.06,
       mature_s: 120,
       adult_life_s: 700
     },
@@ -78,12 +78,12 @@ defmodule Abyss.World.Species do
       pause_s: nil,
       diet: :flora,
       perception: 4.0,
-      sated_s: 30,
+      sated_s: 25,
       school: false,
       shelter: false,
       burst: 1.0,
       energy_max: 100.0,
-      metabolism: 0.25,
+      metabolism: 0.14,
       mature_s: 180,
       adult_life_s: 1200
     },
@@ -99,12 +99,12 @@ defmodule Abyss.World.Species do
       pause_s: 3,
       diet: :flora,
       perception: 6.0,
-      sated_s: 20,
+      sated_s: 8,
       school: true,
       shelter: true,
       burst: 1.8,
       energy_max: 100.0,
-      metabolism: 0.50,
+      metabolism: 0.25,
       mature_s: 90,
       adult_life_s: 600
     },
@@ -119,15 +119,15 @@ defmodule Abyss.World.Species do
       run_s: nil,
       pause_s: nil,
       diet: {:prey, [:filamento, :celula]},
-      perception: 5.0,
+      perception: 8.0,
       sated_s: 20,
       school: false,
       shelter: false,
       burst: 2.5,
       energy_max: 100.0,
-      metabolism: 0.40,
+      metabolism: 0.02,
       mature_s: 200,
-      adult_life_s: 1000
+      adult_life_s: 2400
     }
   ]
 

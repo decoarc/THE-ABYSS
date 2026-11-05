@@ -12,10 +12,6 @@ defmodule Abyss.EcoRunTest do
     assert a != Eco.run(seed: 8, minutes: 10)
   end
 
-  # Com os valores iniciais das espécies a cadeia colapsa por fome antes de haver
-  # predação (ver task-5-report.md); o ajuste é da Parada 1, não se afrouxa o teste.
-  @tag :pending_parada1
-  @tag :eco_long
   test "cadeia de teste acontece" do
     rows = Eco.run(seed: 7, minutes: 30)
     sum = fn f -> rows |> Enum.map(f) |> Enum.sum() end

@@ -392,7 +392,8 @@ defmodule Abyss.World.SimTest do
         sp = Species.get!(o.species)
         assert o.stage == :adult and o.generation == 1 and o.parent_id == nil
         assert o.dividing_left == 0.0
-        assert o.energy >= 0.5 * sp.energy_max and o.energy <= 0.8 * sp.energy_max
+        {lo, hi} = sim.ecology.founder_energy
+        assert o.energy >= lo * sp.energy_max and o.energy <= hi * sp.energy_max
         age = (1_000_000 - o.stage_ms) / 1000
         assert age >= 0 and age <= 0.5 * sp.adult_life_s
       end
@@ -424,10 +425,12 @@ defmodule Abyss.World.SimTest do
     test "Membrana come partícula" do
       sim = bare() |> with_particle({3.0, 4.0, 0.0}) |> with_org(:membrana, {0.0, 4.0, 0.0})
 
+      # Para no passo em que ela come: a saciedade (sated_s) ainda está correndo.
       {sim, removed} =
-        Enum.reduce(1..200, {sim, []}, fn _, {s, acc} ->
+        Enum.reduce_while(1..200, {sim, []}, fn _, {s, acc} ->
           s = Sim.step(s, 0.1)
-          {s, acc ++ s.food_events.removed}
+          acc = acc ++ s.food_events.removed
+          if 1 in acc, do: {:halt, {s, acc}}, else: {:cont, {s, acc}}
         end)
 
       assert 1 in removed
@@ -583,8 +586,9 @@ defmodule Abyss.World.SimTest do
       assert [%{dividing_left: left}] = s1.organisms
       assert left == eco.divide_s
 
-      {final, hist} = step_until_birth(s1, 40)
-      assert length(hist) == 20
+      ticks = round(eco.divide_s * 10)
+      {final, hist} = step_until_birth(s1, ticks + 20)
+      assert length(hist) == ticks
       assert final.totals.eaten_flora == 0
 
       for s <- hist, o <- s.organisms, o.dividing_left > 0 do
@@ -623,7 +627,7 @@ defmodule Abyss.World.SimTest do
 
     test "filho herda as características" do
       sim = %{bare_world() | organisms: [adult("POL-0001", :poliedro, {1.0, 4.0, 0.0})]}
-      {final, _} = step_until_birth(sim, 40)
+      {final, _} = step_until_birth(sim, round(sim.ecology.divide_s * 10) + 20)
       [child] = final.life_events.births
       assert child.species == :poliedro
       assert Map.fetch!(final.bounds.species, child.species) == Map.fetch!(sim.bounds.species, :poliedro)
@@ -641,7 +645,9 @@ defmodule Abyss.World.SimTest do
       sim = %{sim | organisms: Enum.map(parents, &%{&1 | id: "#{codes[&1.species]}-0001"})}
 
       {sim, ids, births} =
-        Enum.reduce(1..400, {sim, MapSet.new(Enum.map(sim.organisms, & &1.id)), 0}, fn i, {s, ids, b} ->
+        # 200 × divide_s passos: o mesmo número de divisões por pai, qualquer que seja divide_s.
+        1..round(200 * sim.ecology.divide_s)
+        |> Enum.reduce({sim, MapSet.new(Enum.map(sim.organisms, & &1.id)), 0}, fn i, {s, ids, b} ->
           s = %{s | organisms: Enum.map(s.organisms, fn o -> if o.stage == :adult, do: %{o | energy: 100.0}, else: o end)}
           s = Sim.step(s, 0.1)
           new_ids = Enum.map(s.life_events.births, & &1.id)
@@ -783,7 +789,7 @@ defmodule Abyss.World.SimTest do
       assert find(s1, "FIL-0001").target == {:prey, "CEL-0001"}
 
       {n, s} =
-        Enum.reduce_while(2..120, {nil, s1}, fn n, {_, s} ->
+        Enum.reduce_while(2..(round(sim.ecology.give_up_s * 10) + 30), {nil, s1}, fn n, {_, s} ->
           s = Sim.step(s, 0.1)
           if find(s, "FIL-0001").target == nil, do: {:halt, {n, s}}, else: {:cont, {nil, s}}
         end)

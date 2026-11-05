@@ -9,8 +9,9 @@ defmodule Abyss.World.SimPerfTest do
   @food Application.compile_env!(:abyss, :food) |> Map.new()
   @max_step_us 20_000
 
-  # 150 organismos com a comida no teto: 100 s de mundo sem organismos (taxa de
-  # partículas dobrada para encher as 400) e depois a população de volta.
+  # 150 organismos com a comida no teto: flora_grow_s + 10 s de mundo sem
+  # organismos (taxa de partículas dobrada para encher as 400) e depois a
+  # população de volta.
   defp at_caps do
     sim =
       Sim.new(%{
@@ -29,7 +30,9 @@ defmodule Abyss.World.SimPerfTest do
         particles: %{sim.particles | cfg: %{@food | particle_rate: 4.0}}
     }
 
-    filled = Enum.reduce(1..200, fill, fn _, s -> Sim.step(s, 0.5) end)
+    filled =
+      Enum.reduce(1..round((@food.flora_grow_s + 10) * 2), fill, fn _, s -> Sim.step(s, 0.5) end)
+
     %{filled | organisms: sim.organisms, particles: %{filled.particles | cfg: @food}}
   end
 

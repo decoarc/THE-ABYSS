@@ -164,7 +164,7 @@ export function Floresta() {
   }, [buckets]);
 
   useFrame((_, dt) => {
-    material.uniforms.uTime.value += clampDelta(dt) * Math.max(motion, 0.3);
+    material.uniforms.uTime.value += clampDelta(dt) * Math.max(motion, 0.15);
   });
 
   return (

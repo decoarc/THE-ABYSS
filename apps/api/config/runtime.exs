@@ -22,15 +22,33 @@ end
 
 config :abyss, AbyssWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-# População do mundo: padrão em config.exs (45); faixa aceita 5–200 (gate I).
+# Caminho do mapa compartilhado (padrão em config.exs).
+if map_path = System.get_env("ABYSS_MAP_PATH") do
+  config :abyss, :map_path, map_path
+end
+
+# População do mundo: padrão em config.exs (150); faixa aceita 5–400 (gate E1).
 if population = System.get_env("ABYSS_POPULATION") do
   n = String.to_integer(population)
 
-  if n < 5 or n > 200 do
-    raise "ABYSS_POPULATION fora da faixa aceita (5–200): #{n}"
+  if n < 5 or n > 400 do
+    raise "ABYSS_POPULATION fora da faixa aceita (5–400): #{n}"
   end
 
   config :abyss, :world, population: n
+end
+
+# Semente do mundo: um inteiro deixa o mundo repetível (medições de desempenho);
+# sem ela (ou vazia), a semente do config.exs (nil = aleatória na partida).
+case System.get_env("ABYSS_SEED") do
+  nil -> :ok
+  "" -> :ok
+  seed -> config :abyss, :world, seed: String.to_integer(seed)
+end
+
+# Espécies de teste: "false" liga o mundo vazio (só flora e partículas).
+if System.get_env("ABYSS_TEST_SPECIES") do
+  config :abyss, :world, test_species: System.get_env("ABYSS_TEST_SPECIES") != "false"
 end
 
 if config_env() == :prod do

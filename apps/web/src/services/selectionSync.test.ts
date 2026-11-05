@@ -6,9 +6,11 @@ import type { WorldSnapshot } from './wire';
 function snap(ids: string[]): WorldSnapshot {
   return {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: 1000,
-    bounds: { radius: 18, y_min: 1.5, y_max: 8 },
+    map_id: 'e1', creature_scale: 0.5,
+    bounds: { y_min: 1.5, y_max: 8 },
     species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 }],
     organisms: ids.map((id) => ({ id, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0] })),
+    flora: [], particles: [],
   };
 }
 

@@ -107,3 +107,16 @@ export function setCreatureGlow(
   scratch.color = color;
   store.set(slot, scratch);
 }
+
+/**
+ * Luz da comida no leito da Planície: as partículas mais próximas da câmera, escritas a cada quadro
+ * por FoodParticles e lidas pelo leito. Separada dos 16 slots acima para não disputar com as criaturas.
+ * `pos`: x, z, raio, intensidade; `col`: rgb linear; só os `count` primeiros valem.
+ */
+export const MAX_FOOD_LIGHTS = 12;
+
+export const foodLights = {
+  pos: new Float32Array(MAX_FOOD_LIGHTS * 4),
+  col: new Float32Array(MAX_FOOD_LIGHTS * 3),
+  count: 0,
+};

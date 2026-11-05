@@ -33,7 +33,7 @@ class CanvasErrorBoundary extends Component<{ onError: () => void; children: Rea
   }
 }
 
-/** Esc fecha a seleção e solta o seguimento, em qualquer lugar da página. */
+/** Esc fecha a seleção e solta o seguimento, em qualquer lugar da página; a câmera fica onde está. */
 function EscapeClears() {
   const { selection } = useWorld();
   useEffect(() => {
@@ -77,7 +77,7 @@ function Scene({ onFail }: { onFail: () => void }) {
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           style={{ position: 'fixed', inset: 0, background: PALETTE.bg }}
           onPointerMissed={(event) => {
-            // Clique no vazio solta a seleção; arrasto da câmera não.
+            // Clique no vazio solta a seleção; arrasto do olhar (ou da órbita no toque) não.
             const d = downAt.current;
             if (d && isClick(d, { x: event.clientX, y: event.clientY })) selection.clear();
           }}

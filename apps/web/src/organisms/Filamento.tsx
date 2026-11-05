@@ -6,6 +6,8 @@ import { useSceneSettings } from '../settings';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import type { Vec3 } from '../services/wire';
+import { useCreatureCull } from '../scene/cull';
+import { useWorld } from '../services/WorldProvider';
 import { FILAMENTO as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
@@ -81,6 +83,9 @@ export function Filamento({ id }: { id: string }) {
   const time = useRef(offset);
   const pulse = useRef(C.nucleus.pulseMin);
   const root = useRef<THREE.Group>(null);
+  const shown = useCreatureCull(root, pose);
+  // O corpo é desenhado em coordenadas de mundo: a escala entra na largura e no comprimento, não no grupo.
+  const scale = useWorld().store.creatureScale();
   const head = useRef<THREE.Group>(null);
   const n = q.filamentoSegments;
   /** Atraso entre amostras com `n` amostras; o mesmo fator escala a fase da ondulação. */
@@ -149,9 +154,7 @@ export function Filamento({ id }: { id: string }) {
   useFrame((_, dt) => {
     time.current += clampDelta(dt) * motion;
     const t = time.current;
-    const visible = pose.has.current;
-    if (root.current) root.current.visible = visible;
-    if (!visible) {
+    if (!shown.current) {
       trail.seeded = false;
       return;
     }
@@ -175,7 +178,7 @@ export function Filamento({ id }: { id: string }) {
       if (speed > 0.05) dir.copy(pose.vel).divideScalar(speed);
       else dir.set(Math.cos(phase * Math.PI * 2), 0, Math.sin(phase * Math.PI * 2));
       const v = Math.max(speed, SEED_SPEED) / 1000;
-      for (let ms = BODY_MS + TRAIL_STEP_MS; ms > 0; ms -= TRAIL_STEP_MS * 4) {
+      for (let ms = BODY_MS * scale + TRAIL_STEP_MS; ms > 0; ms -= TRAIL_STEP_MS * 4) {
         scratch.last[0] = p[0] - dir.x * v * ms;
         scratch.last[1] = p[1] - dir.y * v * ms;
         scratch.last[2] = p[2] - dir.z * v * ms;
@@ -191,7 +194,7 @@ export function Filamento({ id }: { id: string }) {
 
     // A espinha é o próprio trajeto da cabeça amostrado no passado: o corpo passa por onde a cabeça passou.
     spine[0].copy(pose.pos);
-    const lagMs = C.lag * 1000 * lagScale;
+    const lagMs = C.lag * 1000 * lagScale * scale;
     for (let i = 1; i < n; i++) {
       trail.buffer.at(now - i * lagMs, p);
       spine[i].set(p[0], p[1], p[2]);
@@ -203,9 +206,9 @@ export function Filamento({ id }: { id: string }) {
       side.crossVectors(tangent, worldUp).normalize();
       up.crossVectors(side, tangent).normalize();
       // Ondulação lateral que viaja da cabeça para a cauda, crescendo com a distância da cabeça.
-      const wave = Math.sin(t * 1.6 - i * 0.18 * lagScale) * C.undulation * Math.min(1, s * 3);
+      const wave = Math.sin(t * 1.6 - i * 0.18 * lagScale) * C.undulation * scale * Math.min(1, s * 3);
       offset.copy(side).multiplyScalar(wave);
-      const radius = C.width * (1 - s) ** 0.7 + 0.004;
+      const radius = (C.width * (1 - s) ** 0.7 + 0.004) * scale;
       for (let k = 0; k < RADIAL; k++) {
         const a = (k / RADIAL) * Math.PI * 2;
         const cx = Math.cos(a), cy = Math.sin(a);
@@ -233,7 +236,7 @@ export function Filamento({ id }: { id: string }) {
   return (
     <group ref={root} visible={false} {...selectable}>
       <mesh geometry={geometry} material={material} renderOrder={3} frustumCulled={false} />
-      <group ref={head}>
+      <group ref={head} scale={scale}>
         <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={9} timeOffset={offset} />
       </group>
     </group>

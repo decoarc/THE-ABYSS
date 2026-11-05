@@ -1,0 +1,70 @@
+[
+  {
+    "gpu": "GPU padrão",
+    "region": "Planície (meio)",
+    "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.600000023841858,
+    "p95": 17.700000017881393,
+    "drawCalls": 82,
+    "frames": 601,
+    "food": {
+      "floraSum": 194.80000008642673,
+      "particles": 250
+    }
+  },
+  {
+    "gpu": "GPU padrão",
+    "region": "Planície (meio)",
+    "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "low",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.599999994039536,
+    "p95": 17.899999976158142,
+    "drawCalls": 82,
+    "frames": 601,
+    "food": {
+      "floraSum": 195.0800000652671,
+      "particles": 268
+    }
+  },
+  {
+    "gpu": "GPU alto desempenho",
+    "region": "Planície (meio)",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "high",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.599999994039536,
+    "p95": 17.80000001192093,
+    "drawCalls": 86,
+    "frames": 601,
+    "food": {
+      "floraSum": 193.25999978929758,
+      "particles": 306
+    }
+  },
+  {
+    "gpu": "GPU alto desempenho",
+    "region": "Planície (meio)",
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "quality": "low",
+    "dpr": 1,
+    "width": 1920,
+    "height": 1080,
+    "p50": 16.600000023841858,
+    "p95": 17.80000001192093,
+    "drawCalls": 85,
+    "frames": 601,
+    "food": {
+      "floraSum": 194.5399999320507,
+      "particles": 322
+    }
+  }
+]

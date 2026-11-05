@@ -1,3 +1,4 @@
+import { createFoodStore, type FoodStore } from './foodStore';
 import { hermite } from './interpolate';
 import type { OrganismInfo, SpeciesInfo, TickMessage, Vec3, WorldSnapshot } from './wire';
 
@@ -16,7 +17,11 @@ export interface WorldStore {
   roster(): readonly OrganismInfo[];
   species(): readonly SpeciesInfo[];
   worldId(): string | null;
+  /** Flora e partículas canônicas. */
+  food(): FoodStore;
   bounds(): WorldSnapshot['bounds'] | null;
+  /** Escala do corpo das criaturas vinda do snapshot; 1 antes dele. */
+  creatureScale(): number;
   sample(id: string, localMs: number, outPos: Vec3, outVel: Vec3): boolean;
   serverNow(localMs: number): number;
   status(): ConnectionStatus;
@@ -48,6 +53,7 @@ interface Ring {
 export function createWorldStore(): WorldStore {
   let worldId: string | null = null;
   let bounds: WorldSnapshot['bounds'] | null = null;
+  let creatureScale = 1;
   let tickHz = 10;
   let lastTick = -1;
   let roster: readonly OrganismInfo[] = [];
@@ -57,6 +63,7 @@ export function createWorldStore(): WorldStore {
   let history: HistoryEntry[] = [];
   let rosterIds: readonly string[] = [];
   let status: ConnectionStatus = 'connecting';
+  const food = createFoodStore();
   const listeners = new Set<() => void>();
 
   // Janela das últimas diferenças (local - server) para o offset mínimo.
@@ -106,12 +113,14 @@ export function createWorldStore(): WorldStore {
     applySnapshot(s, localMs) {
       worldId = s.world_id;
       bounds = s.bounds;
+      creatureScale = s.creature_scale;
       tickHz = s.tick_hz;
       lastTick = s.tick;
       roster = s.organisms;
       species = s.species;
       rosterIds = s.organisms.map((o) => o.id);
       history = [];
+      food.applySnapshot(s);
       remember(s.tick, rosterIds, s.organisms.map((o) => [...o.p, ...o.v]));
       diffCount = 0;
       diffHead = 0;
@@ -127,9 +136,14 @@ export function createWorldStore(): WorldStore {
     },
 
     applyTick(t, localMs) {
-      if (worldId === null || t.world_id !== worldId || t.o.length !== rings.length) return 'resync';
+      // Antes do snapshot não há o que aplicar nem o que ressincronizar: o join já vai trazer um.
+      if (worldId === null) return 'stale';
+      if (t.world_id !== worldId || t.o.length !== rings.length) return 'resync';
       if (t.tick <= lastTick) return 'stale';
+      // A comida chega em deltas: perder um tick deixa o estado errado até o próximo snapshot.
+      if (t.tick !== lastTick + 1) return 'resync';
       lastTick = t.tick;
+      food.applyTick(t);
       observe(localMs, t.server_ms);
       for (let i = 0; i < rings.length; i++) {
         const row = t.o[i];
@@ -142,7 +156,9 @@ export function createWorldStore(): WorldStore {
     roster: () => roster,
     species: () => species,
     worldId: () => worldId,
+    food: () => food,
     bounds: () => bounds,
+    creatureScale: () => creatureScale,
 
     sample(id, localMs, outPos, outVel) {
       const idx = index.get(id);

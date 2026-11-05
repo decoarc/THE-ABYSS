@@ -1,8 +1,9 @@
 type Vec3 = [number, number, number];
 
-/** Raio do leito; a névoa precisa engolir tudo a partir de ~0.8 × este raio. */
-export const SEABED_RADIUS = 60;
-
+/**
+ * Quadro herói do Jardim: pose da câmera antes do primeiro snapshot e ponto de partida quando
+ * não há nada à vista. Na tela de toque, a órbita usa os limites de distância e de ângulo polar.
+ */
 export const CAMERA: {
   position: Vec3;
   target: Vec3;
@@ -11,23 +12,14 @@ export const CAMERA: {
   maxDistance: number;
   minPolarAngle: number;
   maxPolarAngle: number;
-  minAzimuthAngle: number;
-  maxAzimuthAngle: number;
-  targetBounds: { x: [number, number]; y: [number, number]; z: [number, number] };
-  /** Tempo (s) para a câmera voltar ao quadro herói ao soltar o organismo. */
-  returnSeconds: number;
 } = {
   position: [0, 8.2, 17.5],
   target: [0, 3.1, 0],
   fov: 42,
-  minDistance: 5,
-  maxDistance: 20,
+  minDistance: 3,
+  maxDistance: 15,
   minPolarAngle: 0.95,
   maxPolarAngle: 1.47,
-  minAzimuthAngle: -0.95,
-  maxAzimuthAngle: 0.95,
-  targetBounds: { x: [-5, 5], y: [0.8, 4.5], z: [-5, 5] },
-  returnSeconds: 1.5,
 };
 
 /** Proporção do enquadramento herói (a mesma da referência, 16:10). */

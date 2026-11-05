@@ -67,7 +67,9 @@ const snap = (world_id: string, n = 2): WorldSnapshot => ({
   tick: 1,
   tick_hz: 10,
   server_ms: 1000,
-  bounds: { radius: 10, y_min: -5, y_max: 5 },
+  map_id: 'e1',
+  creature_scale: 0.5,
+  bounds: { y_min: -5, y_max: 5 },
   species: [],
   organisms: Array.from({ length: n }, (_, i) => ({
     id: `o${i}`,
@@ -76,6 +78,8 @@ const snap = (world_id: string, n = 2): WorldSnapshot => ({
     p: [i, 0, 0],
     v: [0, 0, 0],
   })),
+  flora: [],
+  particles: [],
 });
 
 function setup() {
@@ -99,7 +103,7 @@ it('tick vai para o store', () => {
   const { store, socket } = setup();
   const ch = socket.channels[0];
   ch.fireOk(snap('w1'));
-  ch.fireTick({ world_id: 'w1', tick: 2, server_ms: 1100, o: [[5, 0, 0, 0, 0, 0], [6, 0, 0, 0, 0, 0]] });
+  ch.fireTick({ world_id: 'w1', tick: 2, server_ms: 1100, o: [[5, 0, 0, 0, 0, 0], [6, 0, 0, 0, 0, 0]], f: [], ps: [], pr: [] });
   expect(store.debugBufferSize('o0')).toBe(2);
 });
 
@@ -119,8 +123,8 @@ it('resync on new world_id', () => {
   const { store, socket } = setup();
   const first = socket.channels[0];
   first.fireOk(snap('w1'));
-  first.fireTick({ world_id: 'w2', tick: 5, server_ms: 2000, o: [] });
-  first.fireTick({ world_id: 'w2', tick: 6, server_ms: 2100, o: [] });
+  first.fireTick({ world_id: 'w2', tick: 5, server_ms: 2000, o: [], f: [], ps: [], pr: [] });
+  first.fireTick({ world_id: 'w2', tick: 6, server_ms: 2100, o: [], f: [], ps: [], pr: [] });
   expect(first.left).toBe(true);
   expect(socket.channels).toHaveLength(2);
   expect(socket.channels[1].joins).toBe(1);

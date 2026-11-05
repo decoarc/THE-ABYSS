@@ -1,3 +1,5 @@
+import { FloraPatches } from '../food/FloraPatches';
+import { FoodParticles } from '../food/FoodParticles';
 import { PALETTE } from '../lib/palette';
 import { Creatures } from '../organisms/Creatures';
 import { CameraRig } from './CameraRig';
@@ -11,6 +13,8 @@ import { Particles } from './environment/Particles';
 import { Rocks } from './environment/Rocks';
 import { Tufts } from './environment/Tufts';
 import { Vents } from './environment/Vents';
+import { Floresta } from './regions/Floresta';
+import { Planicie } from './regions/Planicie';
 
 export function Stage() {
   return (
@@ -24,6 +28,10 @@ export function Stage() {
       <Corals />
       <Pads />
       <Tufts />
+      <Floresta />
+      <Planicie />
+      <FloraPatches />
+      <FoodParticles />
       <LightShafts />
       <Particles />
       <Creatures />

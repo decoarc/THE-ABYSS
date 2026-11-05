@@ -7,6 +7,8 @@ import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { foggyShader } from '../scene/glsl/material';
 import { SNOISE } from '../scene/glsl/noise';
 import { useSceneSettings } from '../settings';
+import { useCreatureCull } from '../scene/cull';
+import { useWorld } from '../services/WorldProvider';
 import { CELULA as C } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
@@ -120,6 +122,8 @@ export function Celula({ id }: { id: string }) {
   const pose = useOrganismPose(id);
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
+  const shown = useCreatureCull(group, pose);
+  const scale = useWorld().store.creatureScale();
   const granules = useRef<THREE.InstancedMesh>(null);
   const pulse = useRef(C.nucleus.pulseMin);
   const phase = useMemo(() => phaseOf(id), [id]);
@@ -213,8 +217,7 @@ export function Celula({ id }: { id: string }) {
     time.current += step;
     const g = group.current;
     if (!g) return;
-    g.visible = pose.has.current;
-    if (!g.visible) return;
+    if (!shown.current) return;
     // Posição canônica do servidor; o eixo longo (frente = +y local) vira para a velocidade.
     g.position.copy(pose.pos);
     const speed = pose.vel.length();
@@ -236,7 +239,7 @@ export function Celula({ id }: { id: string }) {
   });
 
   return (
-    <group ref={group} visible={false} {...selectable}>
+    <group ref={group} visible={false} scale={scale} {...selectable}>
       {/* Conteúdo interno primeiro; a pele translúcida é desenhada por cima. */}
       <instancedMesh ref={granules} key={granuleCount} args={[granuleGeometry, undefined, granuleCount]} renderOrder={1}>
         <meshBasicMaterial />

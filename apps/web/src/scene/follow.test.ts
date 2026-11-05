@@ -1,16 +1,9 @@
-import { CAMERA } from './cameraConfig';
-import { followTargetBounds, stepFollow, stepReturn } from './follow';
+import { stepFollow } from './follow';
+import { FLY, WORLD_ENV, constrainCamera } from './freeFly';
+import { seabedHeight } from './terrain';
 import type { Vec3 } from '../services/wire';
 
 const FRAME = 1 / 60;
-
-it('followTargetBounds cobre o volume do mundo', () => {
-  expect(followTargetBounds({ radius: 18, y_min: 1.5, y_max: 8 })).toEqual({
-    x: [-18, 18],
-    y: [1.5, 8],
-    z: [-18, 18],
-  });
-});
 
 it('stepFollow preserva o deslocamento câmera–alvo', () => {
   const target: Vec3 = [0, 0, 0];
@@ -31,14 +24,17 @@ it('stepFollow converge para um organismo parado', () => {
   expect(dist).toBeLessThan(0.01);
 });
 
-it('stepReturn chega ao quadro herói em até 2 s', () => {
-  const target: Vec3 = [4, 1, 4];
-  const cam: Vec3 = [0, 8, 20];
-  let arrived = false;
-  for (let t = 0; t < 2 && !arrived; t += FRAME) arrived = stepReturn(target, cam, FRAME);
-  expect(arrived).toBe(true);
-  expect(Math.hypot(target[0] - CAMERA.target[0], target[1] - CAMERA.target[1], target[2] - CAMERA.target[2])).toBeLessThan(0.01);
-  expect(Math.hypot(cam[0] - CAMERA.position[0], cam[1] - CAMERA.position[1], cam[2] - CAMERA.position[2])).toBeLessThan(0.01);
+it('follow respeita o chão', () => {
+  // Da Floresta à Planície (~100 unidades), com o deslocamento câmera–alvo apontando para baixo.
+  const target: Vec3 = [-45, 2, -30];
+  const cam: Vec3 = [-45, 1, -24];
+  const org: Vec3 = [55, 1.5, -28];
+  for (let t = 0; t < 10; t += FRAME) {
+    stepFollow(target, cam, org, FRAME);
+    constrainCamera(cam, WORLD_ENV);
+    expect(cam[1]).toBeGreaterThanOrEqual(seabedHeight(cam[0], cam[2]) + FLY.floorClearance - 1e-9);
+  }
+  expect(Math.hypot(target[0] - org[0], target[2] - org[2])).toBeLessThan(0.01);
 });
 
 it('stepFollow com rate infinito encaixa no mesmo quadro (movimento reduzido)', () => {

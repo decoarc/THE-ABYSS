@@ -12,6 +12,10 @@ config :abyss, AbyssWeb.Endpoint,
     ]
   ]
 
+# Produção começa vazia: sem espécies de teste, só flora e partículas
+# (ABYSS_TEST_SPECIES=true em runtime ainda as liga).
+config :abyss, :world, test_species: false
+
 # Do not print debug messages in production
 config :logger, level: :info
 

@@ -36,4 +36,15 @@ defmodule Abyss.RuntimeConfigTest do
     System.put_env("ABYSS_SEED", "abc")
     assert_raise ArgumentError, fn -> world() end
   end
+
+  test "produção começa sem organismos; dev e test com as espécies de teste" do
+    species = fn env ->
+      Config.Reader.read!("config/config.exs", env: env)
+      |> get_in([:abyss, :world, :test_species])
+    end
+
+    assert species.(:prod) == false
+    assert species.(:dev) == true
+    assert species.(:test) == true
+  end
 end

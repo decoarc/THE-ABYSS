@@ -36,8 +36,7 @@ defmodule Abyss.World.Map do
       particle_rest_y: raw["particle_rest_y"],
       regions: Enum.map(raw["regions"], &region/1),
       vents: Enum.map(raw["vents"], fn [x, z] -> {x, z} end),
-      sponges:
-        Enum.map(raw["sponges"], fn s -> %{x: s["x"], z: s["z"], r: s["r"], h: s["h"]} end)
+      sponges: Enum.map(raw["sponges"], fn s -> %{x: s["x"], z: s["z"], r: s["r"], h: s["h"]} end)
     }
   end
 

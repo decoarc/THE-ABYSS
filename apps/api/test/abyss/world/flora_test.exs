@@ -85,7 +85,8 @@ defmodule Abyss.World.FloraTest do
   end
 
   test "mordida aparece em changed no passo seguinte" do
-    {f, _} = Flora.bite(one(0.6, 20.0, 0.0), 0, 0.25)
+    # 0,6 - 0,24 = 0,36 = 18 passos de 0,02 (longe de um empate de arredondamento)
+    {f, _} = Flora.bite(one(0.6, 20.0, 0.0), 0, 0.24)
     assert {_, [{0, q}]} = Flora.step(f, 0.0)
     assert_in_delta q, 0.36, 1.0e-9
   end

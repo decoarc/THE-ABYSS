@@ -777,7 +777,7 @@ defmodule Abyss.World.SimTest do
         hunt_world([hunter(@open), young(shift(@open, -3.0))])
         |> immortal()
         |> with_traits(:filamento, %{max_speed: 0.05})
-        |> with_traits(:celula, %{perception: 0.0})
+        |> with_traits(:celula, %{perception: 0.0, max_speed: 0.02})
 
       s1 = Sim.step(sim, 0.1)
       assert find(s1, "FIL-0001").target == {:prey, "CEL-0001"}
@@ -793,6 +793,22 @@ defmodule Abyss.World.SimTest do
       assert s.eco_totals.hunts_abandoned == 1
       assert s.eco_totals.hunts_ok == 0
       assert find(s, "CEL-0001") != nil
+
+      # Desistir vale: por give_up_s a mesma presa é ignorada (sem nova perseguição
+      # nem nova desistência), mesmo ainda à vista.
+      window = round(sim.ecology.give_up_s * 10) - 1
+
+      s =
+        Enum.reduce(1..window, s, fn _, s ->
+          s = Sim.step(s, 0.1)
+          assert find(s, "FIL-0001").target == nil
+          assert s.eco_totals.hunts_abandoned == 1
+          s
+        end)
+
+      # Passada a janela, ela volta a ser alvo.
+      s = run(s, 3)
+      assert find(s, "FIL-0001").target == {:prey, "CEL-0001"}
     end
 
     test "abrigo ajuda" do

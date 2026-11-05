@@ -14,6 +14,7 @@ defmodule Abyss.World.Organism do
           mode_left: float,
           target: nil | {:flora, non_neg_integer} | {:particle, pos_integer} | {:prey, String.t()},
           chase_left: float,
+          gave_up: nil | {String.t(), integer},
           sated_left: float,
           energy: float,
           stage: :juvenile | :adult,
@@ -36,6 +37,8 @@ defmodule Abyss.World.Organism do
     mode_left: 0.0,
     target: nil,
     chase_left: 0.0,
+    # Última presa abandonada e até quando (ms do mundo) ela é ignorada.
+    gave_up: nil,
     sated_left: 0.0,
     energy: 50.0,
     stage: :adult,

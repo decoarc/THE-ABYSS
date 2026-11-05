@@ -734,7 +734,8 @@ defmodule Abyss.World.Sim do
       |> Enum.reduce(nil, fn {i, id, pos, pr, psp, _v, _e} = item, best ->
         d = dist(o.pos, pos)
 
-        if id != o.id and not MapSet.member?(food.prey_eaten, id) and closer?(d, i, best) and
+        if id != o.id and not MapSet.member?(food.prey_eaten, id) and
+             not ignored?(o.gave_up, id, env.now_ms) and closer?(d, i, best) and
              Hunt.can_eat?(sp, r, spec(env.bounds, psp), pr) and
              d <= Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos)),
            do: {d, i, item},
@@ -758,10 +759,16 @@ defmodule Abyss.World.Sim do
     if prey do
       approach_or_catch(%{o | chase_left: left}, prey, sp, r, env, food)
     else
-      {%{o | target: nil, chase_left: 0.0}, @zero,
+      # Desistir vale: a presa abandonada fica ignorada por give_up_s (outras podem ser caçadas).
+      until = env.now_ms + round(env.eco.give_up_s * 1000)
+
+      {%{o | target: nil, chase_left: 0.0, gave_up: {id, until}}, @zero,
        %{food | hunts_abandoned: food.hunts_abandoned + 1}}
     end
   end
+
+  defp ignored?({id, until}, id, now_ms), do: now_ms < until
+  defp ignored?(_gave_up, _id, _now_ms), do: false
 
   # A presa perseguida, se ainda vale: não comida, ao alcance e menor.
   defp chased(o, id, sp, r, env, food) do

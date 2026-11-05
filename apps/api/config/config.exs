@@ -41,6 +41,29 @@ config :abyss, :food,
   particle_fall: {0.15, 0.3},
   particle_drift: 0.05
 
+# Ecologia do E2 (valores iniciais; ajustáveis na Parada 1).
+config :abyss, :ecology,
+  # Teto de proteção de organismos.
+  pop_cap: 250,
+  # Gasto = metabolism × (1 + swim_cost × (|v|/max_speed)²) por s.
+  swim_cost: 1.5,
+  flora_energy: 80,
+  particle_energy: 15,
+  # Ganho do caçador = prey_base + prey_yield × energia da presa.
+  prey_base: 25,
+  prey_yield: 0.5,
+  hunt_below: 0.7,
+  give_up_s: 8,
+  divide_s: 2.0,
+  split_parent: 0.5,
+  split_child: 0.35,
+  juvenile_scale: 0.45,
+  school_range: 4.0,
+  school_weight: 0.3,
+  corpse_particles: {3, 4.0},
+  founder_energy: {0.5, 0.8},
+  founder_age: 0.5
+
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,
   url: [host: "localhost"],

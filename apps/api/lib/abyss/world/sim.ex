@@ -34,6 +34,7 @@ defmodule Abyss.World.Sim do
             flora: nil,
             particles: nil,
             food_cfg: %{},
+            ecology: %{},
             now_ms: 0,
             food_events: @no_events,
             totals: @no_totals
@@ -51,6 +52,7 @@ defmodule Abyss.World.Sim do
           flora: Flora.t(),
           particles: Particles.t(),
           food_cfg: map,
+          ecology: map,
           now_ms: integer,
           food_events: food_events,
           totals: map
@@ -59,25 +61,33 @@ defmodule Abyss.World.Sim do
   @doc """
   `opts`: `population` (5..400), `seed`, `now_ms`, `map` (`Abyss.World.Map`),
   `creature_scale` (raio efetivo = body_radius × escala), `test_species`
-  (false = mundo sem organismos) e `food` (mapa do bloco `:food`).
+  (false = mundo sem organismos), `food` (mapa do bloco `:food`), `species`
+  (tabela de espécies, padrão `Species.all/0`) e `ecology` (mapa do bloco
+  `:ecology`, padrão o da configuração).
   """
   @spec new(map) :: t
-  def new(%{
-        population: pop,
-        seed: seed,
-        now_ms: now_ms,
-        map: %WMap{} = map,
-        creature_scale: scale,
-        test_species: test_species,
-        food: food
-      })
+  def new(
+        %{
+          population: pop,
+          seed: seed,
+          now_ms: now_ms,
+          map: %WMap{} = map,
+          creature_scale: scale,
+          test_species: test_species,
+          food: food
+        } = opts
+      )
       when is_integer(pop) and pop >= 5 and pop <= @max_population do
-    bounds = bounds(map, scale)
+    species = Map.get_lazy(opts, :species, &Species.all/0)
+
+    ecology =
+      Map.get_lazy(opts, :ecology, fn -> Map.new(Application.fetch_env!(:abyss, :ecology)) end)
+
+    bounds = bounds(map, scale, species)
     rng = :rand.seed_s(:exsss, seed)
 
     {organisms, rng} =
       if test_species do
-        species = Species.all()
         n = length(species)
         base = div(pop, n)
         extra = rem(pop, n)
@@ -110,6 +120,7 @@ defmodule Abyss.World.Sim do
       flora: flora,
       particles: Particles.new(map, food),
       food_cfg: food,
+      ecology: ecology,
       now_ms: now_ms
     }
   end
@@ -121,8 +132,8 @@ defmodule Abyss.World.Sim do
 
   # Fixos do mapa, calculados uma vez: esponjas numa grade de discos (alcance
   # máximo de sponge_steer/keep_out_sponges) e o centro mais rico por dieta.
-  defp bounds(map, scale) do
-    max_r = Species.all() |> Enum.map(& &1.body_radius) |> Enum.max() |> Kernel.*(scale)
+  defp bounds(map, scale, species) do
+    max_r = species |> Enum.map(& &1.body_radius) |> Enum.max() |> Kernel.*(scale)
 
     sponge_grid =
       map.sponges
@@ -135,6 +146,8 @@ defmodule Abyss.World.Sim do
       y_min: map.y_min,
       y_max: map.y_max,
       max_r: max_r,
+      species: Map.new(species, &{&1.id, &1}),
+      species_list: species,
       sponges: List.to_tuple(map.sponges),
       sponge_grid: sponge_grid,
       richest: %{
@@ -144,10 +157,16 @@ defmodule Abyss.World.Sim do
     }
   end
 
+  @doc "Espécies da simulação, na ordem dada."
+  @spec species(t) :: [Species.t()]
+  def species(%__MODULE__{bounds: %{species_list: list}}), do: list
+
+  defp spec(%{species: by_id}, id), do: Map.fetch!(by_id, id)
+
   @doc "Raio efetivo (body_radius × creature_scale) da espécie."
   @spec body_radius(t, atom) :: float
   def body_radius(%__MODULE__{bounds: bounds}, species_id),
-    do: eff_radius(Species.get!(species_id), bounds)
+    do: eff_radius(spec(bounds, species_id), bounds)
 
   @doc "Avança `dt` s; o relógio da comida anda `dt` (testes e simulações offline)."
   @spec step(t, float) :: t
@@ -174,7 +193,7 @@ defmodule Abyss.World.Sim do
       orgs
       |> Enum.with_index(fn o, i ->
         {x, _, z} = o.pos
-        {x, z, {i, o.id, o.pos, eff_radius(Species.get!(o.species), bounds)}}
+        {x, z, {i, o.id, o.pos, eff_radius(spec(bounds, o.species), bounds)}}
       end)
       |> Grid.build()
 
@@ -246,7 +265,7 @@ defmodule Abyss.World.Sim do
 
     free? =
       Enum.all?(placed, fn p ->
-        dist(pos, p.pos) >= r + eff_radius(Species.get!(p.species), bounds) + @sep_gap
+        dist(pos, p.pos) >= r + eff_radius(spec(bounds, p.species), bounds) + @sep_gap
       end) and not in_sponge?(pos, r, bounds.map)
 
     if free? or tries <= 1,
@@ -295,7 +314,7 @@ defmodule Abyss.World.Sim do
   # --- step ------------------------------------------------------------------
 
   defp step_one(o, snapshot, %{bounds: bounds} = env, dt, rng, food) do
-    sp = Species.get!(o.species)
+    sp = spec(env.bounds, o.species)
     r = eff_radius(sp, bounds)
     sdt = :math.sqrt(dt)
 
@@ -338,7 +357,7 @@ defmodule Abyss.World.Sim do
 
   @zero {0.0, 0.0, 0.0}
 
-  defp forage(o, %{diet: :none}, _r, _dt, _env, food), do: {o, @zero, food}
+  defp forage(o, %{diet: {:prey, _}}, _r, _dt, _env, food), do: {o, @zero, food}
 
   defp forage(o, sp, r, dt, env, food) do
     sated = max(o.sated_left - dt, 0.0)

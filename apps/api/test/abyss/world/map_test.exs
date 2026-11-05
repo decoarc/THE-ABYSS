@@ -13,6 +13,11 @@ defmodule Abyss.World.MapTest do
     assert length(map.vents) == 4
   end
 
+  test "floresta tem cover 0.5, as outras 0", %{map: map} do
+    assert Map.new(map.regions, &{&1.id, &1.cover}) ==
+             %{jardim: 0.0, floresta: 0.5, planicie: 0.0}
+  end
+
   test "edge_depth", %{map: map} do
     assert WorldMap.edge_depth(map, 0, 0) == 30.0
     assert WorldMap.edge_depth(map, 62, -28) == 45.0

@@ -1,7 +1,7 @@
 defmodule Abyss.World.Wire do
   @moduledoc "Serialização do mundo para o formato no fio (snapshot e tick)."
 
-  alias Abyss.World.{Sim, Species}
+  alias Abyss.World.Sim
 
   # Passo de quantização do nível de flora (igual ao de Abyss.World.Flora).
   @quant 0.02
@@ -19,7 +19,7 @@ defmodule Abyss.World.Wire do
       creature_scale: sim.bounds.creature_scale,
       bounds: Map.take(sim.bounds, [:y_min, :y_max]),
       species:
-        Enum.map(Species.all(), fn sp ->
+        Enum.map(Sim.species(sim), fn sp ->
           %{
             id: Atom.to_string(sp.id),
             code: sp.code,

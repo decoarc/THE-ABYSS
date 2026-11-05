@@ -13,7 +13,8 @@ defmodule Abyss.World.Map do
           center: {number, number},
           radius: number,
           flora_patches: non_neg_integer,
-          particle_share: number
+          particle_share: number,
+          cover: float
         }
   @type t :: %__MODULE__{
           id: String.t(),
@@ -48,7 +49,8 @@ defmodule Abyss.World.Map do
       center: {cx, cz},
       radius: r["radius"],
       flora_patches: r["flora_patches"],
-      particle_share: r["particle_share"]
+      particle_share: r["particle_share"],
+      cover: (r["cover"] || 0) * 1.0
     }
   end
 

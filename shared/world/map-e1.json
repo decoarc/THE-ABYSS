@@ -22,7 +22,8 @@
       ],
       "radius": 30,
       "flora_patches": 30,
-      "particle_share": 0.1
+      "particle_share": 0.1,
+      "cover": 0.5
     },
     {
       "id": "planicie",

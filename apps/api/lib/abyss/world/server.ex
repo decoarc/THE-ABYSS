@@ -50,6 +50,9 @@ defmodule Abyss.World.Server do
         test_species: Keyword.get(opts, :test_species, true),
         food:
           Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
+          |> Map.new(),
+        ecology:
+          Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
           |> Map.new()
       })
 

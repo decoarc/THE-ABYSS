@@ -34,6 +34,37 @@ defmodule Abyss.World.SimTest do
     assert Enum.map(Species.all(), &count(sim, &1.id)) == [10, 10, 9, 9, 9]
   end
 
+  test "usa a tabela injetada" do
+    zz = %{
+      id: :zz,
+      code: "ZZZ",
+      name: "Zeta",
+      max_speed: 0.3,
+      wander: 0.3,
+      turn_rate: 0.8,
+      body_radius: 0.9,
+      run_s: nil,
+      pause_s: nil,
+      diet: :flora,
+      perception: 5.0,
+      sated_s: 10,
+      school: false,
+      shelter: false,
+      burst: 1.0,
+      energy_max: 100.0,
+      metabolism: 0.3,
+      mature_s: 100,
+      adult_life_s: 500
+    }
+
+    sim = Sim.new(Map.put(@opts, :species, [zz]))
+    assert Sim.species(sim) == [zz]
+    assert Enum.all?(sim.organisms, &(&1.species == :zz))
+    assert hd(sim.organisms).id == "ZZZ-0001"
+    assert length(sim.organisms) == 45
+    assert %Sim{} = run(sim, 100)
+  end
+
   test "aceita 5..400" do
     assert length(Sim.new(%{@opts | population: 400}).organisms) == 400
     assert_raise ArgumentError, fn -> Sim.new(%{@opts | population: 4}) end

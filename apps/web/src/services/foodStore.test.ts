@@ -8,7 +8,7 @@ const part = (id: number, over: Partial<Record<'y' | 'vy' | 'born' | 'life', num
 
 function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   return {
-    world_id: 'w', tick: 1, tick_hz: 10, server_ms: 0, map_id: 'e1', creature_scale: 0.5,
+    world_id: 'w', tick: 1, tick_hz: 10, server_ms: 0, map_id: 'e1', creature_scale: 0.5, juvenile_scale: 0.45, divide_s: 2,
     bounds: { y_min: 1.5, y_max: 8 }, species: [], organisms: [],
     flora: [[1, 2, 0.5], [3, 4, 0.1], [5, 6, 0]],
     particles: [part(1), part(2)],
@@ -16,7 +16,7 @@ function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   };
 }
 const tick = (n: number, over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w', tick: n, server_ms: n * 100, o: [], f: [], ps: [], pr: [], ...over,
+  world_id: 'w', tick: n, server_ms: n * 100, o: [], b: [], d: [], x: [], f: [], ps: [], pr: [], ...over,
 });
 const ready = (): FoodStore => {
   const f = createFoodStore();

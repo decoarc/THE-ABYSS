@@ -6,8 +6,8 @@ import { createWorldStore, type WorldStore } from '../services/worldStore';
 import type { OrganismInfo, SpeciesInfo, WorldSnapshot } from '../services/wire';
 
 export const SPECIES: SpeciesInfo[] = [
-  { id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1 },
-  { id: 'celula', code: 'CEL', name: 'Célula', body_radius: 0.8 },
+  { id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null },
+  { id: 'celula', code: 'CEL', name: 'Célula', body_radius: 0.8, diet: { kind: 'particles', prey: [] }, extinct_ms: null },
 ];
 
 /** Renderiza `ui` dentro de um mundo de teste: store alimentada por snapshot, sem socket. */
@@ -19,7 +19,7 @@ export function renderWithWorld(
   const selection: Selection = createSelection();
   const snapshot: WorldSnapshot = {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: 1_000_000,
-    map_id: 'e1', creature_scale: 0.5,
+    map_id: 'e1', creature_scale: 0.5, juvenile_scale: 0.45, divide_s: 2,
     bounds: { y_min: 1.5, y_max: 8 },
     species: SPECIES,
     organisms: options.organisms ?? [],
@@ -38,6 +38,6 @@ export function renderWithWorld(
 /** `n` membranas com ids MBR-0001… */
 export function membranas(n: number): OrganismInfo[] {
   return Array.from({ length: n }, (_, i) => ({
-    id: `MBR-${String(i + 1).padStart(4, '0')}`, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0],
+    id: `MBR-${String(i + 1).padStart(4, '0')}`, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null,
   }));
 }

@@ -14,6 +14,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useStretchFrame, useVitals } from './useVitals';
 import { useSelectable } from './useSelectable';
 
 const vertex = /* glsl */ `
@@ -46,6 +47,7 @@ uniform vec3 uInner;
 uniform vec3 uNucleus;
 uniform float uBreath;
 uniform float uThickness;
+uniform float uFade;
 varying vec3 vNormalV;
 varying vec3 vViewDir;
 varying float vDisp;
@@ -58,7 +60,7 @@ void main() {
   vec3 color = uInner * 0.14 + uRim * fresnel * (0.55 + 0.25 * uBreath) + uNucleus * core
     + uRim * max(vDisp, 0.0) * 0.4;
   float alpha = clamp(0.05 + fresnel * 0.75 + core, 0.0, 1.0);
-  gl_FragColor = vec4(color * alpha, 1.0);
+  gl_FragColor = vec4(color * alpha * uFade, 1.0);
   #include <fog_fragment>
 }
 `;
@@ -73,6 +75,8 @@ const getGeometry = () => (sharedGeometry ??= new THREE.IcosahedronGeometry(C.ra
 export function Membrana({ id }: { id: string }) {
   const { motion } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
+  const { frame, counter, apply } = useStretchFrame();
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const shown = useCreatureCull(group, pose);
@@ -94,6 +98,7 @@ export function Membrana({ id }: { id: string }) {
           uTime: { value: 0 },
           uWobble: { value: C.wobble },
           uBreath: { value: 0 },
+          uFade: { value: 1 },
           uThickness: { value: C.thickness },
           uRim: { value: new THREE.Color(PALETTE.cyan) },
           uInner: { value: new THREE.Color(PALETTE.violet) },
@@ -111,20 +116,29 @@ export function Membrana({ id }: { id: string }) {
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
     material.uniforms.uTime.value = t;
     material.uniforms.uBreath.value = breath;
+    material.uniforms.uFade.value = vitals.fade.current;
 
     const g = group.current;
     if (!g) return;
     if (!shown.current) return;
     // Posição canônica do servidor; a rotação lenta é cosmética.
-    g.position.copy(pose.pos);
+    const f = frame.current;
+    if (!f) return;
+    f.position.copy(pose.pos);
+    apply(pose.vel, vitals.stretch.current);
+    g.scale.setScalar(scale * vitals.scale.current);
     g.rotation.set(Math.sin(t * 0.13) * 0.2, t * 0.05, Math.cos(t * 0.11) * 0.15);
-    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 1.3 * (0.6 + 0.4 * breath));
+    requestCreatureGlow(id, FLOOR_COLOR, f.position.x, f.position.y, f.position.z, CREATURE_GLOW_RADIUS, 1.3 * (0.6 + 0.4 * breath) * vitals.glow.current * vitals.fade.current);
   });
 
   return (
-    <group ref={group} visible={false} scale={scale} {...selectable}>
-      <mesh geometry={geometry} material={material} renderOrder={3} />
-      <Nucleus config={C.nucleus} pulseRef={pulse} timeOffset={offset} />
+    <group ref={frame} {...selectable}>
+      <group ref={counter}>
+        <group ref={group} visible={false}>
+          <mesh geometry={geometry} material={material} renderOrder={3} />
+          <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} timeOffset={offset} />
+        </group>
+      </group>
     </group>
   );
 }

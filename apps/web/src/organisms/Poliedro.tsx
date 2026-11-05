@@ -11,6 +11,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useStretchFrame, useVitals } from './useVitals';
 import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
@@ -33,6 +34,8 @@ function getGeometry() {
 export function Poliedro({ id }: { id: string }) {
   const { motion, q } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
+  const { frame, counter, apply } = useStretchFrame();
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const shown = useCreatureCull(group, pose);
@@ -61,6 +64,7 @@ export function Poliedro({ id }: { id: string }) {
             // Brilho interno do núcleo difundido no cristal: as faces nunca ficam escuras.
             emissive: new THREE.Color(C.nucleus.color).multiplyScalar(0.07),
             flatShading: true,
+            transparent: true,
           })
         : new THREE.MeshStandardMaterial({
             color: '#151b24',
@@ -68,6 +72,7 @@ export function Poliedro({ id }: { id: string }) {
             metalness: 0.35,
             emissive: new THREE.Color(C.nucleus.color).multiplyScalar(0.06),
             flatShading: true,
+            transparent: true,
           }),
     [q.crystal],
   );
@@ -95,19 +100,30 @@ export function Poliedro({ id }: { id: string }) {
     step.setFromAxisAngle(AXIS, C.spinSpeed * s);
     solid.current.quaternion.premultiply(step);
     // Posição canônica do servidor + sobe e desce cosmético.
-    g.position.copy(pose.pos);
-    g.position.y += Math.sin(time.current * 0.25) * C.bob * scale;
+    const f = frame.current;
+    if (!f) return;
+    const life = scale * vitals.scale.current;
+    const fade = vitals.fade.current;
+    f.position.copy(pose.pos);
+    f.position.y += Math.sin(time.current * 0.25) * C.bob * life;
+    apply(pose.vel, vitals.stretch.current);
+    g.scale.setScalar(life);
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
-    edgeMaterial.opacity = 0.4 + 0.25 * breath;
-    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.45 + 0.25 * breath);
+    edgeMaterial.opacity = (0.4 + 0.25 * breath) * fade;
+    material.opacity = fade;
+    requestCreatureGlow(id, FLOOR_COLOR, f.position.x, f.position.y, f.position.z, CREATURE_GLOW_RADIUS, (0.45 + 0.25 * breath) * vitals.glow.current * fade);
   });
 
   return (
-    <group ref={group} visible={false} scale={scale} {...selectable}>
-      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={6} timeOffset={offset} />
-      <group ref={solid} quaternion={initial}>
-        <mesh geometry={geometry} material={material} />
-        <lineSegments geometry={edges} material={edgeMaterial} />
+    <group ref={frame} {...selectable}>
+      <group ref={counter}>
+        <group ref={group} visible={false}>
+          <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={6} timeOffset={offset} />
+          <group ref={solid} quaternion={initial}>
+            <mesh geometry={geometry} material={material} />
+            <lineSegments geometry={edges} material={edgeMaterial} />
+          </group>
+        </group>
       </group>
     </group>
   );

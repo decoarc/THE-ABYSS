@@ -20,6 +20,8 @@ export interface Vitals {
   dividing: boolean;
   /** Instante local em que o bit de jovem caiu; null enquanto jovem (ou se nasceu adulto). */
   maturedAtMs: number | null;
+  /** Instante local em que o bit de divisão ligou; null fora da divisão. */
+  dividingSinceMs: number | null;
   /** Instante local da morte por fome ou velhice (fantasma); null para os vivos. */
   dyingSinceMs: number | null;
 }
@@ -81,6 +83,7 @@ interface Live {
   juvenile: boolean;
   dividing: boolean;
   maturedAtMs: number | null;
+  dividingSinceMs: number | null;
 }
 
 interface Ghost {
@@ -90,13 +93,14 @@ interface Ghost {
   dyingSinceMs: number;
 }
 
-const makeLive = (info: OrganismInfo): Live => ({
+const makeLive = (info: OrganismInfo, localMs: number): Live => ({
   info,
   ring: { data: new Float64Array(BUFFER_SAMPLES * STRIDE), head: 0, count: 0 },
   energy: info.e,
   juvenile: info.stage === 'juvenile',
   dividing: info.dividing,
   maturedAtMs: null,
+  dividingSinceMs: info.dividing ? localMs : null,
 });
 
 export function createWorldStore(): WorldStore {
@@ -172,9 +176,13 @@ export function createWorldStore(): WorldStore {
     roster = [...lives.map((l) => l.info), ...ghosts.map((g) => g.info)];
   }
 
-  const findGhost = (id: string) => ghosts.find((g) => g.info.id === id);
+  // Sem closure nem alocação: sample e vitals rodam por quadro.
+  function findGhost(id: string): Ghost | undefined {
+    for (let i = 0; i < ghosts.length; i++) if (ghosts[i].info.id === id) return ghosts[i];
+    return undefined;
+  }
 
-  return {
+  const store: WorldStore = {
     applySnapshot(s, localMs) {
       worldId = s.world_id;
       bounds = s.bounds;
@@ -194,7 +202,7 @@ export function createWorldStore(): WorldStore {
       diffHead = 0;
       observe(localMs, s.server_ms);
       lives = s.organisms.map((org) => {
-        const l = makeLive(org);
+        const l = makeLive(org, localMs);
         push(l.ring, s.server_ms, org.p[0], org.p[1], org.p[2], org.v[0], org.v[1], org.v[2]);
         return l;
       });
@@ -241,17 +249,16 @@ export function createWorldStore(): WorldStore {
             rosterChanged = true;
             continue;
           }
-          const r = l.ring;
-          const k = slot(r, r.count - 1);
-          ghosts.push({
-            info: l.info, pos: [r.data[k + 1], r.data[k + 2], r.data[k + 3]], energy: l.energy, dyingSinceMs: localMs,
-          });
+          // Congela onde o cliente a desenhava agora (atrasada no tempo), não na amostra mais nova: sem salto.
+          const pos: Vec3 = [0, 0, 0];
+          store.sample(l.info.id, localMs, pos, [0, 0, 0]);
+          ghosts.push({ info: l.info, pos, energy: l.energy, dyingSinceMs: localMs });
         }
         lives = lives.filter((l) => !dead.has(l.info.id));
       }
 
       if (t.b.length > 0) {
-        for (const org of t.b) lives.push(makeLive(org));
+        for (const org of t.b) lives.push(makeLive(org, localMs));
         rosterChanged = true;
         changed = true;
       }
@@ -266,7 +273,10 @@ export function createWorldStore(): WorldStore {
         const juvenile = (row[7] & 1) !== 0;
         if (l.juvenile && !juvenile) l.maturedAtMs = localMs;
         l.juvenile = juvenile;
-        l.dividing = (row[7] & 2) !== 0;
+        const dividing = (row[7] & 2) !== 0;
+        if (dividing && !l.dividing) l.dividingSinceMs = localMs;
+        else if (!dividing) l.dividingSinceMs = null;
+        l.dividing = dividing;
       }
 
       if (t.x.length > 0) {
@@ -301,6 +311,7 @@ export function createWorldStore(): WorldStore {
         out.juvenile = l.juvenile;
         out.dividing = l.dividing;
         out.maturedAtMs = l.maturedAtMs;
+        out.dividingSinceMs = l.dividingSinceMs;
         out.dyingSinceMs = null;
         return true;
       }
@@ -310,6 +321,7 @@ export function createWorldStore(): WorldStore {
       out.juvenile = false;
       out.dividing = false;
       out.maturedAtMs = null;
+      out.dividingSinceMs = null;
       out.dyingSinceMs = g.dyingSinceMs;
       return true;
     },
@@ -393,4 +405,5 @@ export function createWorldStore(): WorldStore {
       return idx === undefined ? 0 : lives[idx].ring.count;
     },
   };
+  return store;
 }

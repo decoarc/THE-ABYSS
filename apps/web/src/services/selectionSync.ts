@@ -1,7 +1,7 @@
 import type { Selection } from './selection';
 import type { Vitals, WorldStore } from './worldStore';
 
-const scratch: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dyingSinceMs: null };
+const scratch: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
 
 /**
  * Mantém a seleção coerente com o mundo: some quando o id sai do roster (reinício, predação ou fim do

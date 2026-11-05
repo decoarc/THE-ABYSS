@@ -14,6 +14,8 @@ import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { createTrail } from './trail';
 import { useOrganismPose } from './useOrganismPose';
+import { useVitals } from './useVitals';
+import { STRETCH_MAX } from './vitals';
 import { useSelectable } from './useSelectable';
 
 const RADIAL = 8;
@@ -21,7 +23,7 @@ const RADIAL = 8;
 const BODY_MS = (C.segments - 1) * C.lag * 1000;
 /** Intervalo mínimo entre amostras do rastro; com a capacidade abaixo, cobre o corpo inteiro em qualquer taxa de quadros. */
 const TRAIL_STEP_MS = 8;
-const TRAIL_CAPACITY = Math.ceil(BODY_MS / TRAIL_STEP_MS) + 64;
+const TRAIL_CAPACITY = Math.ceil((BODY_MS * STRETCH_MAX) / TRAIL_STEP_MS) + 64;
 /** Salto maior que isto (resync, volta de aba) recomeça o rastro em vez de desenhar um risco. */
 const TRAIL_RESET_DISTANCE = 3;
 const TRAIL_GAP_MS = 500;
@@ -49,6 +51,7 @@ const fragment = /* glsl */ `
 uniform vec3 uGlow;
 uniform vec3 uBody;
 uniform float uPulse;
+uniform float uFade;
 uniform float uTime;
 uniform vec3 uPulses;
 varying float vU;
@@ -67,7 +70,7 @@ void main() {
   float pulse = travelingPulse(vU) * (1.0 - 0.6 * vU);
   float rim = pow(1.0 - abs(dot(vNormalV, vViewDir)), 1.5);
   vec3 color = uBody * (1.0 - vU) + uGlow * (body * (0.32 + 0.18 * uPulse) + pulse * 0.95 + rim * 0.3 * body);
-  float alpha = clamp((0.3 + 0.45 * body + 0.35 * pulse) * (1.0 - smoothstep(0.85, 1.0, vU)), 0.0, 1.0);
+  float alpha = clamp((0.3 + 0.45 * body + 0.35 * pulse) * (1.0 - smoothstep(0.85, 1.0, vU)), 0.0, 1.0) * uFade;
   gl_FragColor = vec4(color, alpha);
   #include <fog_fragment>
 }
@@ -77,6 +80,7 @@ void main() {
 export function Filamento({ id }: { id: string }) {
   const { motion, q } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
   const selectable = useSelectable(id);
   const phase = useMemo(() => phaseOf(id), [id]);
   const offset = phase * 1000;
@@ -125,6 +129,7 @@ export function Filamento({ id }: { id: string }) {
           uGlow: { value: new THREE.Color(C.nucleus.color) },
           uBody: { value: new THREE.Color('#0b2a2e') },
           uPulse: { value: 0 },
+          uFade: { value: 1 },
           uTime: { value: 0 },
           uPulses: { value: new THREE.Vector3(C.pulses.speed, C.pulses.spacing, C.pulses.width) },
         },
@@ -178,7 +183,7 @@ export function Filamento({ id }: { id: string }) {
       if (speed > 0.05) dir.copy(pose.vel).divideScalar(speed);
       else dir.set(Math.cos(phase * Math.PI * 2), 0, Math.sin(phase * Math.PI * 2));
       const v = Math.max(speed, SEED_SPEED) / 1000;
-      for (let ms = BODY_MS * scale + TRAIL_STEP_MS; ms > 0; ms -= TRAIL_STEP_MS * 4) {
+      for (let ms = BODY_MS * scale * STRETCH_MAX + TRAIL_STEP_MS; ms > 0; ms -= TRAIL_STEP_MS * 4) {
         scratch.last[0] = p[0] - dir.x * v * ms;
         scratch.last[1] = p[1] - dir.y * v * ms;
         scratch.last[2] = p[2] - dir.z * v * ms;
@@ -193,8 +198,11 @@ export function Filamento({ id }: { id: string }) {
     }
 
     // A espinha é o próprio trajeto da cabeça amostrado no passado: o corpo passa por onde a cabeça passou.
+    // Tamanho de vida (jovem/crescendo) e alongamento da divisão: o corpo estica ao longo da trajetória e afina em 1/sqrt.
+    const life = scale * vitals.scale.current;
+    const st = vitals.stretch.current;
     spine[0].copy(pose.pos);
-    const lagMs = C.lag * 1000 * lagScale * scale;
+    const lagMs = C.lag * 1000 * lagScale * life * st;
     for (let i = 1; i < n; i++) {
       trail.buffer.at(now - i * lagMs, p);
       spine[i].set(p[0], p[1], p[2]);
@@ -206,9 +214,9 @@ export function Filamento({ id }: { id: string }) {
       side.crossVectors(tangent, worldUp).normalize();
       up.crossVectors(side, tangent).normalize();
       // Ondulação lateral que viaja da cabeça para a cauda, crescendo com a distância da cabeça.
-      const wave = Math.sin(t * 1.6 - i * 0.18 * lagScale) * C.undulation * scale * Math.min(1, s * 3);
+      const wave = Math.sin(t * 1.6 - i * 0.18 * lagScale) * C.undulation * life * Math.min(1, s * 3);
       offset.copy(side).multiplyScalar(wave);
-      const radius = (C.width * (1 - s) ** 0.7 + 0.004) * scale;
+      const radius = (C.width * (1 - s) ** 0.7 + 0.004) * life / Math.sqrt(st);
       for (let k = 0; k < RADIAL; k++) {
         const a = (k / RADIAL) * Math.PI * 2;
         const cx = Math.cos(a), cy = Math.sin(a);
@@ -229,15 +237,17 @@ export function Filamento({ id }: { id: string }) {
     const range = C.nucleus.pulseMax - C.nucleus.pulseMin;
     material.uniforms.uPulse.value = (pulse.current - C.nucleus.pulseMin) / range;
     material.uniforms.uTime.value = t;
+    material.uniforms.uFade.value = vitals.fade.current;
     head.current?.position.copy(spine[0]);
-    requestCreatureGlow(id, FLOOR_COLOR, spine[0].x, spine[0].y, spine[0].z, CREATURE_GLOW_RADIUS, 0.7);
+    head.current?.scale.setScalar(life);
+    requestCreatureGlow(id, FLOOR_COLOR, spine[0].x, spine[0].y, spine[0].z, CREATURE_GLOW_RADIUS, 0.7 * vitals.glow.current * vitals.fade.current);
   });
 
   return (
     <group ref={root} visible={false} {...selectable}>
       <mesh geometry={geometry} material={material} renderOrder={3} frustumCulled={false} />
-      <group ref={head} scale={scale}>
-        <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={9} timeOffset={offset} />
+      <group ref={head}>
+        <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={9} timeOffset={offset} />
       </group>
     </group>
   );

@@ -34,7 +34,7 @@ const at = (s: Store, id: string, ms: number) => {
   const p: Vec3 = [0, 0, 0], v: Vec3 = [0, 0, 0];
   return s.sample(id, ms, p, v) ? p : null;
 };
-const vit = (): Vitals => ({ energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dyingSinceMs: null });
+const vit = (): Vitals => ({ energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null });
 
 it('antes do snapshot: juvenileScale 1 e divideS 2; depois vêm do snapshot', () => {
   const s = createWorldStore();
@@ -150,17 +150,43 @@ it('extinção: x grava o ms e o snapshot mantém extinct_ms', () => {
 it('vitals: energia e flags do último tick; maturedAtMs quando o bit de jovem cai', () => {
   const s = createWorldStore();
   s.applySnapshot(snap(['a'], { organisms: [org('a', { stage: 'juvenile', e: 0.5, dividing: false })] }), L(1));
-  const out: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: 1, dyingSinceMs: 1 };
+  const out: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: 1, dividingSinceMs: 1, dyingSinceMs: 1 };
   expect(s.vitals('nada', out)).toBe(false);
   expect(s.vitals('a', out)).toBe(true);
-  expect(out).toEqual({ energy: 0.5, juvenile: true, dividing: false, maturedAtMs: null, dyingSinceMs: null });
+  expect(out).toEqual({ energy: 0.5, juvenile: true, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null });
   s.applyTick(tick(2, [row(0, 0.42, 1)]), L(2));
   s.vitals('a', out);
   expect(out).toMatchObject({ energy: 0.42, juvenile: true, maturedAtMs: null });
   s.applyTick(tick(3, [row(0, 0.9, 2)]), L(3));
   s.vitals('a', out);
-  expect(out).toEqual({ energy: 0.9, juvenile: false, dividing: true, maturedAtMs: L(3), dyingSinceMs: null });
+  expect(out).toEqual({ energy: 0.9, juvenile: false, dividing: true, maturedAtMs: L(3), dividingSinceMs: L(3), dyingSinceMs: null });
   s.applyTick(tick(4, [row(0, 0.9, 0)]), L(4));
   s.vitals('a', out);
   expect(out.maturedAtMs).toBe(L(3));
+});
+
+it('fantasma congela onde o cliente desenhava na morte, não na amostra mais nova', () => {
+  const s = ready();
+  const mv = (x: number): TickRow => [x, 0, 0, 100, 0, 0, 0.8, 0];
+  s.applyTick(tick(2, [mv(0), mv(10), mv(2)]), L(2));
+  s.applyTick(tick(3, [mv(0), mv(20), mv(2)]), L(3));
+  const shown = at(s, 'b', L(4))!;
+  expect(shown[0]).toBeLessThan(20);
+  s.applyTick(tick(4, [mv(0), mv(2)], { d: [['b', 'starvation']] }), L(4));
+  expect(at(s, 'b', L(4) + 5000)).toEqual(shown);
+});
+
+it('vitals: dividingSinceMs marca quando o bit de divisão ligou', () => {
+  const s = createWorldStore();
+  s.applySnapshot(snap(['a'], { organisms: [org('a')] }), L(1));
+  const out = vit();
+  s.vitals('a', out);
+  expect(out.dividingSinceMs).toBeNull();
+  s.applyTick(tick(2, [row(0, 0.9, 2)]), L(2));
+  s.applyTick(tick(3, [row(0, 0.9, 2)]), L(3));
+  s.vitals('a', out);
+  expect(out.dividingSinceMs).toBe(L(2));
+  s.applyTick(tick(4, [row(0, 0.9, 0)]), L(4));
+  s.vitals('a', out);
+  expect(out.dividingSinceMs).toBeNull();
 });

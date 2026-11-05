@@ -5,3 +5,6 @@ dist/
 apps/api/_build/
 apps/api/deps/
 apps/api/.elixir_ls/
+
+# vídeos de captura ficam fora do git (THE-ABYSS-capturas/)
+docs/captures/**/*.webm

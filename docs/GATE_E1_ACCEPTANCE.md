@@ -28,6 +28,8 @@
 | `captures/e1/perf.json` | Desempenho oficial (percurso e Floresta, Arc e RTX) |
 | `captures/e1/carga-oficial.md` / `.json` | Carga oficial com 50 clientes + 2 abas |
 
+Os quatro vídeos `.webm` (13–29 MB cada) são locais, não versionados, como no gate I: ficam em `THE-ABYSS-capturas/e1/parada-N/`, pasta irmã do repositório, com o mesmo nome (decisão do autor em 2026-11-05, para não pôr ~100 MB no histórico de `main`).
+
 ## Critérios (design §6)
 
 | # | Critério | Situação e evidência |

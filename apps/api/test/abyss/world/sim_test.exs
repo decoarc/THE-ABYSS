@@ -665,17 +665,17 @@ defmodule Abyss.World.SimTest do
       orgs = for i <- 1..20, do: adult("CEL-#{String.pad_leading("#{i}", 4, "0")}", :celula, {1.0 + i * 1.0, 4.0, 0.0})
       sim = %{bare_world(20) | organisms: orgs}
 
-      full = fn s -> %{s | organisms: Enum.map(s.organisms, &%{&1 | energy: 100.0})} end
-      sim = Enum.reduce(1..100, sim, fn _, s -> s |> full.() |> Sim.step(0.1) end)
+      sim = Enum.reduce(1..100, sim, fn _, s -> Sim.step(s, 0.1) end)
 
       assert length(sim.organisms) == 20
       assert sim.eco_totals.cap_holds > 0
-      assert Enum.all?(sim.organisms, &(&1.dividing_left == 0))
+      assert Enum.all?(sim.organisms, &(&1.dividing_left == 0 and &1.energy == 100.0))
+      assert sim.life_events.deaths == [] and sim.eco_totals.deaths == %{}
       assert sim.eco_totals.births == %{}
 
       # Abre uma vaga: um deles começa a dividir no passo seguinte.
       sim = %{sim | organisms: tl(sim.organisms)}
-      s = sim |> full.() |> Sim.step(0.1)
+      s = Sim.step(sim, 0.1)
       assert Enum.count(s.organisms, &(&1.dividing_left > 0)) == 1
     end
   end

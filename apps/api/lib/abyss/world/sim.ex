@@ -233,7 +233,7 @@ defmodule Abyss.World.Sim do
     # Divisões: concluem (nascidos no fim da lista) antes de remover os mortos,
     # então o filho de um pai que morre neste passo nasce mesmo assim.
     {new_orgs, births, next_seq} = complete_divisions(orgs, new_orgs, sim, now_ms)
-    {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim.ecology)
+    {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim)
     new_orgs = new_orgs ++ births
 
     {survivors, dead} =
@@ -316,24 +316,34 @@ defmodule Abyss.World.Sim do
   # Quem quer dividir (energia cheia) começa se houver vaga: população mais
   # divisões em curso (e nascidos deste passo) abaixo de pop_cap. Sem vaga, conta
   # um cap_hold e tenta de novo no passo seguinte.
-  defp start_divisions(orgs, _births, [], _eco), do: {orgs, 0}
+  defp start_divisions(orgs, _births, [], _sim), do: {orgs, 0}
 
-  defp start_divisions(orgs, births, wants, eco) do
+  defp start_divisions(orgs, births, wants, %{ecology: eco, bounds: bounds}) do
     in_course = Enum.count(orgs, &(&1.dividing_left > 0))
     used = length(orgs) + length(births) + in_course
 
-    {started, holds, _} =
+    {started, held, _} =
       wants
       |> Enum.reverse()
-      |> Enum.reduce({MapSet.new(), 0, used}, fn id, {set, holds, n} ->
+      |> Enum.reduce({MapSet.new(), MapSet.new(), used}, fn id, {set, held, n} ->
         if n < eco.pop_cap,
-          do: {MapSet.put(set, id), holds, n + 1},
-          else: {set, holds + 1, n}
+          do: {MapSet.put(set, id), held, n + 1},
+          else: {set, MapSet.put(held, id), n}
       end)
 
+    # Quem espera vaga não gasta energia neste passo: continua cheio e tenta de novo.
     {Enum.map(orgs, fn o ->
-       if MapSet.member?(started, o.id), do: %{o | dividing_left: eco.divide_s * 1.0}, else: o
-     end), holds}
+       cond do
+         MapSet.member?(started, o.id) ->
+           %{o | dividing_left: eco.divide_s * 1.0}
+
+         MapSet.member?(held, o.id) ->
+           %{o | energy: spec(bounds, o.species).energy_max}
+
+         true ->
+           o
+       end
+     end), MapSet.size(held)}
   end
 
   defp count_births(eco_totals, births) do

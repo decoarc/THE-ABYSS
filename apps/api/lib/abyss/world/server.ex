@@ -79,7 +79,9 @@ defmodule Abyss.World.Server do
     sorted = Enum.sort(state.jitters)
 
     reply =
-      Map.merge(Sim.food_stats(state.sim), %{
+      Sim.food_stats(state.sim)
+      |> Map.merge(Sim.eco_stats(state.sim))
+      |> Map.merge(%{
         world_id: state.world_id,
         tick: state.sim.tick,
         tick_hz: state.tick_hz,

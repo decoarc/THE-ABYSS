@@ -830,4 +830,111 @@ defmodule Abyss.World.SimTest do
       assert mean.(inside) > mean.(outside)
     end
   end
+
+  describe "extinção e medições" do
+    alias Abyss.World.Organism
+
+    # Só o Casco "já teve indivíduos"; as outras espécies nunca existiram.
+    defp casco_world do
+      sim = bare_world()
+      %{sim | next_seq: Map.new(sim.next_seq, fn {sp, _} -> {sp, if(sp == :casco, do: 4, else: 1)} end)}
+    end
+
+    defp casco(n, extra \\ []),
+      do: adult("CAS-000#{n}", :casco, {1.0 + n * 6, 4.0, 0.0}, extra)
+
+    test "extinção é permanente" do
+      sim = %{casco_world() | organisms: for(n <- 1..3, do: casco(n, energy: 0.0))}
+      s1 = Sim.step(sim, 0.1)
+
+      assert s1.organisms == []
+      assert s1.extinct == %{casco: s1.now_ms}
+      assert s1.life_events.extinct == [{:casco, s1.now_ms}]
+
+      s = run(s1, 6000)
+      assert s.now_ms - s1.now_ms == 600_000
+      assert s.extinct == %{casco: s1.now_ms}
+      assert s.organisms == []
+      assert s.life_events.extinct == []
+    end
+
+    test "nascimento no último tick salva a espécie" do
+      # O último adulto morre de velhice no passo em que a divisão dele termina.
+      o = casco(1, energy: 50.0, dividing_left: 0.1, stage_ms: -2_000_000)
+      sim = %{casco_world() | organisms: [o]}
+      s = Sim.step(sim, 0.1)
+
+      assert s.life_events.deaths == [{"CAS-0001", :old_age}]
+      assert [%Organism{species: :casco, stage: :juvenile}] = s.organisms
+      assert s.extinct == %{}
+      assert s.life_events.extinct == []
+      assert s.eco_totals.births == %{casco: 1}
+
+      assert run(s, 5).extinct == %{}
+    end
+
+    test "espécie inventada" do
+      base = %{
+        run_s: nil,
+        pause_s: nil,
+        wander: 0.4,
+        turn_rate: 1.0,
+        perception: 6.0,
+        sated_s: 10,
+        school: false,
+        shelter: false,
+        energy_max: 100.0,
+        mature_s: 60,
+        adult_life_s: 600
+      }
+
+      aa =
+        Map.merge(base, %{
+          id: :aa, code: "AAA", name: "Alfa", max_speed: 0.3, body_radius: 0.8,
+          diet: :flora, burst: 1.5, metabolism: 0.3
+        })
+
+      bb =
+        Map.merge(base, %{
+          id: :bb, code: "BBB", name: "Beta", max_speed: 0.7, body_radius: 1.4,
+          diet: {:prey, [:aa]}, burst: 2.0, metabolism: 0.4
+        })
+
+      sim = Sim.new(Map.merge(@opts, %{population: 30, species: [aa, bb]}))
+      assert sim.bounds.hunted == MapSet.new([:aa])
+
+      sim = run(sim, 18_000)
+      assert Enum.all?(sim.organisms, &(&1.species in [:aa, :bb]))
+      assert Enum.all?(Map.keys(sim.extinct), &(&1 in [:aa, :bb]))
+
+      t = sim.eco_totals
+      assert get_in(t.deaths, [:aa, :predation]) > 0
+      assert t.births[:aa] > 0
+      assert t.births[:bb] > 0
+    end
+
+    test "medições" do
+      sim = %{casco_world() | organisms: [casco(1), casco(2, energy: 0.0)]}
+      s = Sim.step(sim, 0.1)
+      st = Sim.eco_stats(s)
+
+      assert st.population_by_species == %{casco: 1}
+      assert st.births_total == 0
+      assert st.deaths_total == %{starvation: 1, predation: 0, old_age: 0}
+      assert st.hunts_ok == 0 and st.hunts_abandoned == 0 and st.cap_holds == 0
+      assert st.extinct == %{}
+    end
+
+    test "mundo vazio sem medições" do
+      sim = Sim.new(%{@opts | test_species: false})
+      s = run(sim, 20)
+      st = Sim.eco_stats(s)
+
+      assert st.population_by_species == %{}
+      assert st.births_total == 0
+      assert st.deaths_total == %{starvation: 0, predation: 0, old_age: 0}
+      assert st.hunts_ok == 0 and st.hunts_abandoned == 0 and st.cap_holds == 0
+      assert st.extinct == %{}
+    end
+  end
 end

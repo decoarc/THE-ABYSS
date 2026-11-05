@@ -19,5 +19,15 @@ defmodule AbyssWeb.StatsControllerTest do
           ~w(flora_patches flora_level_sum particles eaten_flora_total eaten_particles_total particles_expired_total) do
       assert is_number(body[k]), "falta #{k}"
     end
+
+    for k <- ~w(births_total hunts_ok hunts_abandoned cap_holds) do
+      assert is_number(body[k]), "falta #{k}"
+    end
+
+    assert %{"starvation" => s, "predation" => p, "old_age" => o} = body["deaths_total"]
+    assert is_number(s) and is_number(p) and is_number(o)
+    assert is_map(body["extinct"])
+    assert is_map(body["population_by_species"])
+    assert Enum.sum(Map.values(body["population_by_species"])) == body["population"]
   end
 end

@@ -45,6 +45,7 @@ defmodule Abyss.World.Sim do
             totals: @no_totals,
             life_events: @no_life,
             eco_totals: @no_eco,
+            extinct: %{},
             next_seq: %{}
 
   @type food_events :: %{
@@ -66,6 +67,7 @@ defmodule Abyss.World.Sim do
           totals: map,
           life_events: %{deaths: [{String.t(), atom}], births: [Organism.t()], extinct: [tuple]},
           eco_totals: map,
+          extinct: %{atom => integer},
           next_seq: %{atom => pos_integer}
         }
 
@@ -275,6 +277,9 @@ defmodule Abyss.World.Sim do
 
     {food, corpse_events, rng} = bury(dead, eaten, food, sim, now_ms, rng)
 
+    # Extinção decidida só aqui, depois de mortes e nascimentos do passo.
+    {extinct, new_extinct} = detect_extinct(survivors, next_seq, sim.extinct, now_ms)
+
     removed = expired ++ Enum.reverse(food.eaten_ids)
     spawned = spawned ++ corpse_events.spawned
 
@@ -295,7 +300,13 @@ defmodule Abyss.World.Sim do
         food_events: %{changed: changed, spawned: spawned, removed: removed},
         totals: totals,
         next_seq: next_seq,
-        life_events: %{@no_life | deaths: corpse_events.deaths, births: births},
+        extinct: extinct,
+        life_events: %{
+          @no_life
+          | deaths: corpse_events.deaths,
+            births: births,
+            extinct: new_extinct
+        },
         eco_totals:
           sim.eco_totals
           |> count_deaths(corpse_events.dead_by)
@@ -304,6 +315,21 @@ defmodule Abyss.World.Sim do
           |> Map.update!(:hunts_ok, &(&1 + food.hunts_ok))
           |> Map.update!(:hunts_abandoned, &(&1 + food.hunts_abandoned))
     }
+  end
+
+  # Espécie que já teve indivíduos (`next_seq` > 1) e agora não tem nenhum entra
+  # em `extinct` com o ms do passo; nunca sai.
+  defp detect_extinct(survivors, next_seq, extinct, now_ms) do
+    present = MapSet.new(survivors, & &1.species)
+
+    new =
+      for {id, seq} <- next_seq,
+          seq > 1,
+          not Map.has_key?(extinct, id),
+          not MapSet.member?(present, id),
+          do: {id, now_ms}
+
+    {Enum.into(new, extinct), Enum.sort(new)}
   end
 
   # Quem tinha `dividing_left > 0` e zerou neste passo termina a divisão: o pai
@@ -445,6 +471,28 @@ defmodule Abyss.World.Sim do
       eaten_flora_total: totals.eaten_flora,
       eaten_particles_total: totals.eaten_particles,
       particles_expired_total: totals.particles_expired
+    }
+  end
+
+  @doc "Medições ecológicas para /api/stats."
+  @spec eco_stats(t) :: map
+  def eco_stats(%__MODULE__{organisms: orgs, eco_totals: t, extinct: extinct}) do
+    by_cause = fn cause ->
+      t.deaths |> Map.values() |> Enum.map(&Map.get(&1, cause, 0)) |> Enum.sum()
+    end
+
+    %{
+      population_by_species: Enum.frequencies_by(orgs, & &1.species),
+      births_total: t.births |> Map.values() |> Enum.sum(),
+      deaths_total: %{
+        starvation: by_cause.(:starvation),
+        predation: by_cause.(:predation),
+        old_age: by_cause.(:old_age)
+      },
+      hunts_ok: t.hunts_ok,
+      hunts_abandoned: t.hunts_abandoned,
+      cap_holds: t.cap_holds,
+      extinct: extinct
     }
   end
 

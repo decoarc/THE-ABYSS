@@ -32,6 +32,7 @@ defmodule Abyss.World.SimTest do
   defp xz({x, z}), do: {x, 0.0, z}
   defp count(sim, sp), do: Enum.count(sim.organisms, &(&1.species == sp))
   defp max_speed(sp), do: Enum.find(Species.all(), &(&1.id == sp)).max_speed
+  defp burst(sp), do: Enum.find(Species.all(), &(&1.id == sp)).burst
 
   test "distribui a população pelas espécies" do
     sim = Sim.new(@opts)
@@ -162,10 +163,11 @@ defmodule Abyss.World.SimTest do
     end
   end
 
+  # Caçar e fugir usam o arranque (max_speed × burst); fora disso, max_speed.
   test "respeita max_speed" do
     Enum.reduce(1..300, Sim.new(@opts), fn _, s ->
       s = Sim.step(s, 0.1)
-      for o <- s.organisms, do: assert(norm(o.vel) <= max_speed(o.species) * 1.001)
+      for o <- s.organisms, do: assert(norm(o.vel) <= max_speed(o.species) * burst(o.species) * 1.001)
       s
     end)
   end
@@ -677,6 +679,139 @@ defmodule Abyss.World.SimTest do
       sim = %{sim | organisms: tl(sim.organisms)}
       s = Sim.step(sim, 0.1)
       assert Enum.count(s.organisms, &(&1.dividing_left > 0)) == 1
+    end
+  end
+
+  describe "predação" do
+    alias Abyss.World.{Flora, Organism}
+
+    @open {62.0, 7.0, -28.0}
+    @forest {-48.0, 7.0, -30.0}
+
+    # Mundo vazio, sem flora nem partículas novas; os testes põem caçador e presa.
+    defp hunt_world(orgs, seed \\ 7) do
+      sim = Sim.new(%{@opts | seed: seed, test_species: false, food: %{@food | particle_rate: 0.0}})
+      %{sim | flora: Flora.put_patches(sim.flora, {}), organisms: orgs}
+    end
+
+    defp hunter(pos, extra \\ []),
+      do: struct!(%Organism{id: "FIL-0001", species: :filamento, born_ms: 0, pos: pos, energy: 30.0}, extra)
+
+    defp young(pos, extra \\ []),
+      do:
+        struct!(
+          %Organism{id: "CEL-0001", species: :celula, born_ms: 0, pos: pos, stage: :juvenile, energy: 50.0},
+          extra
+        )
+
+    defp shift({x, y, z}, dx), do: {x + dx, y, z}
+    defp find(sim, id), do: Enum.find(sim.organisms, &(&1.id == id))
+
+    defp with_traits(sim, id, traits) do
+      sp = Map.merge(Map.fetch!(sim.bounds.species, id), traits)
+      %{sim | bounds: %{sim.bounds | species: Map.put(sim.bounds.species, id, sp)}}
+    end
+
+    # Passos até a presa sumir (ou `max`): {passo da captura | nil, sim antes, sim depois, spawned}.
+    defp until_gone(sim, id, max) do
+      Enum.reduce_while(1..max, {nil, sim, sim, []}, fn n, {_, _, s, sp} ->
+        s2 = Sim.step(s, 0.1)
+        sp = sp ++ s2.food_events.spawned
+        if find(s2, id) == nil, do: {:halt, {n, s, s2, sp}}, else: {:cont, {nil, s, s2, sp}}
+      end)
+    end
+
+    test "caçador come presa jovem" do
+      sim = hunt_world([hunter(@open), young(shift(@open, -3.0))])
+      {n, before, after_, spawned} = until_gone(sim, "CEL-0001", 150)
+
+      assert n != nil
+      assert after_.life_events.deaths == [{"CEL-0001", :predation}]
+      assert spawned == []
+      assert after_.eco_totals.hunts_ok == 1
+      assert after_.eco_totals.deaths == %{celula: %{predation: 1}}
+
+      h0 = find(before, "FIL-0001")
+      prey = find(before, "CEL-0001")
+      h1 = find(after_, "FIL-0001")
+      gain = sim.ecology.prey_base + sim.ecology.prey_yield * prey.energy
+      assert_in_delta h1.energy, h0.energy + gain, 0.5
+      assert h1.target == nil and h1.sated_left > 0
+    end
+
+    test "caçador cheio não caça" do
+      sim = hunt_world([hunter(@open, energy: 80.0), young(shift(@open, -3.0))])
+
+      final =
+        Enum.reduce(1..30, sim, fn _, s ->
+          s = Sim.step(s, 0.1)
+          refute match?({:prey, _}, find(s, "FIL-0001").target)
+          s
+        end)
+
+      assert final.eco_totals.hunts_ok == 0
+      assert find(final, "CEL-0001") != nil
+    end
+
+    test "presa foge" do
+      # Caçador ao sul (−z): a deriva e o abrigo puxam para −x, só a fuga empurra para +z.
+      {x, y, z} = @open
+      h = hunter({x, y, z - 5.5})
+      p = young(@open)
+      sim = immortal(hunt_world([h, p]))
+      d0 = dist(p.pos, h.pos)
+
+      s = run(sim, 20)
+      prey = find(s, "CEL-0001")
+      assert prey != nil
+      assert dist(prey.pos, h.pos) > d0
+      {_, _, pz} = prey.pos
+      {_, _, vz} = prey.vel
+      assert pz > z + 0.3
+      assert vz > 0.2
+    end
+
+    test "desiste" do
+      # Caçador lento demais para alcançar; presa que não vê ameaça e fica por perto.
+      sim =
+        hunt_world([hunter(@open), young(shift(@open, -3.0))])
+        |> immortal()
+        |> with_traits(:filamento, %{max_speed: 0.05})
+        |> with_traits(:celula, %{perception: 0.0})
+
+      s1 = Sim.step(sim, 0.1)
+      assert find(s1, "FIL-0001").target == {:prey, "CEL-0001"}
+
+      {n, s} =
+        Enum.reduce_while(2..120, {nil, s1}, fn n, {_, s} ->
+          s = Sim.step(s, 0.1)
+          if find(s, "FIL-0001").target == nil, do: {:halt, {n, s}}, else: {:cont, {nil, s}}
+        end)
+
+      assert n != nil
+      assert_in_delta n * 0.1, 0.1 + sim.ecology.give_up_s, 0.25
+      assert s.eco_totals.hunts_abandoned == 1
+      assert s.eco_totals.hunts_ok == 0
+      assert find(s, "CEL-0001") != nil
+    end
+
+    test "abrigo ajuda" do
+      # Tempo até ser comida (no máximo 60 s), com a mesma semente dentro e fora.
+      survival = fn at, seed ->
+        sim = hunt_world([hunter(at), young(shift(at, -3.0))], seed) |> immortal()
+
+        case until_gone(sim, "CEL-0001", 600) do
+          {nil, _, _, _} -> 60.0
+          {n, _, _, _} -> n * 0.1
+        end
+      end
+
+      inside = for seed <- 1..20, do: survival.(@forest, seed)
+      outside = for seed <- 1..20, do: survival.(@open, seed)
+      mean = fn l -> Enum.sum(l) / length(l) end
+
+      IO.puts("\n[abrigo] média dentro #{mean.(inside)} s, fora #{mean.(outside)} s")
+      assert mean.(inside) > mean.(outside)
     end
   end
 end

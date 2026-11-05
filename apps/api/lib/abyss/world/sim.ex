@@ -9,7 +9,7 @@ defmodule Abyss.World.Sim do
   soma e o desempate são os da varredura linear, então o resultado é idêntico.
   """
 
-  alias Abyss.World.{Flora, Grid, Life, Organism, Particles, Species}
+  alias Abyss.World.{Flora, Grid, Hunt, Life, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
@@ -175,6 +175,10 @@ defmodule Abyss.World.Sim do
       species_list: species,
       sponges: List.to_tuple(map.sponges),
       sponge_grid: sponge_grid,
+      # Centros das regiões com cobertura (abrigo da fuga) e espécies que alguém caça.
+      shelters: for(%{cover: c, center: center} <- map.regions, c > 0, do: center),
+      hunted:
+        for(%{diet: {:prey, ids}} <- species, id <- ids, into: MapSet.new(), do: id),
       richest: %{
         flora: Enum.max_by(map.regions, & &1.flora_patches).center,
         particles: Enum.max_by(map.regions, & &1.particle_share).center
@@ -209,37 +213,67 @@ defmodule Abyss.World.Sim do
       eco: sim.ecology,
       cfg: sim.food_cfg,
       now_ms: now_ms,
-      particle_index: Particles.index(particles, now_ms)
+      particle_index: Particles.index(particles, now_ms),
+      grid: nil
     }
 
-    food = %{flora: flora, particles: particles, eaten_ids: [], bites: 0, takes: 0, wants: []}
+    # `prey_eaten`: ids comidos neste passo (cada presa uma vez; quem processa
+    # primeiro, na ordem da lista, fica com ela).
+    food = %{
+      flora: flora,
+      particles: particles,
+      eaten_ids: [],
+      bites: 0,
+      takes: 0,
+      wants: [],
+      prey_eaten: MapSet.new(),
+      hunts_ok: 0,
+      hunts_abandoned: 0
+    }
 
-    # {i, id, pos, r}: i é a ordem da lista, para a separação somar na mesma ordem.
+    # {i, id, pos, r, species, vel, energy}, do começo do passo: i é a ordem da
+    # lista, para a separação somar na mesma ordem e as buscas desempatarem.
     snapshot =
       orgs
       |> Enum.with_index(fn o, i ->
         {x, _, z} = o.pos
         r = Life.radius(o, spec(bounds, o.species), bounds.creature_scale, sim.ecology)
-        {x, z, {i, o.id, o.pos, r}}
+        {x, z, {i, o.id, o.pos, r, o.species, o.vel, o.energy}}
       end)
       |> Grid.build()
 
+    env = %{env | grid: snapshot}
+
+    # Quem já foi comido neste passo não age mais: não anda, não come, não conta
+    # a divisão (então não a conclui) e não pode ser comido de novo.
     {new_orgs, {rng, food}} =
       Enum.map_reduce(orgs, {rng, food}, fn o, {rng, food} ->
-        {o, rng, food} = step_one(o, snapshot, env, dt, rng, food)
-        {o, {rng, food}}
+        if MapSet.member?(food.prey_eaten, o.id) do
+          {o, {rng, food}}
+        else
+          {o, rng, food} = step_one(o, snapshot, env, dt, rng, food)
+          {o, {rng, food}}
+        end
       end)
 
+    eaten = food.prey_eaten
+    food = %{food | wants: Enum.reject(food.wants, &MapSet.member?(eaten, &1))}
+
     # Divisões: concluem (nascidos no fim da lista) antes de remover os mortos,
-    # então o filho de um pai que morre neste passo nasce mesmo assim.
+    # então o filho de um pai que morre neste passo nasce mesmo assim — também o
+    # de uma presa que concluiu a divisão no seu próprio passo e depois foi comida.
     {new_orgs, births, next_seq} = complete_divisions(orgs, new_orgs, sim, now_ms)
     {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim)
     new_orgs = new_orgs ++ births
 
+    # Remoção única no fim: comidos (:predation, sem corpo), fome e velhice.
     {survivors, dead} =
-      Enum.split_with(new_orgs, &(Life.death_cause(&1, spec(bounds, &1.species), now_ms) == nil))
+      Enum.split_with(new_orgs, fn o ->
+        not MapSet.member?(eaten, o.id) and
+          Life.death_cause(o, spec(bounds, o.species), now_ms) == nil
+      end)
 
-    {food, corpse_events, rng} = bury(dead, food, sim, now_ms, rng)
+    {food, corpse_events, rng} = bury(dead, eaten, food, sim, now_ms, rng)
 
     removed = expired ++ Enum.reverse(food.eaten_ids)
     spawned = spawned ++ corpse_events.spawned
@@ -267,6 +301,8 @@ defmodule Abyss.World.Sim do
           |> count_deaths(corpse_events.dead_by)
           |> count_births(births)
           |> Map.update!(:cap_holds, &(&1 + cap_holds))
+          |> Map.update!(:hunts_ok, &(&1 + food.hunts_ok))
+          |> Map.update!(:hunts_abandoned, &(&1 + food.hunts_abandoned))
     }
   end
 
@@ -356,8 +392,9 @@ defmodule Abyss.World.Sim do
   end
 
   # Fome e velhice: o corpo vira partículas (round(base + k × raio efetivo)),
-  # que entram também em `spawned` para o fio mandá-las.
-  defp bury(dead, food, sim, now_ms, rng) do
+  # que entram também em `spawned` para o fio mandá-las. Predação: a presa some
+  # sem corpo (a causa vale mesmo que ela também estivesse morrendo de outra).
+  defp bury(dead, eaten, food, sim, now_ms, rng) do
     {base, per_r} = sim.ecology.corpse_particles
 
     acc0 = {food, %{deaths: [], spawned: [], dead_by: []}, rng}
@@ -365,10 +402,15 @@ defmodule Abyss.World.Sim do
     {food, events, rng} =
       Enum.reduce(dead, acc0, fn o, {food, ev, rng} ->
         sp = spec(sim.bounds, o.species)
-        cause = Life.death_cause(o, sp, now_ms)
+        predation? = MapSet.member?(eaten, o.id)
+        cause = if predation?, do: :predation, else: Life.death_cause(o, sp, now_ms)
         r = Life.radius(o, sp, sim.bounds.creature_scale, sim.ecology)
-        n = round(base + per_r * r)
-        {particles, born, rng} = Particles.add_corpse(food.particles, o.pos, n, now_ms, rng)
+        n = if predation?, do: 0, else: round(base + per_r * r)
+
+        {particles, born, rng} =
+          if n > 0,
+            do: Particles.add_corpse(food.particles, o.pos, n, now_ms, rng),
+            else: {food.particles, [], rng}
 
         {%{food | particles: particles},
          %{
@@ -503,13 +545,6 @@ defmodule Abyss.World.Sim do
 
     dividing? = o.dividing_left > 0
 
-    target =
-      cond do
-        mode == :pause -> 0.0
-        dividing? -> sp.max_speed * @divide_speed
-        true -> sp.max_speed
-      end
-
     dir = {:math.cos(pitch) * :math.cos(yaw), :math.sin(pitch), :math.cos(pitch) * :math.sin(yaw)}
 
     {o, seek, food} =
@@ -523,6 +558,22 @@ defmodule Abyss.World.Sim do
     food =
       if not dividing? and Life.wants_divide?(o, sp), do: %{food | wants: [o.id | food.wants]}, else: food
 
+    # Quem divide só estica devagar: não foge nem anda em cardume.
+    {flee, school} =
+      if dividing?, do: {@zero, @zero}, else: {flee(o, sp, r, env), Hunt.school_steer(o, sp, snapshot, env.eco)}
+
+    # Caçando ou fugindo, o arranque manda: sem o vagar de cruzeiro, e o teto de
+    # velocidade sobe ao do steer mais forte (max_speed × burst).
+    urgent? = flee != @zero or match?({:prey, _}, o.target)
+
+    target =
+      cond do
+        urgent? -> 0.0
+        mode == :pause -> 0.0
+        dividing? -> sp.max_speed * @divide_speed
+        true -> sp.max_speed
+      end
+
     desired =
       dir
       |> scale(target)
@@ -530,9 +581,12 @@ defmodule Abyss.World.Sim do
       |> add(sponge_steer(o.pos, r, bounds, sp.max_speed))
       |> add(separation(o, sp, r, snapshot, bounds.max_r))
       |> add(seek)
+      |> add(flee)
+      |> add(school)
 
+    cap = sp.max_speed |> max(norm(seek)) |> max(norm(flee))
     k = min(1.0, sp.turn_rate * dt)
-    vel = o.vel |> add(scale(sub(desired, o.vel), k)) |> clamp_norm(sp.max_speed)
+    vel = o.vel |> add(scale(sub(desired, o.vel), k)) |> clamp_norm(cap)
 
     pos =
       o.pos
@@ -549,7 +603,7 @@ defmodule Abyss.World.Sim do
   # Devolve {organismo, steer, comida}. Comer não tem efeito no E1 além da
   # saciedade (que só silencia a busca).
 
-  defp forage(o, %{diet: {:prey, _}}, _r, _dt, _env, food), do: {o, @zero, food}
+  defp forage(o, %{diet: {:prey, _}} = sp, r, dt, env, food), do: hunt(o, sp, r, dt, env, food)
 
   defp forage(o, sp, r, dt, env, food) do
     sated = max(o.sated_left - dt, 0.0)
@@ -645,6 +699,109 @@ defmodule Abyss.World.Sim do
     {ux, _, uz} = unit({cx - x, 0.0, cz - z})
     {ux * @drift_weight * sp.max_speed, 0.0, uz * @drift_weight * sp.max_speed}
   end
+
+  # --- caça e fuga --------------------------------------------------------------
+  # O caçador faminto (energia < hunt_below × energy_max e sem saciedade) escolhe
+  # a presa válida mais próxima pela grade do passo e a persegue a
+  # max_speed × burst (× (1 − cover/2) dentro de cobertura). A presa é vista a
+  # perception × (1 − cover da região dela). A perseguição é abandonada
+  # (hunts_abandoned) depois de give_up_s, se a presa passa de 1,2 × esse
+  # alcance, deixa de caber pelo porte ou some (inclusive comida por outro).
+  # Posições e energia da presa são as do começo do passo (a grade).
+
+  defp hunt(o, sp, r, dt, env, food) do
+    sated = max(o.sated_left - dt, 0.0)
+    o = %{o | sated_left: sated}
+
+    cond do
+      sated > 0 or o.energy >= env.eco.hunt_below * sp.energy_max ->
+        {%{o | target: nil, chase_left: 0.0}, @zero, food}
+
+      match?({:prey, _}, o.target) ->
+        continue_chase(o, sp, r, dt, env, food)
+
+      true ->
+        start_chase(o, sp, r, env, food)
+    end
+  end
+
+  defp start_chase(o, sp, r, env, food) do
+    {x, _, z} = o.pos
+
+    best =
+      env.grid
+      |> Grid.near(x, z, sp.perception)
+      |> Enum.reduce(nil, fn {i, id, pos, pr, psp, _v, _e} = item, best ->
+        d = dist(o.pos, pos)
+
+        if id != o.id and not MapSet.member?(food.prey_eaten, id) and closer?(d, i, best) and
+             Hunt.can_eat?(sp, r, spec(env.bounds, psp), pr) and
+             d <= Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos)),
+           do: {d, i, item},
+           else: best
+      end)
+
+    case best do
+      nil ->
+        {%{o | target: nil, chase_left: 0.0}, @zero, food}
+
+      {_, _, {_, id, _, _, _, _, _} = prey} ->
+        o = %{o | target: {:prey, id}, chase_left: env.eco.give_up_s * 1.0}
+        approach_or_catch(o, prey, sp, r, env, food)
+    end
+  end
+
+  defp continue_chase(%{target: {:prey, id}} = o, sp, r, dt, env, food) do
+    left = o.chase_left - dt
+    prey = if left > @divide_eps, do: chased(o, id, sp, r, env, food)
+
+    if prey do
+      approach_or_catch(%{o | chase_left: left}, prey, sp, r, env, food)
+    else
+      {%{o | target: nil, chase_left: 0.0}, @zero,
+       %{food | hunts_abandoned: food.hunts_abandoned + 1}}
+    end
+  end
+
+  # A presa perseguida, se ainda vale: não comida, ao alcance e menor.
+  defp chased(o, id, sp, r, env, food) do
+    {x, _, z} = o.pos
+
+    if not MapSet.member?(food.prey_eaten, id) do
+      env.grid
+      |> Grid.near(x, z, sp.perception * 1.2)
+      |> Enum.find(fn {_, pid, pos, pr, psp, _, _} ->
+        pid == id and Hunt.can_eat?(sp, r, spec(env.bounds, psp), pr) and
+          dist(o.pos, pos) <=
+            1.2 * Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos))
+      end)
+    end
+  end
+
+  defp approach_or_catch(o, {_, id, ppos, pr, _, _, pe}, sp, r, env, food) do
+    if dist(o.pos, ppos) <= r + pr + @eat_margin do
+      o = Life.gain(o, sp, env.eco.prey_base + env.eco.prey_yield * pe)
+
+      {%{o | target: nil, chase_left: 0.0, sated_left: sp.sated_s * 1.0}, @zero,
+       %{food | prey_eaten: MapSet.put(food.prey_eaten, id), hunts_ok: food.hunts_ok + 1}}
+    else
+      speed = sp.max_speed * sp.burst * (1 - Hunt.cover_at(env.bounds, o.pos) / 2)
+      {o, ppos |> sub(o.pos) |> unit() |> scale(speed), food}
+    end
+  end
+
+  # Só quem alguma espécie caça procura ameaça (atalho; a regra é a de Hunt.threat).
+  defp flee(o, sp, r, %{bounds: bounds, grid: grid}) do
+    with true <- MapSet.member?(bounds.hunted, o.species),
+         pos when pos != nil <- Hunt.threat(o, sp, r, grid, bounds) do
+      Hunt.flee_steer(o, sp, pos, bounds)
+    else
+      _ -> @zero
+    end
+  end
+
+  defp closer?(_d, _i, nil), do: true
+  defp closer?(d, i, {bd, bi, _}), do: d < bd or (d == bd and i < bi)
 
   # Só a Célula alterna entre correr e pausar (run_s/pause_s definidos).
   defp advance_mode(%{run_s: nil}, mode, _left, yaw, rng), do: {mode, 0.0, yaw, rng}
@@ -765,7 +922,7 @@ defmodule Abyss.World.Sim do
     grid
     |> Grid.near(x, z, r0 + max_r + @sep_gap)
     |> Enum.sort()
-    |> Enum.reduce({0.0, 0.0, 0.0}, fn {_i, id, pos, r}, acc ->
+    |> Enum.reduce({0.0, 0.0, 0.0}, fn {_i, id, pos, r, _sp, _vel, _e}, acc ->
       if id == o.id do
         acc
       else

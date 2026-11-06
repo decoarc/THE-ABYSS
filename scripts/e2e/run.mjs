@@ -15,6 +15,14 @@ const COMPOSE = 'infra/compose/compose.yaml';
 const NEGATE = process.env.E2E_NEGATE === '1';
 const LIVE_TIMEOUT = 30_000;
 
+const E2_WAIT_MS = Number(process.env.E2E_WAIT_S ?? 120) * 1000;
+const FOLLOW_TIMEOUT_MS = Number(process.env.E2E_FOLLOW_S ?? 300) * 1000;
+const hash = (str) => {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+};
+
 async function waitHttp(url, timeoutMs) {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
@@ -137,6 +145,114 @@ try {
     assert.equal(sel.id, id, 'selection.id igual ao id escolhido');
     assert.equal(sel.following, false, 'escolher pelo índice não segue');
     await page.getByText(`INDIVÍDUO · ${id}`).waitFor({ timeout: 5000 });
+    await page.close();
+  });
+
+  await scenario('duas abas concordam depois de 120 s (vivos, extintas, gen/parent)', async () => {
+    const a = await openWorld(context);
+    const b = await openWorld(context);
+    await delay(E2_WAIT_MS);
+    // Tentativas: cada uma compara um tick que as duas ainda guardam no histórico; `extinct()` não é
+    // alinhado por tick, então uma divergência só reprova se persistir nas três.
+    let lastProblem = '';
+    let ok = false;
+    for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+      await delay(500);
+      const lastA = await a.evaluate(() => window.__abyss.lastTick());
+      const lastB = await b.evaluate(() => window.__abyss.lastTick());
+      const tick = Math.min(lastA, lastB) - 3;
+      const snap = (page) =>
+        page.evaluate((t) => {
+          const pos = window.__abyss.positionsAt(t);
+          if (!pos) return null;
+          const info = Object.fromEntries(window.__abyss.organisms().map((o) => [o.id, [o.gen, o.parent, o.species]]));
+          return { ids: Object.keys(pos).sort(), ext: window.__abyss.extinct(), info };
+        }, tick);
+      const [sa, sb] = await Promise.all([snap(a), snap(b)]);
+      assert.ok(sa && sb, `tick ${tick} ausente no histórico`);
+      const sameIds = JSON.stringify(sa.ids) === JSON.stringify(sb.ids);
+      const sameExt = JSON.stringify(sa.ext) === JSON.stringify(sb.ext);
+      const shared = sa.ids.filter((id) => sb.info[id]);
+      // Sorteio com semente fixa por tentativa, só para variar os ids entre as rodadas.
+      const picks = [...shared].sort((x, y) => hash(x + attempt) - hash(y + attempt)).slice(0, 10);
+      const sameInfo = picks.every((id) => JSON.stringify(sa.info[id]) === JSON.stringify(sb.info[id]));
+      assert.ok(sa.ids.length >= 5, `poucos vivos: ${sa.ids.length}`);
+      assert.equal(picks.length, Math.min(10, shared.length));
+      const agree = sameIds && sameExt && sameInfo;
+      lastProblem = `ids ${sameIds} (${sa.ids.length} x ${sb.ids.length}), extintas ${sameExt}, gen/parent ${sameInfo}`;
+      console.log(`  tick ${tick}: ${lastProblem}; gens máx ${Math.max(...Object.values(sa.info).map((v) => v[0]))}`);
+      if (NEGATE) assert.ok(!agree, 'NEGATE: esperava diferença (deve falhar)');
+      ok = agree;
+    }
+    assert.ok(ok, `abas divergem: ${lastProblem}`);
+    await a.close();
+    await b.close();
+  });
+
+  await scenario('seguir quem morre: sem erro, o Seguir solta e o painel fecha', async () => {
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+    page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
+    await page.goto(`${BASE}?debug=1`, { waitUntil: 'load' });
+    await live(page);
+    await delay(4000); // a introdução termina
+    const until = Date.now() + FOLLOW_TIMEOUT_MS;
+    let victim = null;
+    let died = false;
+    let deathMode = '';
+    let repickAt = Date.now() + 30_000;
+    while (Date.now() < until && !died) {
+      if (!victim) {
+        victim = await page.evaluate(() => {
+          const b = window.__abyss;
+          const pos = b.positionsAt(b.lastTick() - 1) ?? {};
+          const alive = Object.keys(pos)
+            .map((id) => [id, b.vitals(id)])
+            .filter(([, v]) => v && v.dyingSinceMs === null)
+            .sort((x, y) => x[1].energy - y[1].energy);
+          if (!alive.length) return null;
+          b.select(alive[0][0]);
+          b.follow(true);
+          return alive[0][0];
+        });
+        if (!victim) {
+          await delay(500);
+          continue;
+        }
+        const st = await page.evaluate(() => window.__abyss.selection());
+        assert.deepEqual(st, { id: victim, following: true }, 'seguindo');
+      }
+      await delay(250);
+      const state = await page.evaluate((id) => {
+        const b = window.__abyss;
+        const v = b.vitals(id);
+        const living = Object.hasOwn(b.positionsAt(b.lastTick() - 1) ?? { [id]: 1 }, id);
+        return { v, living, sel: b.selection() };
+      }, victim);
+      if (state.v && state.v.dyingSinceMs !== null) deathMode = 'fantasma (fome ou velhice)';
+      if (!state.v || !state.living) {
+        died = true;
+        if (!deathMode) deathMode = 'sumiu na hora (predação) ou já fora do roster';
+      } else if (Date.now() > repickAt && state.v.energy > 0.4) {
+        // Este se recuperou: solta e escolhe quem está pior agora.
+        await page.evaluate(() => window.__abyss.follow(false));
+        victim = null;
+        repickAt = Date.now() + 30_000;
+      }
+    }
+    assert.ok(died, `${victim} não morreu em ${FOLLOW_TIMEOUT_MS / 1000} s`);
+    console.log(`  ${victim}: ${deathMode}`);
+    // Painel fecha e o Seguir solta (depois do desfazer, no máximo ~DISSOLVE_MS + folga).
+    await page.waitForFunction(
+      () => window.__abyss.selection().id === null && window.__abyss.selection().following === false,
+      null,
+      { timeout: 6000 },
+    );
+    assert.equal(await page.getByText(`INDIVÍDUO · ${victim}`).count(), 0, 'painel fechado');
+    await delay(1500);
+    if (NEGATE) assert.ok(errors.length > 0, 'NEGATE: esperava erros no console (deve falhar)');
+    else assert.deepEqual(errors, [], 'erros no console');
     await page.close();
   });
 

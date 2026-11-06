@@ -25,8 +25,23 @@ export interface AbyssDebug {
   position(id: string): Vec3 | null;
   /** Põe a câmera livre em `pos` olhando para `lookAt` (para capturas). */
   setCamera(pos: Vec3, lookAt: Vec3): void;
+  /** Espécies extintas (id -> ms do servidor). */
+  extinct(): Record<string, number>;
+  /** Seleciona um organismo (como o clique no índice). */
+  select(id: string): void;
+  /** Liga ou solta o Seguir da seleção atual. */
+  follow(on: boolean): void;
+  /** Programas de shader compilados agora (`renderer.info.programs`); null antes do canvas. */
+  programs(): number | null;
   /** Câmera agora: posição, altura do leito embaixo dela e o andamento do percurso fixo (`?flypath=1`). */
   camera(): { pos: Vec3; floor: number; pathS: number | null; lapS: number };
+}
+
+let programCounter: (() => number) | null = null;
+
+/** O canvas registra como contar os programas compilados (usado só pelo `?debug=1`). */
+export function registerProgramCounter(fn: () => number): void {
+  programCounter = fn;
 }
 
 export function debugEnabled(search: string): boolean {
@@ -57,6 +72,10 @@ export function installDebugBridge(
       const p: Vec3 = [0, 0, 0];
       return store.sample(id, performance.now(), p, [0, 0, 0]) ? p : null;
     },
+    extinct: () => Object.fromEntries(store.extinct()),
+    select: (id) => selection.select(id),
+    follow: (on) => selection.setFollowing(on),
+    programs: () => (programCounter ? programCounter() : null),
     setCamera: (pos, lookAt) => requestCameraPose(pos, lookAt),
     camera: () => {
       const { pos, pathS } = readCamera();

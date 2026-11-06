@@ -1,9 +1,9 @@
 import type { Selection, SelectionState } from './selection';
-import type { ConnectionStatus, WorldStore } from './worldStore';
+import type { ConnectionStatus, Vitals, WorldStore } from './worldStore';
 import { readCamera, requestCameraPose } from '../scene/cameraPose';
 import { FLY_PATH_LAP_S } from '../scene/flyPath';
 import { seabedHeight } from '../scene/terrain';
-import type { Vec3 } from './wire';
+import type { OrganismInfo, SpeciesInfo, Vec3 } from './wire';
 
 /** Superfície exposta em `window.__abyss` quando a URL tem `?debug=1`, para os testes e2e. */
 export interface AbyssDebug {
@@ -16,6 +16,13 @@ export interface AbyssDebug {
   /** Resumo canônico da comida ao fim do tick (para comparar observadores). */
   foodDigestAt(tick: number): string | null;
   foodCounts(): { floraSum: number; particles: number };
+  /** Roster completo (vivos e fantasmas) com espécie, estágio e posição de nascimento. */
+  organisms(): readonly OrganismInfo[];
+  /** Estado vital de um organismo (energia, jovem, dividindo, fantasma); null se desconhecido. */
+  vitals(id: string): Vitals | null;
+  species(): readonly SpeciesInfo[];
+  /** Posição interpolada de um organismo agora; null se desconhecido. */
+  position(id: string): Vec3 | null;
   /** Põe a câmera livre em `pos` olhando para `lookAt` (para capturas). */
   setCamera(pos: Vec3, lookAt: Vec3): void;
   /** Câmera agora: posição, altura do leito embaixo dela e o andamento do percurso fixo (`?flypath=1`). */
@@ -40,6 +47,16 @@ export function installDebugBridge(
     selection: () => selection.get(),
     foodDigestAt: (tick) => store.food().digestAt(tick),
     foodCounts: () => store.food().counts(),
+    organisms: () => store.roster(),
+    vitals: (id) => {
+      const out: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
+      return store.vitals(id, out) ? out : null;
+    },
+    species: () => store.species(),
+    position: (id) => {
+      const p: Vec3 = [0, 0, 0];
+      return store.sample(id, performance.now(), p, [0, 0, 0]) ? p : null;
+    },
     setCamera: (pos, lookAt) => requestCameraPose(pos, lookAt),
     camera: () => {
       const { pos, pathS } = readCamera();

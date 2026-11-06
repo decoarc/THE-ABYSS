@@ -8,14 +8,16 @@ defmodule Abyss.World.SimPerfTest do
   @map WMap.load!("/shared/world/map-e1.json")
   @food Application.compile_env!(:abyss, :food) |> Map.new()
   @max_step_us 20_000
+  # Teto de proteção do E2: 250 organismos, ciclo de vida e caça ligados.
+  @population 250
 
-  # 150 organismos com a comida no teto: flora_grow_s + 10 s de mundo sem
+  # 250 organismos (o teto) com a comida no teto: flora_grow_s + 10 s de mundo sem
   # organismos (taxa de partículas dobrada para encher as 400) e depois a
   # população de volta.
   defp at_caps do
     sim =
       Sim.new(%{
-        population: 150,
+        population: @population,
         seed: 20_261_104,
         now_ms: 0,
         map: @map,
@@ -36,12 +38,12 @@ defmodule Abyss.World.SimPerfTest do
     %{filled | organisms: sim.organisms, particles: %{filled.particles | cfg: @food}}
   end
 
-  test "600 ticks com 150 organismos e comida no teto: passo máximo <= 20 ms" do
+  test "600 ticks com 250 organismos e comida no teto: passo máximo <= 20 ms" do
     sim = at_caps()
     assert Particles.count(sim.particles) >= 380
     assert Enum.all?(Tuple.to_list(sim.flora.patches), &(&1.level == 1.0))
 
-    {_, times} =
+    {final, times} =
       Enum.reduce(1..600, {sim, []}, fn _, {s, acc} ->
         {us, s} = :timer.tc(fn -> Sim.step(s, 0.1) end)
         {s, [us | acc]}
@@ -53,10 +55,12 @@ defmodule Abyss.World.SimPerfTest do
     mean = div(Enum.sum(sorted), 600)
 
     IO.puts(
-      "\n[sim perf] 600 ticks, 150 organismos, #{Particles.count(sim.particles)} partículas: " <>
-        "média #{mean} us, p99 #{p99} us, máx #{max} us"
+      "\n[sim perf] 600 ticks, #{@population} organismos, #{Particles.count(sim.particles)} partículas: " <>
+        "população final #{length(final.organisms)}, média #{mean} us, p99 #{p99} us, máx #{max} us"
     )
 
+    assert length(sim.organisms) == @population
+    assert length(final.organisms) <= 250
     assert max <= @max_step_us
   end
 end

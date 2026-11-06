@@ -46,6 +46,22 @@ case System.get_env("ABYSS_SEED") do
   seed -> config :abyss, :world, seed: String.to_integer(seed)
 end
 
+# Só para medição (não é valor do mundo): ABYSS_FOOD_BOOST multiplica a comida
+# (flora_grow_s ÷ k; particle_rate e particle_cap × k) para o mundo chegar ao
+# teto de 250 e ficar perto dele. Vazia ou ausente = 1.0 (comida canônica).
+case System.get_env("ABYSS_FOOD_BOOST") do
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
+  boost ->
+    {k, ""} = Float.parse(boost)
+    if k <= 0, do: raise("ABYSS_FOOD_BOOST deve ser > 0: #{boost}")
+    config :abyss, :world, food_boost: k
+end
+
 # Espécies de teste: "false" liga o mundo vazio (só flora e partículas).
 if System.get_env("ABYSS_TEST_SPECIES") do
   config :abyss, :world, test_species: System.get_env("ABYSS_TEST_SPECIES") != "false"

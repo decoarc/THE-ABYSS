@@ -13,7 +13,8 @@ defmodule Abyss.Eco do
 
   @doc """
   `opts`: `seed` (padrão 1), `minutes` (padrão 10), `population` (padrão o da
-  configuração do mundo). Cada linha: `%{minute, pop, births, births_by, deaths,
+  configuração do mundo), `food_boost` (padrão o da configuração do mundo, 1.0;
+  só para medição, ver `Sim.boost_food/2`). Cada linha: `%{minute, pop, births, births_by, deaths,
   extinct}`; `births` e `deaths` contam só aquele minuto, `pop` é o fim dele.
   """
   @spec run(keyword) :: [map]
@@ -22,6 +23,7 @@ defmodule Abyss.Eco do
     minutes = Keyword.get(opts, :minutes, 10)
     world = Application.fetch_env!(:abyss, :world)
     population = Keyword.get(opts, :population) || Keyword.fetch!(world, :population)
+    boost = Keyword.get(opts, :food_boost) || Keyword.get(world, :food_boost, 1.0)
 
     sim =
       Sim.new(%{
@@ -31,7 +33,7 @@ defmodule Abyss.Eco do
         map: WMap.load!(Application.fetch_env!(:abyss, :map_path)),
         creature_scale: Keyword.fetch!(world, :creature_scale),
         test_species: Keyword.fetch!(world, :test_species),
-        food: :abyss |> Application.fetch_env!(:food) |> Map.new(),
+        food: :abyss |> Application.fetch_env!(:food) |> Map.new() |> Sim.boost_food(boost),
         ecology: :abyss |> Application.fetch_env!(:ecology) |> Map.new()
       })
 

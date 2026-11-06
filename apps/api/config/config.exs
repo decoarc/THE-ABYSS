@@ -22,7 +22,10 @@ config :abyss, :world,
   # Espécies de teste do E1; false = mundo sem organismos (só comida).
   test_species: true,
   # Raio efetivo = body_radius × creature_scale.
-  creature_scale: 0.5
+  creature_scale: 0.5,
+  # Só para medição (ABYSS_FOOD_BOOST): multiplica a velocidade da flora e a
+  # taxa e o teto das partículas. 1.0 = a comida canônica, sem mudança.
+  food_boost: 1.0
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,

@@ -188,6 +188,24 @@ defmodule Abyss.World.Sim do
     }
   end
 
+  @doc """
+  Comida multiplicada por `k` (só para medição, `ABYSS_FOOD_BOOST`): a flora
+  cresce `k` vezes mais rápido (`flora_grow_s ÷ k`) e as partículas nascem `k`
+  vezes mais (`particle_rate` e `particle_cap` × `k`). Com `k` = 1, o mapa volta
+  igual.
+  """
+  @spec boost_food(map, number) :: map
+  def boost_food(food, k) when k == 1, do: food
+
+  def boost_food(food, k) when k > 0 do
+    %{
+      food
+      | flora_grow_s: food.flora_grow_s / k,
+        particle_rate: food.particle_rate * k,
+        particle_cap: round(food.particle_cap * k)
+    }
+  end
+
   @doc "Espécies da simulação, na ordem dada."
   @spec species(t) :: [Species.t()]
   def species(%__MODULE__{bounds: %{species_list: list}}), do: list

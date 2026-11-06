@@ -1,7 +1,9 @@
 defmodule Mix.Tasks.Abyss.Eco do
   @shortdoc "Roda um experimento ecológico offline e imprime CSV por minuto"
   @moduledoc """
-  Uso: `mix abyss.eco --seed N --minutes M [--population P]`.
+  Uso: `mix abyss.eco --seed N --minutes M [--population P] [--food-boost K]`.
+
+  `--food-boost` (só para medição) multiplica a comida, ver `Abyss.World.Sim.boost_food/2`.
 
   Imprime uma linha CSV por minuto simulado (passo fixo de 0,1 s, repetível
   pela semente): população por espécie, nascimentos e mortes por causa.
@@ -9,7 +11,7 @@ defmodule Mix.Tasks.Abyss.Eco do
 
   use Mix.Task
 
-  @switches [seed: :integer, minutes: :integer, population: :integer]
+  @switches [seed: :integer, minutes: :integer, population: :integer, food_boost: :float]
 
   @impl Mix.Task
   def run(args) do

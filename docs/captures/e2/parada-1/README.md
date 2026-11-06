@@ -44,3 +44,15 @@ Eles estão na sessão contínua `sessao-completa.webm` (143 s), nos instantes a
 | 30 | 36 | 126 | 26 | 27 | 4 |
 
 Totais em 30 minutos: 632 nascimentos; mortes: 202 por fome, 177 por predação, 184 por velhice. O CSV não tem coluna de extinção; o Poliedro cai para 4 no minuto 30 e a Célula passa de 126.
+
+## Aprovação do autor (2026-11-06)
+
+Parada 1 aprovada pelo autor ("pode considerar aprovado"). Decisões, todas mantendo o estado atual:
+
+1. Poliedro: fica como está (pode se extinguir; equilíbrio não é critério de aceite).
+2. Divisão: `divide_s` continua 8 s.
+3. Brilho da energia: fica como está.
+4. Desfazer na morte: aprovado como está.
+5. Abrigo da Floresta: `cover` continua 0,5.
+
+Nenhum valor da calibração inicial (commit 49ab101) foi alterado.

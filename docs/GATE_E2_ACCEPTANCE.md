@@ -42,15 +42,15 @@ Os vídeos `.webm` ficam fora do git, em `THE-ABYSS-capturas/e2/parada-1/` (past
 |---|---|---|
 | 1 | O autor reconhece a cadeia no mundo de teste | Atendido pelo autor na Parada 1 (2026-11-06, "pode considerar aprovado"). Evidência: distribuição por região (README da Parada 1: Planície só com Membrana e Poliedro; Jardim com as cinco; Floresta com Célula, Filamento, Casco e Poliedro) e tabela de 30 min (seed 7: 632 nascimentos; mortes: 202 fome, 177 predação, 184 velhice). O autor confirma de novo ao vivo na Parada 2 |
 | 2 | Cada momento do ciclo aparece na tela e foi aprovado numa parada visual | Atendido: Parada 1 aprovou caça, morte virando pontos, divisão com jovem, crescimento e brilho de fome. Evidência: `captures/e2/parada-1/a` a `g` e os vídeos. Decisões do autor em "Aceite do autor" |
-| 3 | Extinção: aparece como extinta, com data, em todas as abas, e não volta | Atendido nos testes: `sim_test` "extinção é permanente" e "espécie inventada"; painel/índice (`SpeciesIndex.test.tsx`) mostram "extinta · data" sem expandir; e2e "duas abas concordam depois de 120 s" confere extintas iguais. Evidência ao vivo: no experimento de 30 min com `ABYSS_FOOD_BOOST=2.0` a Célula e o Filamento se extinguem (task 11, tabela por minuto). Sem evidência: captura de tela do índice com uma espécie extinta (o CSV não tem coluna de extinção) |
-| 4 | Painel mostra os campos novos; seguir quem morre não quebra | Atendido: painel com Espécie, Fase, Energia, Geração, Come, Nasceu de, Surgiu, Posição (`InspectPanel.test.tsx`, Task 9). e2e "seguir quem morre": CEL-0025 seguida até morrer, sem erro de console, painel fecha e o Seguir é liberado. Sem evidência: captura de tela do painel novo |
+| 3 | Extinção: aparece como extinta, com data, em todas as abas, e não volta | Atendido nos testes: `sim_test` "extinção é permanente" e "espécie inventada"; painel/índice (`SpeciesIndex.test.tsx`) mostram "extinta · data" sem expandir; e2e "duas abas concordam depois de 120 s" confere extintas iguais. Evidência ao vivo: no experimento de 30 min com `ABYSS_FOOD_BOOST=2.0` a Célula e o Filamento se extinguem (task 11, tabela por minuto). Captura do índice com uma espécie extinta: a mostrar ao vivo na Parada 2 |
+| 4 | Painel mostra os campos novos; seguir quem morre não quebra | Atendido: painel com Espécie, Fase, Energia, Geração, Come, Nasceu de, Surgiu, Posição (`InspectPanel.test.tsx`, Task 9). e2e "seguir quem morre": CEL-0025 seguida até morrer, sem erro de console, painel fecha e o Seguir é liberado. Captura do painel novo: a mostrar ao vivo na Parada 2 |
 | 5 | Duas abas concordam sobre vivos, nascimentos, mortes e extinções (e2e) | Atendido: `pnpm e2e` 7/7. Após 120 s (tick 1591): ids vivos 188 = 188, extintos iguais, geração e pai iguais em 10 ids. Com `E2E_NEGATE=1` o script sai com código 1 e `2/7` (as asserções novas falham, como deveriam) |
 | 6 | Mesma semente, mesmo resultado nas medições do servidor | Atendido: `eco_run_test` "mesma semente, mesmo resultado" e `sim_test` "é determinístico pela seed". O `sim_perf_test` dá sempre os mesmos números ecológicos (11 nascimentos, 13 mortes, 3 caças) |
 | 7 | Desempenho dentro do orçamento do E1 com 250, parado e voando; carga com observadores | Atendido: ver "Desempenho" e "Carga medida". O mundo ficou em 242–250 organismos em todas as janelas (meta ≥ 240), com a alavanca de medição |
-| 8 | Nada de regra amarrada a nome de espécie | Atendido: teste "espécie inventada" (`sim_test`), com tabela injetada só de valores (`Sim.new` aceita a tabela); revisões das tarefas 1–5 sem regra por nome. Sem evidência: busca automática por nomes de espécie no código (a conferência foi por revisão) |
+| 8 | Nada de regra amarrada a nome de espécie | Atendido: teste "espécie inventada" (`sim_test`), com tabela injetada só de valores (`Sim.new` aceita a tabela); revisões das tarefas 1–5 sem regra por nome. Busca do controlador em `apps/api/lib/abyss/world/`: ids e nomes de espécie só aparecem em `species.ex` (tabela de dados das espécies de teste: ids e dietas). Nenhuma regra em `sim`, `life` ou `hunt` os cita |
 | 9 | **Aprovação explícita do autor** | **Pendente — Parada 2** |
 
-Testes: API 126 passam na tarefa 6 (`pnpm api:test`); web 241 passam na tarefa 9 (`pnpm test`); e2e 7/7. Sem evidência: contagem final da suíte inteira depois da última tarefa (as contagens acima são as dos relatórios das tarefas).
+Testes (rodados pelo controlador em 2026-11-07, sobre 4f287fb + este doc): `pnpm test` exit 0, 45 arquivos, 241 testes; `pnpm typecheck` exit 0; `pnpm api:test` exit 0, 128 testes passam (o `sim_perf_test` na suíte: máx 8294 us, população mín 246); e2e 7/7.
 
 ## Ciclo de vida (resumo do que existe)
 
@@ -141,7 +141,7 @@ Itens menores diferidos estão listados no ledger (`progress.md`, linhas "minor 
   2. `divide_s` continua 8 s.
   3. Brilho da energia fica como está.
   4. Desfazer na morte aprovado como está.
-  5. Abrigo da Floresta: `cover` continua 0,5 (valor conforme o README da Parada 1; não conferi o JSON do mapa).
+  5. Abrigo da Floresta: `cover` continua 0,5 (`shared/world/map-e1.json`, linha 26, região Floresta).
 - **Parada 2** (mundo ao vivo + este pacote): **pendente.**
 
 **Aceite do autor:** gate E2 — pendente — Parada 2.

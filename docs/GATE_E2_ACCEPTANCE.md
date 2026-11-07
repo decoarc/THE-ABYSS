@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-07 · **Branch:** `gate-e` (a partir de `main`, com o E1 já dentro)
 **Spec:** `docs/superpowers/specs/2026-11-05-gate-e2-ecologia-design.md` · **Plano:** `docs/superpowers/plans/2026-11-05-gate-e2-ecologia.md`
-**Status:** Parada 1 (visual) aprovada pelo autor em 2026-11-06. Critérios 1–8 com evidência abaixo. **Critério 9 (aprovação explícita do autor): pendente — Parada 2.**
+**Status:** Parada 1 (visual) aprovada pelo autor em 2026-11-06. Critérios 1–8 com evidência abaixo. **Critério 9: aprovado pelo autor na Parada 2, em 2026-11-07 ("aprovo"). Gate E2 aprovado.**
 
 ## Como ver
 
@@ -44,11 +44,11 @@ Os vídeos `.webm` ficam fora do git, em `THE-ABYSS-capturas/e2/parada-1/` (past
 | 2 | Cada momento do ciclo aparece na tela e foi aprovado numa parada visual | Atendido: Parada 1 aprovou caça, morte virando pontos, divisão com jovem, crescimento e brilho de fome. Evidência: `captures/e2/parada-1/a` a `g` e os vídeos. Decisões do autor em "Aceite do autor" |
 | 3 | Extinção: aparece como extinta, com data, em todas as abas, e não volta | Atendido nos testes: `sim_test` "extinção é permanente" e "espécie inventada"; painel/índice (`SpeciesIndex.test.tsx`) mostram "extinta · data" sem expandir; e2e "duas abas concordam depois de 120 s" confere extintas iguais. Evidência ao vivo: no experimento de 30 min com `ABYSS_FOOD_BOOST=2.0` a Célula e o Filamento se extinguem (task 11, tabela por minuto). Captura do índice com uma espécie extinta: a mostrar ao vivo na Parada 2 |
 | 4 | Painel mostra os campos novos; seguir quem morre não quebra | Atendido: painel com Espécie, Fase, Energia, Geração, Come, Nasceu de, Surgiu, Posição (`InspectPanel.test.tsx`, Task 9). e2e "seguir quem morre": CEL-0025 seguida até morrer, sem erro de console, painel fecha e o Seguir é liberado. Captura do painel novo: a mostrar ao vivo na Parada 2 |
-| 5 | Duas abas concordam sobre vivos, nascimentos, mortes e extinções (e2e) | Atendido: `pnpm e2e` 7/7. Após 120 s (tick 1591): ids vivos 188 = 188, extintos iguais, geração e pai iguais em 10 ids. Com `E2E_NEGATE=1` o script sai com código 1 e `2/7` (as asserções novas falham, como deveriam) |
+| 5 | Duas abas concordam sobre vivos, nascimentos, mortes e extinções (e2e) | Atendido: `pnpm e2e` 7/7. Após 120 s (tick 1591): ids vivos 188 = 188, extintos iguais, geração e pai iguais em 10 ids. Com `E2E_NEGATE=1` o script sai com código 1 e `2/7` (as asserções novas falham, como deveriam). O e2e compara ids vivos, extintas, geração e pai (não compara contadores de nascimentos e mortes). Nascimentos e mortes ficam cobertos de forma indireta: um nascimento ou morte divergente muda o conjunto de ids |
 | 6 | Mesma semente, mesmo resultado nas medições do servidor | Atendido: `eco_run_test` "mesma semente, mesmo resultado" e `sim_test` "é determinístico pela seed". O `sim_perf_test` dá sempre os mesmos números ecológicos (11 nascimentos, 13 mortes, 3 caças) |
 | 7 | Desempenho dentro do orçamento do E1 com 250, parado e voando; carga com observadores | Atendido: ver "Desempenho" e "Carga medida". O mundo ficou em 242–250 organismos em todas as janelas (meta ≥ 240), com a alavanca de medição |
 | 8 | Nada de regra amarrada a nome de espécie | Atendido: teste "espécie inventada" (`sim_test`), com tabela injetada só de valores (`Sim.new` aceita a tabela); revisões das tarefas 1–5 sem regra por nome. Busca do controlador em `apps/api/lib/abyss/world/`: ids e nomes de espécie só aparecem em `species.ex` (tabela de dados das espécies de teste: ids e dietas). Nenhuma regra em `sim`, `life` ou `hunt` os cita |
-| 9 | **Aprovação explícita do autor** | **Pendente — Parada 2** |
+| 9 | **Aprovação explícita do autor** | **Atendido: o autor aprovou o gate na Parada 2, em 2026-11-07 ("aprovo")** |
 
 Testes (rodados pelo controlador em 2026-11-07, sobre 4f287fb + este doc): `pnpm test` exit 0, 45 arquivos, 241 testes; `pnpm typecheck` exit 0; `pnpm api:test` exit 0, 128 testes passam (o `sim_perf_test` na suíte: máx 8294 us, população mín 246); e2e 7/7.
 
@@ -68,7 +68,7 @@ Energia, fases jovem/adulto, divisão com filho jovem, teto de proteção de 250
 
 Totais: 632 nascimentos; mortes por fome 202, predação 177, velhice 184. O equilíbrio não é aceite: o Poliedro cai de 30 para 4, a Célula passa de 126.
 
-**Teto** (seed 7, 250 fundadores, `ABYSS_FOOD_BOOST=2.0`, 30 min; relatório da tarefa 11). Total ≥ 245 o tempo todo. Células e Filamentos somem por volta dos minutos 10–21; a Membrana domina.
+**Teto** (seed 7, 250 fundadores, `ABYSS_FOOD_BOOST=2.0`, 30 min; relatório da tarefa 11). Total ≥ 245 o tempo todo. Células e Filamentos somem por volta dos minutos 12–21; a Membrana domina.
 
 | Minuto | Total | Casco | Célula | Filamento | Membrana | Poliedro |
 |---|---|---|---|---|---|---|
@@ -98,7 +98,7 @@ Orçamento: **Arc `low` p95 ≤ 33 ms: PASS (pior 16,8)**. **RTX `high` p50 ≤ 
 
 Programas de shader (RTX high, voando): 2 min de percurso com 18 nascimentos, 23 → 23 programas. Não cresceu. Resync forçado de 246 organismos: 23 → 21 programas, sem crescimento.
 
-**Servidor:** `sim_perf_test` com 250 adultos maduros no teto, 3000 passos, com nascimentos, mortes e caças (> 0). Máximo do passo de 6,5 a 10,8 ms em 5 execuções (orçamento 20 ms); 18,2 ms numa corrida dentro da suíte completa. Média 2,3–2,5 ms.
+**Servidor:** `sim_perf_test` com 250 adultos maduros no teto, 3000 passos, com nascimentos, mortes e caças (> 0). Máximo do passo de 6,5 a 10,8 ms em 5 execuções (orçamento 20 ms); 18,2 ms numa corrida da tarefa 11 e 8,3 ms na rodada final (8294 us); o mesmo trabalho varia 6,5–18 ms pelo ambiente. Média 2,3–2,5 ms.
 
 ## Carga medida
 
@@ -142,6 +142,10 @@ Itens menores diferidos estão listados no ledger (`progress.md`, linhas "minor 
   3. Brilho da energia fica como está.
   4. Desfazer na morte aprovado como está.
   5. Abrigo da Floresta: `cover` continua 0,5 (`shared/world/map-e1.json`, linha 26, região Floresta).
-- **Parada 2** (mundo ao vivo + este pacote): **pendente.**
+- **Parada 2** (mundo ao vivo + este pacote, 2026-11-07): aprovada ("aprovo"). Adendo do autor: ver "Backlog".
 
-**Aceite do autor:** gate E2 — pendente — Parada 2.
+**Aceite do autor:** gate E2 aprovado em 2026-11-07.
+
+## Backlog
+
+- Adendo do autor na Parada 2: "em alguns momentos, ao se mover, metade da tela ficou preta". Não investigado. Não bloqueia o gate; vai para o backlog.

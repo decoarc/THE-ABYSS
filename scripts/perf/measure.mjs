@@ -162,6 +162,26 @@ async function apiStats() {
   }
 }
 
+/** Amostra a população do servidor a cada 2 s; `stop()` devolve mín./máx. e quantas amostras. */
+function samplePopulation() {
+  const values = [];
+  let on = true;
+  const loop = (async () => {
+    while (on) {
+      const a = await apiStats();
+      if (a && typeof a.population === 'number') values.push(a.population);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+  return {
+    async stop() {
+      on = false;
+      await loop;
+      return { min: values.length ? Math.min(...values) : null, max: values.length ? Math.max(...values) : null, samples: values.length };
+    },
+  };
+}
+
 async function openLive(browser, url) {
   const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
   await context.addInitScript(installRecorder);
@@ -228,11 +248,23 @@ async function programsOverBirths(gpuArgs) {
     const lapS = await page.evaluate(() => window.__abyss.camera().lapS);
     await page.waitForFunction((end) => window.__abyss.camera().pathS >= end, lapS + 0.5, { timeout: (lapS + 60) * 1000, polling: 500 });
     const before = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const sampler = samplePopulation();
     await page.waitForTimeout(120_000);
     const after = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const popBirths = await sampler.stop();
+    // Ressincronização forçada: todos os organismos desmontam e remontam juntos (aba voltando do segundo plano).
+    const beforeResync = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const removed = await page.evaluate(() => window.__abyss.forceResync());
+    await page.waitForTimeout(500);
+    const rosterAfterRemove = await page.evaluate(() => window.__abyss.roster().length);
+    await page.waitForFunction(() => window.__abyss.status() === 'live' && window.__abyss.roster().length > 200, null, { timeout: 30_000, polling: 100 });
+    // Deixa o percurso rodar 20 s para a cena ver tudo de novo e o three compilar o que for compilar.
+    await page.waitForTimeout(20_000);
+    const afterResync = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats(), roster: await page.evaluate(() => window.__abyss.roster().length) };
+    const resync = { removed, rosterAfterRemove, before: beforeResync, after: afterResync, links: await page.evaluate(() => window.__perfRec.links.map(([t, sig]) => ({ t: Math.round(t), sig })).slice(-20)) };
     const stats = await (await fetch('http://localhost:4000/api/stats')).json();
     const births = (after.api?.births_total ?? stats.births_total) - (before.api?.births_total ?? 0);
-    return { renderer: await page.evaluate(rendererName), before, after, birthsDuring: births, birthsTotal: stats.births_total, deathsTotal: stats.deaths_total };
+    return { renderer: await page.evaluate(rendererName), before, after, populationDuringBirths: popBirths, resync, birthsDuring: births, birthsTotal: stats.births_total, deathsTotal: stats.deaths_total };
   } finally {
     await browser.close();
   }
@@ -258,7 +290,9 @@ async function e1(outDir) {
         const browser = await chromium.launch({ args: v.vsync ? g.args : [...g.args, ...NO_VSYNC] });
         try {
           const stats = await apiStats();
-          const result = scenario === 'percurso' ? await runPath(browser, v.quality) : await runFloresta(browser, v.quality);
+          const sampler = samplePopulation();
+          const result0 = scenario === 'percurso' ? await runPath(browser, v.quality) : await runFloresta(browser, v.quality);
+          const result = { ...result0, population: await sampler.stop() };
           runs.push({ label, scenario, gpu: g.key, quality: v.quality, vsync: v.vsync, api: stats, ...result, apiEnd: await apiStats() });
           const w = result.laps ?? [result.window];
           console.log(
@@ -267,6 +301,7 @@ async function e1(outDir) {
                 .map((x) => `p50 ${x.p50} p95 ${x.p95} max ${x.max} >33 ${x.over33} >50 ${x.over50} longas ${x.longTasks} links ${x.programLinks}`)
                 .join(' | '),
           );
+          console.log(`  população ${result.population.min}..${result.population.max} (${result.population.samples} amostras)`);
           for (const [i, x] of w.entries()) {
             const where = result.laps ? `volta ${i + 1}` : 'janela';
             for (const l of x.links) console.log(`  ${where} +${l.atS} s: ${l.shader} (quadro de ${l.frameMs} ms)`);
@@ -301,8 +336,9 @@ async function e1(outDir) {
   const out = join(outDir, 'perf.json');
   const programsRun = opts.suite === 'e2' && !opts.only ? await programsOverBirths(HP_ARGS) : null;
   if (programsRun) {
-    const grew = programsRun.after.programs > programsRun.before.programs;
-    targets.push({ name: 'programas de shader não crescem em 2 min de nascimentos', value: `${programsRun.before.programs} -> ${programsRun.after.programs} (nascimentos ${programsRun.birthsDuring})`, pass: !grew });
+    const grew = programsRun.after.programs > programsRun.before.programs || programsRun.resync.after.programs > programsRun.resync.before.programs;
+    console.log(`resync: ${programsRun.resync.removed} removidos, programas ${programsRun.resync.before.programs} -> ${programsRun.resync.after.programs}; população nos nascimentos ${programsRun.populationDuringBirths.min}..${programsRun.populationDuringBirths.max}`);
+    targets.push({ name: 'programas de shader não crescem em 2 min de nascimentos nem após ressincronização forçada', value: `${programsRun.before.programs} -> ${programsRun.after.programs} (nascimentos ${programsRun.birthsDuring})`, pass: !grew });
     console.log(`${grew ? 'FAIL' : 'PASS'} programas ${programsRun.before.programs} -> ${programsRun.after.programs}, nascimentos ${programsRun.birthsDuring}`);
   }
   const meta = { date: new Date().toISOString(), base, seed: process.env.ABYSS_SEED ?? null, viewport: '1920×1080' };

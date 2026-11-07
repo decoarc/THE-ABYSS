@@ -33,6 +33,12 @@ export interface AbyssDebug {
   follow(on: boolean): void;
   /** Programas de shader compilados agora (`renderer.info.programs`); null antes do canvas. */
   programs(): number | null;
+  /**
+   * Só para medição: tira todos os vivos do roster de uma vez (tick sintético que os remove) e deixa o próximo
+   * tick real cair no caminho de resync do cliente, que remonta todos juntos, como numa aba que volta do
+   * segundo plano. Devolve quantos foram removidos.
+   */
+  forceResync(): number;
   /** Câmera agora: posição, altura do leito embaixo dela e o andamento do percurso fixo (`?flypath=1`). */
   camera(): { pos: Vec3; floor: number; pathS: number | null; lapS: number };
 }
@@ -76,6 +82,29 @@ export function installDebugBridge(
     select: (id) => selection.select(id),
     follow: (on) => selection.setFollowing(on),
     programs: () => (programCounter ? programCounter() : null),
+    forceResync: () => {
+      const worldId = store.worldId();
+      if (worldId === null) return 0;
+      const probe: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
+      const ids = store.roster().filter((o) => store.vitals(o.id, probe) && probe.dyingSinceMs === null).map((o) => o.id);
+      const now = performance.now();
+      store.applyTick(
+        {
+          world_id: worldId,
+          tick: store.lastTick() + 1,
+          server_ms: store.serverNow(now),
+          o: [],
+          b: [],
+          d: ids.map((id) => [id, 'predation'] as [string, 'predation']),
+          x: [],
+          f: [],
+          ps: [],
+          pr: [],
+        },
+        now,
+      );
+      return ids.length;
+    },
     setCamera: (pos, lookAt) => requestCameraPose(pos, lookAt),
     camera: () => {
       const { pos, pathS } = readCamera();

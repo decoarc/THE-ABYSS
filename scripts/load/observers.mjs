@@ -192,6 +192,7 @@ const summary = [
   `# Carga do servidor — ${new Date(started).toISOString()}`,
   '',
   `- Clientes: ${clientCount} · abas reais: ${tabCount} · duração: ${args.seconds} s (depois de ${args.warmup} s de aquecimento) · população: ${finalSample?.stats?.population ?? 'n/a'}`,
+  `- População ao longo da medição (mín.–máx.): ${range('population')} (amostras a cada ${STATS_EVERY_MS / 1000} s)`,
   `- Comida no início: ${food(firstSample)} · no fim: ${food(finalSample)}`,
   `- Comida ao longo da medição: partículas ${range('particles')} · soma da flora ${range('flora_level_sum')}`,
   `- Comido na medição: flora ${(finalSample?.stats?.eaten_flora_total ?? 0) - (firstSample?.stats?.eaten_flora_total ?? 0)} mordidas · partículas ${(finalSample?.stats?.eaten_particles_total ?? 0) - (firstSample?.stats?.eaten_particles_total ?? 0)}`,

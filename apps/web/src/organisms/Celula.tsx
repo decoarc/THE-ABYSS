@@ -14,6 +14,7 @@ import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useVitals } from './useVitals';
 import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
@@ -67,6 +68,7 @@ uniform vec3 uSkin;
 uniform vec3 uSheen;
 uniform vec3 uNucleus;
 uniform float uPulse;
+uniform float uFade;
 varying vec3 vNormalV;
 varying vec3 vViewDir;
 varying vec3 vLocal;
@@ -82,7 +84,7 @@ void main() {
   vec3 inner = uNucleus * facing * facing * (0.12 + 0.22 * uPulse);
   vec3 sheen = uSheen * pow(rim, 3.0) * 0.35;
   float alpha = clamp(0.5 + rim * 0.45, 0.0, 1.0);
-  gl_FragColor = vec4(skin + inner + sheen, alpha);
+  gl_FragColor = vec4(skin + inner + sheen, alpha * uFade);
   #include <fog_fragment>
 }
 `;
@@ -108,10 +110,11 @@ void main() {
 
 const flagellumFragment = /* glsl */ `
 uniform vec3 uColor;
+uniform float uFade;
 varying float vT;
 #include <fog_pars_fragment>
 void main() {
-  gl_FragColor = vec4(uColor * (0.5 + 0.5 * vT), 0.75 * (1.0 - vT * 0.7));
+  gl_FragColor = vec4(uColor * (0.5 + 0.5 * vT), 0.75 * (1.0 - vT * 0.7) * uFade);
   #include <fog_fragment>
 }
 `;
@@ -120,11 +123,13 @@ void main() {
 export function Celula({ id }: { id: string }) {
   const { motion, q: quality } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
   const selectable = useSelectable(id);
   const group = useRef<THREE.Group>(null);
   const shown = useCreatureCull(group, pose);
   const scale = useWorld().store.creatureScale();
   const granules = useRef<THREE.InstancedMesh>(null);
+  const granuleMaterial = useRef<THREE.MeshBasicMaterial>(null);
   const pulse = useRef(C.nucleus.pulseMin);
   const phase = useMemo(() => phaseOf(id), [id]);
   const offset = phase * 1000;
@@ -145,6 +150,7 @@ export function Celula({ id }: { id: string }) {
           uSheen: { value: new THREE.Color('#cfe6c8') },
           uNucleus: { value: new THREE.Color(C.nucleus.color) },
           uPulse: { value: 0 },
+          uFade: { value: 1 },
         },
       }),
     [],
@@ -163,6 +169,7 @@ export function Celula({ id }: { id: string }) {
             uPhase: { value: i * 2.1 },
             uLength: { value: FLAGELLUM_LENGTH },
             uColor: { value: new THREE.Color('#5d6d4c') },
+            uFade: { value: 1 },
           },
         }),
       ),
@@ -234,18 +241,29 @@ export function Celula({ id }: { id: string }) {
 
     const breath = (pulse.current - C.nucleus.pulseMin) / (C.nucleus.pulseMax - C.nucleus.pulseMin);
     bodyMaterial.uniforms.uPulse.value = breath;
-    for (const m of flagellumMaterials) m.uniforms.uTime.value = time.current;
-    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.5 + 0.3 * breath);
+    const fade = vitals.fade.current;
+    bodyMaterial.uniforms.uFade.value = fade;
+    if (granuleMaterial.current) granuleMaterial.current.opacity = fade;
+    for (const m of flagellumMaterials) {
+      m.uniforms.uTime.value = time.current;
+      m.uniforms.uFade.value = fade;
+    }
+    // Eixo longo (+y local, já virado para a velocidade) estica; os outros dois encolhem em 1/sqrt.
+    const life = scale * vitals.scale.current;
+    const st = vitals.stretch.current;
+    const k = 1 / Math.sqrt(st);
+    g.scale.set(life * k, life * st, life * k);
+    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, (0.5 + 0.3 * breath) * vitals.glow.current * fade);
   });
 
   return (
-    <group ref={group} visible={false} scale={scale} {...selectable}>
+    <group ref={group} visible={false} {...selectable}>
       {/* Conteúdo interno primeiro; a pele translúcida é desenhada por cima. */}
       <instancedMesh ref={granules} key={granuleCount} args={[granuleGeometry, undefined, granuleCount]} renderOrder={1}>
-        <meshBasicMaterial />
+        <meshBasicMaterial ref={granuleMaterial} alphaHash />
       </instancedMesh>
       <group position={[0, shaft * 0.2, 0]}>
-        <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} timeOffset={offset} />
+        <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={4} timeOffset={offset} />
       </group>
       <mesh geometry={body} material={bodyMaterial} renderOrder={2} />
       {flagellumMaterials.map((m, i) => {

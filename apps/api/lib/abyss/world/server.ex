@@ -14,7 +14,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` (medição), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -51,6 +51,10 @@ defmodule Abyss.World.Server do
         food:
           Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
           |> Map.new()
+          |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0)),
+        ecology:
+          Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
+          |> Map.new()
       })
 
     state = %{
@@ -76,7 +80,9 @@ defmodule Abyss.World.Server do
     sorted = Enum.sort(state.jitters)
 
     reply =
-      Map.merge(Sim.food_stats(state.sim), %{
+      Sim.food_stats(state.sim)
+      |> Map.merge(Sim.eco_stats(state.sim))
+      |> Map.merge(%{
         world_id: state.world_id,
         tick: state.sim.tick,
         tick_hz: state.tick_hz,

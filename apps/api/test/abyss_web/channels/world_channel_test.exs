@@ -22,6 +22,7 @@ defmodule AbyssWeb.WorldChannelTest do
     {:ok, reply, _} = join_main(socket)
     assert is_binary(reply.world_id)
     assert length(reply.organisms) == 45
+    assert is_number(reply.juvenile_scale)
   end
 
   test "recebe ticks do mesmo mundo", %{socket: socket} do

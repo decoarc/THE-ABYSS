@@ -7,6 +7,9 @@
 //     - "floresta": câmera parada no pior quadro da Floresta (5 s de aquecimento, 10 s medidos).
 //     Pré-requisitos: API com semente fixa (`ABYSS_SEED`) no ar há ≥ 10 min (comida no teto) e o preview em <url-base>.
 //     Grava <outDir>/perf.json (padrão docs/captures/e1) e sai com 1 se o orçamento reprovar.
+//   e2: o mesmo percurso e a mesma Floresta com o mundo no teto (ABYSS_POPULATION=250), mais a contagem de
+//     programas de shader (`renderer.info.programs`) antes e depois de 2 min de nascimentos. Grava <outDir>/perf.json
+//     (padrão docs/captures/e2/parada-2).
 //   gate-i: os cenários parados do gate I (`?perf=1`), em <outDir>/perf-60-organismos.json.
 //
 // Além de p50/p95, cada janela conta quadros > 33 ms e > 50 ms, tarefas longas e quantos
@@ -152,11 +155,31 @@ function summarize(rec, from, to) {
 async function apiStats() {
   try {
     const s = await (await fetch('http://localhost:4000/api/stats')).json();
-    const keep = ['world_id', 'uptime_ms', 'population', 'flora_patches', 'flora_level_sum', 'particles', 'step_us_max'];
+    const keep = ['world_id', 'uptime_ms', 'population', 'births_total', 'deaths_total', 'flora_patches', 'flora_level_sum', 'particles', 'step_us_max'];
     return Object.fromEntries(keep.map((k) => [k, s[k]]));
   } catch {
     return null;
   }
+}
+
+/** Amostra a população do servidor a cada 2 s; `stop()` devolve mín./máx. e quantas amostras. */
+function samplePopulation() {
+  const values = [];
+  let on = true;
+  const loop = (async () => {
+    while (on) {
+      const a = await apiStats();
+      if (a && typeof a.population === 'number') values.push(a.population);
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  })();
+  return {
+    async stop() {
+      on = false;
+      await loop;
+      return { min: values.length ? Math.min(...values) : null, max: values.length ? Math.max(...values) : null, samples: values.length };
+    },
+  };
 }
 
 async function openLive(browser, url) {
@@ -175,6 +198,7 @@ async function runPath(browser, quality) {
   // Início do percurso no relógio da página.
   const start = await page.evaluate(() => performance.now() - window.__abyss.camera().pathS * 1000);
   const food = await page.evaluate(() => window.__abyss.foodCounts());
+  const programsStart = await page.evaluate(() => window.__abyss.programs());
   await page.waitForFunction((end) => window.__abyss.camera().pathS >= end, LAPS * lapS + 0.2, {
     timeout: (LAPS * lapS + 60) * 1000,
     polling: 500,
@@ -187,6 +211,7 @@ async function runPath(browser, quality) {
     renderer: await page.evaluate(rendererName),
     lapS: r1(lapS),
     food,
+    programs: { start: programsStart, end: await page.evaluate(() => window.__abyss.programs()) },
     programLinksBeforePath: rec.links.filter(([t]) => t < start).length,
     laps,
   };
@@ -201,6 +226,7 @@ async function runFloresta(browser, quality) {
   }
   await page.waitForTimeout(FLORESTA_WARMUP_MS);
   const from = await page.evaluate(() => performance.now());
+  const programsStart = await page.evaluate(() => window.__abyss.programs());
   await page.waitForTimeout(FLORESTA_SAMPLE_MS);
   const to = await page.evaluate(() => performance.now());
   const rec = await page.evaluate(() => window.__perfRec);
@@ -208,8 +234,40 @@ async function runFloresta(browser, quality) {
     renderer: await page.evaluate(rendererName),
     pose: FLORESTA_POSE,
     food: await page.evaluate(() => window.__abyss.foodCounts()),
+    programs: { start: programsStart, end: await page.evaluate(() => window.__abyss.programs()) },
     window: summarize(rec, from, to),
   };
+}
+
+/** Programas de shader antes e depois de 2 min com nascimentos acontecendo (não pode crescer). */
+async function programsOverBirths(gpuArgs) {
+  const browser = await chromium.launch({ args: gpuArgs });
+  try {
+    const page = await openLive(browser, `${base}?debug=1&flypath=1&quality=high`);
+    // Dá uma volta inteira do percurso para a cena ver todos os materiais, depois mede.
+    const lapS = await page.evaluate(() => window.__abyss.camera().lapS);
+    await page.waitForFunction((end) => window.__abyss.camera().pathS >= end, lapS + 0.5, { timeout: (lapS + 60) * 1000, polling: 500 });
+    const before = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const sampler = samplePopulation();
+    await page.waitForTimeout(120_000);
+    const after = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const popBirths = await sampler.stop();
+    // Ressincronização forçada: todos os organismos desmontam e remontam juntos (aba voltando do segundo plano).
+    const beforeResync = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
+    const removed = await page.evaluate(() => window.__abyss.forceResync());
+    await page.waitForTimeout(500);
+    const rosterAfterRemove = await page.evaluate(() => window.__abyss.roster().length);
+    await page.waitForFunction(() => window.__abyss.status() === 'live' && window.__abyss.roster().length > 200, null, { timeout: 30_000, polling: 100 });
+    // Deixa o percurso rodar 20 s para a cena ver tudo de novo e o three compilar o que for compilar.
+    await page.waitForTimeout(20_000);
+    const afterResync = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats(), roster: await page.evaluate(() => window.__abyss.roster().length) };
+    const resync = { removed, rosterAfterRemove, before: beforeResync, after: afterResync, links: await page.evaluate(() => window.__perfRec.links.map(([t, sig]) => ({ t: Math.round(t), sig })).slice(-20)) };
+    const stats = await (await fetch('http://localhost:4000/api/stats')).json();
+    const births = (after.api?.births_total ?? stats.births_total) - (before.api?.births_total ?? 0);
+    return { renderer: await page.evaluate(rendererName), before, after, populationDuringBirths: popBirths, resync, birthsDuring: births, birthsTotal: stats.births_total, deathsTotal: stats.deaths_total };
+  } finally {
+    await browser.close();
+  }
 }
 
 async function e1(outDir) {
@@ -232,8 +290,10 @@ async function e1(outDir) {
         const browser = await chromium.launch({ args: v.vsync ? g.args : [...g.args, ...NO_VSYNC] });
         try {
           const stats = await apiStats();
-          const result = scenario === 'percurso' ? await runPath(browser, v.quality) : await runFloresta(browser, v.quality);
-          runs.push({ label, scenario, gpu: g.key, quality: v.quality, vsync: v.vsync, api: stats, ...result });
+          const sampler = samplePopulation();
+          const result0 = scenario === 'percurso' ? await runPath(browser, v.quality) : await runFloresta(browser, v.quality);
+          const result = { ...result0, population: await sampler.stop() };
+          runs.push({ label, scenario, gpu: g.key, quality: v.quality, vsync: v.vsync, api: stats, ...result, apiEnd: await apiStats() });
           const w = result.laps ?? [result.window];
           console.log(
             `${label}: ` +
@@ -241,6 +301,7 @@ async function e1(outDir) {
                 .map((x) => `p50 ${x.p50} p95 ${x.p95} max ${x.max} >33 ${x.over33} >50 ${x.over50} longas ${x.longTasks} links ${x.programLinks}`)
                 .join(' | '),
           );
+          console.log(`  população ${result.population.min}..${result.population.max} (${result.population.samples} amostras)`);
           for (const [i, x] of w.entries()) {
             const where = result.laps ? `volta ${i + 1}` : 'janela';
             for (const l of x.links) console.log(`  ${where} +${l.atS} s: ${l.shader} (quadro de ${l.frameMs} ms)`);
@@ -273,12 +334,19 @@ async function e1(outDir) {
 
   await mkdir(outDir, { recursive: true });
   const out = join(outDir, 'perf.json');
+  const programsRun = opts.suite === 'e2' && !opts.only ? await programsOverBirths(HP_ARGS) : null;
+  if (programsRun) {
+    const grew = programsRun.after.programs > programsRun.before.programs || programsRun.resync.after.programs > programsRun.resync.before.programs;
+    console.log(`resync: ${programsRun.resync.removed} removidos, programas ${programsRun.resync.before.programs} -> ${programsRun.resync.after.programs}; população nos nascimentos ${programsRun.populationDuringBirths.min}..${programsRun.populationDuringBirths.max}`);
+    targets.push({ name: 'programas de shader não crescem em 2 min de nascimentos nem após ressincronização forçada', value: `${programsRun.before.programs} -> ${programsRun.after.programs} (nascimentos ${programsRun.birthsDuring})`, pass: !grew });
+    console.log(`${grew ? 'FAIL' : 'PASS'} programas ${programsRun.before.programs} -> ${programsRun.after.programs}, nascimentos ${programsRun.birthsDuring}`);
+  }
   const meta = { date: new Date().toISOString(), base, seed: process.env.ABYSS_SEED ?? null, viewport: '1920×1080' };
-  await writeFile(out, JSON.stringify({ meta, budget, targets, runs }, null, 2));
+  await writeFile(out, JSON.stringify({ meta, budget, targets, programsRun, runs }, null, 2));
   console.log('gravado em', out);
   process.exitCode = budget.every((c) => c.pass) ? 0 : 1;
 }
 
 // Depois das constantes acima (o await no topo roda antes das declarações que vêm depois dele).
 if (opts.suite === 'gate-i') await gateI(positionals[1] ?? 'captures/perf');
-else await e1(positionals[1] ?? 'docs/captures/e1');
+else await e1(positionals[1] ?? (opts.suite === 'e2' ? 'docs/captures/e2/parada-2' : 'docs/captures/e1'));

@@ -36,11 +36,17 @@ export const MIN_PULSE_RATE = 0.3;
 export function Nucleus({
   config,
   pulseRef,
+  glowRef,
+  fadeRef,
   haloScale = 7,
   timeOffset = 0,
 }: {
   config: NucleusConfig;
   pulseRef?: RefObject<number>;
+  /** Brilho da energia (0..1): multiplica a intensidade do núcleo e do halo. */
+  glowRef?: { current: number };
+  /** Desfazer na morte (1..0): opacidade do núcleo e do halo. */
+  fadeRef?: { current: number };
   haloScale?: number;
   /** Desloca o relógio do pulso, em segundos: instâncias da mesma espécie não pulsam juntas. */
   timeOffset?: number;
@@ -48,7 +54,7 @@ export function Nucleus({
   const { motion } = useSceneSettings();
   const time = useRef(timeOffset);
   const core = useMemo(
-    () => new THREE.MeshBasicMaterial({ color: config.color, toneMapped: false }),
+    () => new THREE.MeshBasicMaterial({ color: config.color, toneMapped: false, alphaHash: true }),
     [config.color],
   );
   const halo = useMemo(
@@ -77,8 +83,11 @@ export function Nucleus({
     time.current += clampDelta(dt) * Math.max(motion, MIN_PULSE_RATE);
     const intensity = nucleusPulse(time.current, config);
     if (pulseRef) pulseRef.current = intensity;
-    core.color.copy(base).multiplyScalar(intensity);
-    halo.opacity = 0.25 + 0.15 * intensity;
+    const glow = glowRef ? glowRef.current : 1;
+    const fade = fadeRef ? fadeRef.current : 1;
+    core.color.copy(base).multiplyScalar(intensity * glow);
+    core.opacity = fade;
+    halo.opacity = (0.25 + 0.15 * intensity) * glow * fade;
     sprite.current?.scale.setScalar(config.radius * haloScale * (0.85 + 0.08 * intensity));
   });
 

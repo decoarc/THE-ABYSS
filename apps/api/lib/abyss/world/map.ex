@@ -13,7 +13,8 @@ defmodule Abyss.World.Map do
           center: {number, number},
           radius: number,
           flora_patches: non_neg_integer,
-          particle_share: number
+          particle_share: number,
+          cover: float
         }
   @type t :: %__MODULE__{
           id: String.t(),
@@ -48,7 +49,8 @@ defmodule Abyss.World.Map do
       center: {cx, cz},
       radius: r["radius"],
       flora_patches: r["flora_patches"],
-      particle_share: r["particle_share"]
+      particle_share: r["particle_share"],
+      cover: (r["cover"] || 0) * 1.0
     }
   end
 
@@ -59,6 +61,10 @@ defmodule Abyss.World.Map do
   @doc "Região onde a profundidade de borda é máxima."
   @spec region_at(t, number, number) :: atom
   def region_at(%__MODULE__{} = map, x, z), do: map |> deepest(x, z) |> elem(1) |> Map.fetch!(:id)
+
+  @doc "`cover` da região onde a profundidade de borda é máxima (0 se a região não tem)."
+  @spec cover_at(t, number, number) :: float
+  def cover_at(%__MODULE__{} = map, x, z), do: map |> deepest(x, z) |> elem(1) |> Map.get(:cover, 0.0)
 
   @doc "Vetor unitário rumo ao centro da região mais profunda ({0.0, 0.0} no próprio centro)."
   @spec inward(t, number, number) :: {float, float}

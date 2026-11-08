@@ -13,6 +13,7 @@ import { requestCreatureLight } from './creatureLights';
 import { phaseOf } from './instancePhase';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
+import { useStretchFrame, useVitals } from './useVitals';
 import { useSelectable } from './useSelectable';
 
 const FLOOR_COLOR = glowOf(C.nucleus.color, 0, 0, 0, 0).color;
@@ -90,6 +91,9 @@ const getGeometry = () => (sharedGeometry ??= shellGeometry());
 export function Casco({ id }: { id: string }) {
   const { motion } = useSceneSettings();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
+  const { frame, counter, apply } = useStretchFrame();
+  const shellMaterial = useRef<THREE.MeshStandardMaterial>(null);
   const selectable = useSelectable(id);
   const geometry = getGeometry();
   const group = useRef<THREE.Group>(null);
@@ -150,21 +154,34 @@ export function Casco({ id }: { id: string }) {
     s.drift.multiplyScalar(1 - Math.min(1, step * 0.25));
 
     // Posição canônica do servidor + deriva cosmética dos trancos e leve flutuação, no tamanho da criatura.
-    g.position.set(
-      pose.pos.x + s.drift.x * scale,
-      pose.pos.y + (s.drift.y + Math.sin(s.t * 0.4) * 0.08) * scale,
-      pose.pos.z + s.drift.z * scale,
+    const f = frame.current;
+    if (!f) return;
+    const life = scale * vitals.scale.current;
+    f.position.set(
+      pose.pos.x + s.drift.x * life,
+      pose.pos.y + (s.drift.y + Math.sin(s.t * 0.4) * 0.08) * life,
+      pose.pos.z + s.drift.z * life,
     );
-    requestCreatureLight(glowColor, g.position.x, g.position.y, g.position.z, 1.2 * pulse.current);
-    requestCreatureGlow(id, FLOOR_COLOR, g.position.x, g.position.y, g.position.z, CREATURE_GLOW_RADIUS, 0.35 * pulse.current);
+    apply(pose.vel, vitals.stretch.current);
+    g.scale.setScalar(life);
+    if (shellMaterial.current) shellMaterial.current.opacity = vitals.fade.current;
+    // A luz da reserva fixa e o brilho do chão seguem energia e desfazer; o número de luzes não muda.
+    const lit = vitals.glow.current * vitals.fade.current;
+    requestCreatureLight(glowColor, f.position.x, f.position.y, f.position.z, 1.2 * pulse.current * lit);
+    requestCreatureGlow(id, FLOOR_COLOR, f.position.x, f.position.y, f.position.z, CREATURE_GLOW_RADIUS, 0.35 * pulse.current * lit);
   });
 
   return (
-    <group ref={group} visible={false} scale={scale} {...selectable} quaternion={state.initial}>
-      <mesh geometry={geometry}>
-        <meshStandardMaterial color="#10161c" roughness={0.85} metalness={0.05} flatShading />
-      </mesh>
-      <Nucleus config={C.nucleus} pulseRef={pulse} haloScale={4} timeOffset={phase * 1000} />
+    <group ref={frame} {...selectable}>
+      <group ref={counter}>
+        <group ref={group} visible={false} quaternion={state.initial}>
+          <mesh geometry={geometry}>
+            {/* Opaco com alphaHash desde a criação: o desfazer só mexe na opacidade, sem recompilar nem sair do passe opaco. */}
+            <meshStandardMaterial ref={shellMaterial} color="#10161c" roughness={0.85} metalness={0.05} flatShading alphaHash />
+          </mesh>
+          <Nucleus config={C.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={4} timeOffset={phase * 1000} />
+        </group>
+      </group>
     </group>
   );
 }

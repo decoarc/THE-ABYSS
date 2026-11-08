@@ -12,6 +12,8 @@ services:
       - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-true}
       # Semente fixa opcional (mundo repetível); vazia = aleatória.
       - ABYSS_SEED=${ABYSS_SEED:-}
+      # Só para medição: multiplica a comida (vazia = 1.0, a canônica).
+      - ABYSS_FOOD_BOOST=${ABYSS_FOOD_BOOST:-}
     ports:
       - "4000:4000"
     volumes:

@@ -12,7 +12,7 @@ import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
 import { WorldProvider, useWorld } from './services/WorldProvider';
 import { isClick, type Point } from './lib/pointer';
-import { debugEnabled, installDebugBridge, type AbyssDebug } from './services/debugBridge';
+import { debugEnabled, installDebugBridge, registerProgramCounter, type AbyssDebug } from './services/debugBridge';
 import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 
@@ -82,6 +82,7 @@ function Scene({ onFail }: { onFail: () => void }) {
             if (d && isClick(d, { x: event.clientX, y: event.clientY })) selection.clear();
           }}
           onCreated={({ gl, scene }) => {
+            registerProgramCounter(() => gl.info.programs?.length ?? 0);
             scene.background = null;
             gl.setClearColor(PALETTE.bg);
             gl.domElement.addEventListener('pointerdown', (event) => {

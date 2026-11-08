@@ -2,7 +2,7 @@ defmodule Abyss.RuntimeConfigTest do
   # Lê config/runtime.exs com variáveis de ambiente controladas.
   use ExUnit.Case, async: false
 
-  @vars ~w(ABYSS_SEED ABYSS_POPULATION ABYSS_TEST_SPECIES)
+  @vars ~w(ABYSS_SEED ABYSS_POPULATION ABYSS_TEST_SPECIES ABYSS_FOOD_BOOST)
 
   setup do
     saved = Map.new(@vars, &{&1, System.get_env(&1)})
@@ -35,6 +35,28 @@ defmodule Abyss.RuntimeConfigTest do
   test "ABYSS_SEED que não é inteiro falha na partida" do
     System.put_env("ABYSS_SEED", "abc")
     assert_raise ArgumentError, fn -> world() end
+  end
+
+  test "ABYSS_FOOD_BOOST (só medição) vira food_boost; vazia ou ausente não muda nada" do
+    refute Keyword.has_key?(world(), :food_boost)
+    System.put_env("ABYSS_FOOD_BOOST", "")
+    refute Keyword.has_key?(world(), :food_boost)
+    System.put_env("ABYSS_FOOD_BOOST", "2.5")
+    assert Keyword.get(world(), :food_boost) == 2.5
+    System.put_env("ABYSS_FOOD_BOOST", "0")
+    assert_raise RuntimeError, fn -> world() end
+  end
+
+  test "food_boost padrão é 1.0 e 1.0 devolve a comida igual" do
+    assert Config.Reader.read!("config/config.exs", env: :test)
+           |> get_in([:abyss, :world, :food_boost]) == 1.0
+
+    food = Application.fetch_env!(:abyss, :food) |> Map.new()
+    assert Abyss.World.Sim.boost_food(food, 1.0) == food
+    boosted = Abyss.World.Sim.boost_food(food, 2.0)
+    assert boosted.flora_grow_s == food.flora_grow_s / 2
+    assert boosted.particle_rate == food.particle_rate * 2
+    assert boosted.particle_cap == food.particle_cap * 2
   end
 
   test "produção começa sem organismos; dev e test com as espécies de teste" do

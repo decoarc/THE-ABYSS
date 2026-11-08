@@ -1,0 +1,7223 @@
+{
+  "criteria": [
+    {
+      "name": "jitter_ms_p99 máximo ≤ 20 ms",
+      "value": 1.826,
+      "pass": true
+    },
+    {
+      "name": "memória sem tendência de alta (última ≤ 1,10 × mediana dos 10 primeiros min)",
+      "value": "227.3 vs 214.7 MiB",
+      "pass": true
+    },
+    {
+      "name": "zero quedas de conexão",
+      "value": 0,
+      "pass": true
+    },
+    {
+      "name": "observers = 52",
+      "value": 52,
+      "pass": true
+    }
+  ],
+  "tickBytes": {
+    "total": 10948042950,
+    "count": 902125
+  },
+  "samples": [
+    {
+      "t": 15161,
+      "stats": {
+        "tick": 6140,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.72,
+        "observers": 52,
+        "uptime_ms": 614078,
+        "flora_patches": 200,
+        "hunts_ok": 5,
+        "particles": 800,
+        "hunts_abandoned": 374,
+        "extinct": {},
+        "cap_holds": 329093,
+        "births_total": 128,
+        "deaths_total": {
+          "starvation": 32,
+          "predation": 5,
+          "old_age": 95
+        },
+        "population_by_species": {
+          "membrana": 111,
+          "celula": 1,
+          "filamento": 6,
+          "casco": 77,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 424,
+        "eaten_particles_total": 932,
+        "flora_level_sum": 197.678,
+        "particles_expired_total": 1236
+      },
+      "cpu": 30.23,
+      "memMiB": 249.8
+    },
+    {
+      "t": 25186,
+      "stats": {
+        "tick": 6240,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.733,
+        "observers": 52,
+        "uptime_ms": 624099,
+        "flora_patches": 200,
+        "hunts_ok": 5,
+        "particles": 788,
+        "hunts_abandoned": 378,
+        "extinct": {},
+        "cap_holds": 329591,
+        "births_total": 135,
+        "deaths_total": {
+          "starvation": 35,
+          "predation": 5,
+          "old_age": 96
+        },
+        "population_by_species": {
+          "membrana": 118,
+          "celula": 1,
+          "filamento": 4,
+          "casco": 75,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 438,
+        "eaten_particles_total": 956,
+        "flora_level_sum": 196.314,
+        "particles_expired_total": 1267
+      },
+      "cpu": 28.17,
+      "memMiB": 220
+    },
+    {
+      "t": 35173,
+      "stats": {
+        "tick": 6340,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.751,
+        "observers": 52,
+        "uptime_ms": 634093,
+        "flora_patches": 200,
+        "hunts_ok": 5,
+        "particles": 751,
+        "hunts_abandoned": 379,
+        "extinct": {},
+        "cap_holds": 330078,
+        "births_total": 138,
+        "deaths_total": {
+          "starvation": 38,
+          "predation": 5,
+          "old_age": 96
+        },
+        "population_by_species": {
+          "membrana": 120,
+          "celula": 1,
+          "filamento": 4,
+          "casco": 73,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 448,
+        "eaten_particles_total": 993,
+        "flora_level_sum": 196.551,
+        "particles_expired_total": 1312
+      },
+      "cpu": 26.55,
+      "memMiB": 216.7
+    },
+    {
+      "t": 45188,
+      "stats": {
+        "tick": 6440,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.581,
+        "jitter_ms_p99": 1.755,
+        "observers": 52,
+        "uptime_ms": 644103,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 748,
+        "hunts_abandoned": 382,
+        "extinct": {},
+        "cap_holds": 330461,
+        "births_total": 139,
+        "deaths_total": {
+          "starvation": 41,
+          "predation": 6,
+          "old_age": 97
+        },
+        "population_by_species": {
+          "membrana": 120,
+          "celula": 1,
+          "filamento": 2,
+          "casco": 71,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 453,
+        "eaten_particles_total": 1019,
+        "flora_level_sum": 197.354,
+        "particles_expired_total": 1342
+      },
+      "cpu": 24.1,
+      "memMiB": 208.1
+    },
+    {
+      "t": 55211,
+      "stats": {
+        "tick": 6541,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.751,
+        "observers": 52,
+        "uptime_ms": 654129,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 725,
+        "hunts_abandoned": 382,
+        "extinct": {},
+        "cap_holds": 330921,
+        "births_total": 144,
+        "deaths_total": {
+          "starvation": 41,
+          "predation": 6,
+          "old_age": 98
+        },
+        "population_by_species": {
+          "membrana": 123,
+          "celula": 1,
+          "filamento": 2,
+          "casco": 72,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 464,
+        "eaten_particles_total": 1050,
+        "flora_level_sum": 196.568,
+        "particles_expired_total": 1380
+      },
+      "cpu": 24.91,
+      "memMiB": 213.9
+    },
+    {
+      "t": 65230,
+      "stats": {
+        "tick": 6641,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.733,
+        "observers": 52,
+        "uptime_ms": 664144,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 707,
+        "hunts_abandoned": 382,
+        "extinct": {},
+        "cap_holds": 331438,
+        "births_total": 146,
+        "deaths_total": {
+          "starvation": 42,
+          "predation": 6,
+          "old_age": 100
+        },
+        "population_by_species": {
+          "membrana": 124,
+          "celula": 1,
+          "filamento": 1,
+          "casco": 71,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 469,
+        "eaten_particles_total": 1077,
+        "flora_level_sum": 197.191,
+        "particles_expired_total": 1416
+      },
+      "cpu": 27.49,
+      "memMiB": 207
+    },
+    {
+      "t": 75246,
+      "stats": {
+        "tick": 6741,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.779,
+        "observers": 52,
+        "uptime_ms": 674147,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 700,
+        "hunts_abandoned": 382,
+        "extinct": {},
+        "cap_holds": 332133,
+        "births_total": 148,
+        "deaths_total": {
+          "starvation": 42,
+          "predation": 6,
+          "old_age": 102
+        },
+        "population_by_species": {
+          "membrana": 125,
+          "celula": 1,
+          "filamento": 1,
+          "casco": 70,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 481,
+        "eaten_particles_total": 1108,
+        "flora_level_sum": 196.13,
+        "particles_expired_total": 1448
+      },
+      "cpu": 27.37,
+      "memMiB": 214.1
+    },
+    {
+      "t": 85253,
+      "stats": {
+        "tick": 6841,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.779,
+        "observers": 52,
+        "uptime_ms": 684170,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 697,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 332682,
+        "births_total": 151,
+        "deaths_total": {
+          "starvation": 42,
+          "predation": 6,
+          "old_age": 104
+        },
+        "population_by_species": {
+          "membrana": 127,
+          "celula": 1,
+          "casco": 70,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 491,
+        "eaten_particles_total": 1137,
+        "flora_level_sum": 196.066,
+        "particles_expired_total": 1477
+      },
+      "cpu": 28.82,
+      "memMiB": 209.9
+    },
+    {
+      "t": 95256,
+      "stats": {
+        "tick": 6941,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.779,
+        "observers": 52,
+        "uptime_ms": 694159,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 686,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 333298,
+        "births_total": 152,
+        "deaths_total": {
+          "starvation": 42,
+          "predation": 6,
+          "old_age": 105
+        },
+        "population_by_species": {
+          "membrana": 127,
+          "celula": 1,
+          "casco": 70,
+          "poliedro": 51
+        },
+        "eaten_flora_total": 504,
+        "eaten_particles_total": 1164,
+        "flora_level_sum": 195.534,
+        "particles_expired_total": 1502
+      },
+      "cpu": 29.07,
+      "memMiB": 221.3
+    },
+    {
+      "t": 105230,
+      "stats": {
+        "tick": 7041,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.727,
+        "observers": 52,
+        "uptime_ms": 704149,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 702,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 333926,
+        "births_total": 154,
+        "deaths_total": {
+          "starvation": 44,
+          "predation": 6,
+          "old_age": 106
+        },
+        "population_by_species": {
+          "membrana": 127,
+          "celula": 1,
+          "casco": 70,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 512,
+        "eaten_particles_total": 1192,
+        "flora_level_sum": 196.276,
+        "particles_expired_total": 1520
+      },
+      "cpu": 26.43,
+      "memMiB": 212.4
+    },
+    {
+      "t": 115238,
+      "stats": {
+        "tick": 7141,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.729,
+        "observers": 52,
+        "uptime_ms": 714164,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 703,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 334551,
+        "births_total": 156,
+        "deaths_total": {
+          "starvation": 46,
+          "predation": 6,
+          "old_age": 109
+        },
+        "population_by_species": {
+          "membrana": 128,
+          "celula": 1,
+          "casco": 66,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 528,
+        "eaten_particles_total": 1224,
+        "flora_level_sum": 195.358,
+        "particles_expired_total": 1552
+      },
+      "cpu": 27.54,
+      "memMiB": 213.3
+    },
+    {
+      "t": 125242,
+      "stats": {
+        "tick": 7241,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.743,
+        "observers": 52,
+        "uptime_ms": 724160,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 700,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 335168,
+        "births_total": 161,
+        "deaths_total": {
+          "starvation": 47,
+          "predation": 6,
+          "old_age": 109
+        },
+        "population_by_species": {
+          "membrana": 131,
+          "celula": 1,
+          "casco": 67,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 541,
+        "eaten_particles_total": 1251,
+        "flora_level_sum": 195.081,
+        "particles_expired_total": 1574
+      },
+      "cpu": 26.53,
+      "memMiB": 203.5
+    },
+    {
+      "t": 135312,
+      "stats": {
+        "tick": 7341,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.788,
+        "observers": 52,
+        "uptime_ms": 734186,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 699,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 336055,
+        "births_total": 163,
+        "deaths_total": {
+          "starvation": 47,
+          "predation": 6,
+          "old_age": 113
+        },
+        "population_by_species": {
+          "membrana": 130,
+          "celula": 1,
+          "casco": 66,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 551,
+        "eaten_particles_total": 1284,
+        "flora_level_sum": 195.288,
+        "particles_expired_total": 1595
+      },
+      "cpu": 22.2,
+      "memMiB": 214.2
+    },
+    {
+      "t": 145239,
+      "stats": {
+        "tick": 7441,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.794,
+        "observers": 52,
+        "uptime_ms": 744159,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 677,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 336953,
+        "births_total": 166,
+        "deaths_total": {
+          "starvation": 48,
+          "predation": 6,
+          "old_age": 115
+        },
+        "population_by_species": {
+          "membrana": 132,
+          "celula": 1,
+          "casco": 64,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 557,
+        "eaten_particles_total": 1312,
+        "flora_level_sum": 196.656,
+        "particles_expired_total": 1626
+      },
+      "cpu": 27.17,
+      "memMiB": 214.4
+    },
+    {
+      "t": 155261,
+      "stats": {
+        "tick": 7541,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.826,
+        "observers": 52,
+        "uptime_ms": 754171,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 656,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 337878,
+        "births_total": 169,
+        "deaths_total": {
+          "starvation": 49,
+          "predation": 6,
+          "old_age": 116
+        },
+        "population_by_species": {
+          "membrana": 133,
+          "celula": 1,
+          "casco": 64,
+          "poliedro": 50
+        },
+        "eaten_flora_total": 567,
+        "eaten_particles_total": 1332,
+        "flora_level_sum": 196.471,
+        "particles_expired_total": 1680
+      },
+      "cpu": 25.93,
+      "memMiB": 215.5
+    },
+    {
+      "t": 165234,
+      "stats": {
+        "tick": 7641,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.826,
+        "observers": 52,
+        "uptime_ms": 764157,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 657,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 338935,
+        "births_total": 173,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 116
+        },
+        "population_by_species": {
+          "membrana": 135,
+          "celula": 1,
+          "casco": 64,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 576,
+        "eaten_particles_total": 1360,
+        "flora_level_sum": 196.576,
+        "particles_expired_total": 1715
+      },
+      "cpu": 26.96,
+      "memMiB": 208.8
+    },
+    {
+      "t": 175248,
+      "stats": {
+        "tick": 7741,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.826,
+        "observers": 52,
+        "uptime_ms": 774166,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 645,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 340097,
+        "births_total": 174,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 117
+        },
+        "population_by_species": {
+          "membrana": 136,
+          "celula": 1,
+          "casco": 63,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 589,
+        "eaten_particles_total": 1389,
+        "flora_level_sum": 195.997,
+        "particles_expired_total": 1741
+      },
+      "cpu": 29.85,
+      "memMiB": 214.7
+    },
+    {
+      "t": 185240,
+      "stats": {
+        "tick": 7841,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.79,
+        "observers": 52,
+        "uptime_ms": 784161,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 648,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 341469,
+        "births_total": 175,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 118
+        },
+        "population_by_species": {
+          "membrana": 136,
+          "celula": 1,
+          "casco": 63,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 601,
+        "eaten_particles_total": 1417,
+        "flora_level_sum": 195.98,
+        "particles_expired_total": 1753
+      },
+      "cpu": 33.79,
+      "memMiB": 206.8
+    },
+    {
+      "t": 195256,
+      "stats": {
+        "tick": 7941,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.737,
+        "observers": 52,
+        "uptime_ms": 794176,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 628,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 343067,
+        "births_total": 177,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 121
+        },
+        "population_by_species": {
+          "membrana": 134,
+          "celula": 1,
+          "casco": 64,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 615,
+        "eaten_particles_total": 1458,
+        "flora_level_sum": 195.549,
+        "particles_expired_total": 1782
+      },
+      "cpu": 27.37,
+      "memMiB": 211.7
+    },
+    {
+      "t": 205248,
+      "stats": {
+        "tick": 8041,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.709,
+        "observers": 52,
+        "uptime_ms": 804170,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 630,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 344725,
+        "births_total": 179,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 124
+        },
+        "population_by_species": {
+          "membrana": 134,
+          "celula": 1,
+          "casco": 63,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 618,
+        "eaten_particles_total": 1490,
+        "flora_level_sum": 197.337,
+        "particles_expired_total": 1805
+      },
+      "cpu": 28.36,
+      "memMiB": 211.6
+    },
+    {
+      "t": 215255,
+      "stats": {
+        "tick": 8141,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.701,
+        "observers": 52,
+        "uptime_ms": 814175,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 623,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 346256,
+        "births_total": 182,
+        "deaths_total": {
+          "starvation": 52,
+          "predation": 6,
+          "old_age": 125
+        },
+        "population_by_species": {
+          "membrana": 135,
+          "celula": 1,
+          "casco": 64,
+          "poliedro": 49
+        },
+        "eaten_flora_total": 628,
+        "eaten_particles_total": 1515,
+        "flora_level_sum": 196.823,
+        "particles_expired_total": 1831
+      },
+      "cpu": 31.79,
+      "memMiB": 215.8
+    },
+    {
+      "t": 225248,
+      "stats": {
+        "tick": 8241,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.553,
+        "jitter_ms_p99": 1.702,
+        "observers": 52,
+        "uptime_ms": 824177,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 634,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 347810,
+        "births_total": 184,
+        "deaths_total": {
+          "starvation": 54,
+          "predation": 6,
+          "old_age": 128
+        },
+        "population_by_species": {
+          "membrana": 134,
+          "celula": 1,
+          "casco": 63,
+          "poliedro": 48
+        },
+        "eaten_flora_total": 640,
+        "eaten_particles_total": 1545,
+        "flora_level_sum": 196.382,
+        "particles_expired_total": 1856
+      },
+      "cpu": 29.48,
+      "memMiB": 217.2
+    },
+    {
+      "t": 235273,
+      "stats": {
+        "tick": 8341,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.702,
+        "observers": 52,
+        "uptime_ms": 834198,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 652,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 349732,
+        "births_total": 188,
+        "deaths_total": {
+          "starvation": 54,
+          "predation": 6,
+          "old_age": 131
+        },
+        "population_by_species": {
+          "membrana": 135,
+          "celula": 1,
+          "casco": 63,
+          "poliedro": 48
+        },
+        "eaten_flora_total": 646,
+        "eaten_particles_total": 1576,
+        "flora_level_sum": 197.627,
+        "particles_expired_total": 1873
+      },
+      "cpu": 33.07,
+      "memMiB": 215.6
+    },
+    {
+      "t": 245250,
+      "stats": {
+        "tick": 8441,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.706,
+        "observers": 52,
+        "uptime_ms": 844180,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 656,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 351521,
+        "births_total": 192,
+        "deaths_total": {
+          "starvation": 55,
+          "predation": 6,
+          "old_age": 133
+        },
+        "population_by_species": {
+          "membrana": 139,
+          "celula": 1,
+          "casco": 61,
+          "poliedro": 47
+        },
+        "eaten_flora_total": 658,
+        "eaten_particles_total": 1603,
+        "flora_level_sum": 196.742,
+        "particles_expired_total": 1895
+      },
+      "cpu": 28.7,
+      "memMiB": 216.2
+    },
+    {
+      "t": 255283,
+      "stats": {
+        "tick": 8542,
+        "population": 244,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.567,
+        "jitter_ms_p99": 1.713,
+        "observers": 52,
+        "uptime_ms": 854214,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 672,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 353425,
+        "births_total": 194,
+        "deaths_total": {
+          "starvation": 56,
+          "predation": 6,
+          "old_age": 138
+        },
+        "population_by_species": {
+          "membrana": 137,
+          "celula": 1,
+          "casco": 59,
+          "poliedro": 47
+        },
+        "eaten_flora_total": 666,
+        "eaten_particles_total": 1633,
+        "flora_level_sum": 197.188,
+        "particles_expired_total": 1916
+      },
+      "cpu": 31.08,
+      "memMiB": 218.2
+    },
+    {
+      "t": 265304,
+      "stats": {
+        "tick": 8642,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.713,
+        "observers": 52,
+        "uptime_ms": 864229,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 657,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 355182,
+        "births_total": 200,
+        "deaths_total": {
+          "starvation": 56,
+          "predation": 6,
+          "old_age": 140
+        },
+        "population_by_species": {
+          "membrana": 142,
+          "celula": 1,
+          "casco": 58,
+          "poliedro": 47
+        },
+        "eaten_flora_total": 676,
+        "eaten_particles_total": 1670,
+        "flora_level_sum": 197.134,
+        "particles_expired_total": 1942
+      },
+      "cpu": 27.22,
+      "memMiB": 211.5
+    },
+    {
+      "t": 275306,
+      "stats": {
+        "tick": 8742,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.581,
+        "jitter_ms_p99": 1.726,
+        "observers": 52,
+        "uptime_ms": 874238,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 686,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 357078,
+        "births_total": 202,
+        "deaths_total": {
+          "starvation": 59,
+          "predation": 6,
+          "old_age": 142
+        },
+        "population_by_species": {
+          "membrana": 141,
+          "celula": 1,
+          "casco": 58,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 683,
+        "eaten_particles_total": 1698,
+        "flora_level_sum": 197.341,
+        "particles_expired_total": 1954
+      },
+      "cpu": 27.15,
+      "memMiB": 219.9
+    },
+    {
+      "t": 285312,
+      "stats": {
+        "tick": 8842,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.728,
+        "observers": 52,
+        "uptime_ms": 884243,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 687,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 358928,
+        "births_total": 207,
+        "deaths_total": {
+          "starvation": 60,
+          "predation": 6,
+          "old_age": 143
+        },
+        "population_by_species": {
+          "membrana": 144,
+          "celula": 1,
+          "casco": 58,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 690,
+        "eaten_particles_total": 1728,
+        "flora_level_sum": 197.619,
+        "particles_expired_total": 1974
+      },
+      "cpu": 26.76,
+      "memMiB": 218
+    },
+    {
+      "t": 295305,
+      "stats": {
+        "tick": 8942,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.733,
+        "observers": 52,
+        "uptime_ms": 894240,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 667,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 360905,
+        "births_total": 209,
+        "deaths_total": {
+          "starvation": 61,
+          "predation": 6,
+          "old_age": 143
+        },
+        "population_by_species": {
+          "membrana": 145,
+          "celula": 1,
+          "casco": 58,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 702,
+        "eaten_particles_total": 1753,
+        "flora_level_sum": 197.23,
+        "particles_expired_total": 2006
+      },
+      "cpu": 25.35,
+      "memMiB": 215
+    },
+    {
+      "t": 305346,
+      "stats": {
+        "tick": 9042,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 904258,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 647,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 363407,
+        "births_total": 210,
+        "deaths_total": {
+          "starvation": 61,
+          "predation": 6,
+          "old_age": 144
+        },
+        "population_by_species": {
+          "membrana": 146,
+          "celula": 1,
+          "casco": 57,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 708,
+        "eaten_particles_total": 1790,
+        "flora_level_sum": 197.797,
+        "particles_expired_total": 2024
+      },
+      "cpu": 25.12,
+      "memMiB": 219.1
+    },
+    {
+      "t": 315346,
+      "stats": {
+        "tick": 9142,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.735,
+        "observers": 52,
+        "uptime_ms": 914258,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 655,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 366583,
+        "births_total": 211,
+        "deaths_total": {
+          "starvation": 61,
+          "predation": 6,
+          "old_age": 144
+        },
+        "population_by_species": {
+          "membrana": 147,
+          "celula": 1,
+          "casco": 57,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 714,
+        "eaten_particles_total": 1813,
+        "flora_level_sum": 197.92,
+        "particles_expired_total": 2047
+      },
+      "cpu": 27.19,
+      "memMiB": 216.8
+    },
+    {
+      "t": 325354,
+      "stats": {
+        "tick": 9242,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.747,
+        "observers": 52,
+        "uptime_ms": 924264,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 665,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 370007,
+        "births_total": 212,
+        "deaths_total": {
+          "starvation": 61,
+          "predation": 6,
+          "old_age": 145
+        },
+        "population_by_species": {
+          "membrana": 148,
+          "celula": 1,
+          "casco": 56,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 721,
+        "eaten_particles_total": 1840,
+        "flora_level_sum": 197.871,
+        "particles_expired_total": 2064
+      },
+      "cpu": 27.27,
+      "memMiB": 214.8
+    },
+    {
+      "t": 335324,
+      "stats": {
+        "tick": 9342,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.56,
+        "jitter_ms_p99": 1.747,
+        "observers": 52,
+        "uptime_ms": 934253,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 664,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 373714,
+        "births_total": 212,
+        "deaths_total": {
+          "starvation": 62,
+          "predation": 6,
+          "old_age": 145
+        },
+        "population_by_species": {
+          "membrana": 148,
+          "celula": 1,
+          "casco": 55,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 733,
+        "eaten_particles_total": 1862,
+        "flora_level_sum": 196.977,
+        "particles_expired_total": 2083
+      },
+      "cpu": 27.79,
+      "memMiB": 212.9
+    },
+    {
+      "t": 345324,
+      "stats": {
+        "tick": 9442,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.747,
+        "observers": 52,
+        "uptime_ms": 944245,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 667,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 377463,
+        "births_total": 213,
+        "deaths_total": {
+          "starvation": 64,
+          "predation": 6,
+          "old_age": 146
+        },
+        "population_by_species": {
+          "membrana": 146,
+          "celula": 1,
+          "casco": 55,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 738,
+        "eaten_particles_total": 1894,
+        "flora_level_sum": 197.829,
+        "particles_expired_total": 2109
+      },
+      "cpu": 27.39,
+      "memMiB": 212.2
+    },
+    {
+      "t": 355385,
+      "stats": {
+        "tick": 9542,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.733,
+        "observers": 52,
+        "uptime_ms": 954276,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 665,
+        "hunts_abandoned": 382,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 381249,
+        "births_total": 216,
+        "deaths_total": {
+          "starvation": 64,
+          "predation": 6,
+          "old_age": 147
+        },
+        "population_by_species": {
+          "membrana": 149,
+          "celula": 1,
+          "casco": 54,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 747,
+        "eaten_particles_total": 1918,
+        "flora_level_sum": 197.14,
+        "particles_expired_total": 2126
+      },
+      "cpu": 29.6,
+      "memMiB": 214
+    },
+    {
+      "t": 365368,
+      "stats": {
+        "tick": 9642,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.75,
+        "observers": 52,
+        "uptime_ms": 964267,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 680,
+        "hunts_abandoned": 384,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 385110,
+        "births_total": 217,
+        "deaths_total": {
+          "starvation": 64,
+          "predation": 6,
+          "old_age": 148
+        },
+        "population_by_species": {
+          "membrana": 150,
+          "celula": 1,
+          "casco": 53,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 758,
+        "eaten_particles_total": 1939,
+        "flora_level_sum": 196.515,
+        "particles_expired_total": 2134
+      },
+      "cpu": 22.81,
+      "memMiB": 215.7
+    },
+    {
+      "t": 375443,
+      "stats": {
+        "tick": 9743,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.75,
+        "observers": 52,
+        "uptime_ms": 974321,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 670,
+        "hunts_abandoned": 384,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 388955,
+        "births_total": 219,
+        "deaths_total": {
+          "starvation": 65,
+          "predation": 6,
+          "old_age": 148
+        },
+        "population_by_species": {
+          "membrana": 152,
+          "celula": 1,
+          "casco": 52,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 763,
+        "eaten_particles_total": 1966,
+        "flora_level_sum": 197.456,
+        "particles_expired_total": 2160
+      },
+      "cpu": 24.27,
+      "memMiB": 216.1
+    },
+    {
+      "t": 385370,
+      "stats": {
+        "tick": 9842,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.783,
+        "observers": 52,
+        "uptime_ms": 984269,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 675,
+        "hunts_abandoned": 384,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 392865,
+        "births_total": 219,
+        "deaths_total": {
+          "starvation": 66,
+          "predation": 6,
+          "old_age": 150
+        },
+        "population_by_species": {
+          "membrana": 151,
+          "celula": 1,
+          "casco": 50,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 775,
+        "eaten_particles_total": 1992,
+        "flora_level_sum": 196.734,
+        "particles_expired_total": 2185
+      },
+      "cpu": 23,
+      "memMiB": 212.1
+    },
+    {
+      "t": 395423,
+      "stats": {
+        "tick": 9942,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.766,
+        "observers": 52,
+        "uptime_ms": 994289,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 674,
+        "hunts_abandoned": 384,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 397112,
+        "births_total": 222,
+        "deaths_total": {
+          "starvation": 66,
+          "predation": 6,
+          "old_age": 150
+        },
+        "population_by_species": {
+          "membrana": 154,
+          "celula": 1,
+          "casco": 50,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 783,
+        "eaten_particles_total": 2023,
+        "flora_level_sum": 197.135,
+        "particles_expired_total": 2203
+      },
+      "cpu": 26.77,
+      "memMiB": 214.5
+    },
+    {
+      "t": 405419,
+      "stats": {
+        "tick": 10043,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.766,
+        "observers": 52,
+        "uptime_ms": 1004303,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 653,
+        "hunts_abandoned": 385,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 401808,
+        "births_total": 222,
+        "deaths_total": {
+          "starvation": 66,
+          "predation": 6,
+          "old_age": 152
+        },
+        "population_by_species": {
+          "membrana": 154,
+          "celula": 1,
+          "casco": 48,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 791,
+        "eaten_particles_total": 2060,
+        "flora_level_sum": 197.188,
+        "particles_expired_total": 2247
+      },
+      "cpu": 25.54,
+      "memMiB": 213.3
+    },
+    {
+      "t": 415396,
+      "stats": {
+        "tick": 10143,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.787,
+        "observers": 52,
+        "uptime_ms": 1014301,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 640,
+        "hunts_abandoned": 385,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 406831,
+        "births_total": 224,
+        "deaths_total": {
+          "starvation": 66,
+          "predation": 6,
+          "old_age": 152
+        },
+        "population_by_species": {
+          "membrana": 156,
+          "celula": 1,
+          "casco": 48,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 795,
+        "eaten_particles_total": 2097,
+        "flora_level_sum": 198.255,
+        "particles_expired_total": 2266
+      },
+      "cpu": 24.26,
+      "memMiB": 206.9
+    },
+    {
+      "t": 425497,
+      "stats": {
+        "tick": 10243,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.796,
+        "observers": 52,
+        "uptime_ms": 1024339,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 618,
+        "hunts_abandoned": 386,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 412000,
+        "births_total": 224,
+        "deaths_total": {
+          "starvation": 67,
+          "predation": 6,
+          "old_age": 152
+        },
+        "population_by_species": {
+          "membrana": 155,
+          "celula": 1,
+          "casco": 48,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 806,
+        "eaten_particles_total": 2130,
+        "flora_level_sum": 197.355,
+        "particles_expired_total": 2300
+      },
+      "cpu": 27.03,
+      "memMiB": 214.6
+    },
+    {
+      "t": 435485,
+      "stats": {
+        "tick": 10343,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.799,
+        "observers": 52,
+        "uptime_ms": 1034338,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 598,
+        "hunts_abandoned": 386,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 417411,
+        "births_total": 225,
+        "deaths_total": {
+          "starvation": 67,
+          "predation": 6,
+          "old_age": 152
+        },
+        "population_by_species": {
+          "membrana": 155,
+          "celula": 1,
+          "casco": 49,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 810,
+        "eaten_particles_total": 2157,
+        "flora_level_sum": 197.951,
+        "particles_expired_total": 2328
+      },
+      "cpu": 28.94,
+      "memMiB": 197.6
+    },
+    {
+      "t": 445590,
+      "stats": {
+        "tick": 10443,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 10229,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.777,
+        "observers": 52,
+        "uptime_ms": 1044384,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 605,
+        "hunts_abandoned": 386,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 422932,
+        "births_total": 226,
+        "deaths_total": {
+          "starvation": 68,
+          "predation": 6,
+          "old_age": 154
+        },
+        "population_by_species": {
+          "membrana": 156,
+          "celula": 1,
+          "casco": 46,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 816,
+        "eaten_particles_total": 2187,
+        "flora_level_sum": 198.06,
+        "particles_expired_total": 2354
+      },
+      "cpu": 30.66,
+      "memMiB": 213.1
+    },
+    {
+      "t": 455455,
+      "stats": {
+        "tick": 10543,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.777,
+        "observers": 52,
+        "uptime_ms": 1054351,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 586,
+        "hunts_abandoned": 387,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 428253,
+        "births_total": 229,
+        "deaths_total": {
+          "starvation": 68,
+          "predation": 6,
+          "old_age": 155
+        },
+        "population_by_species": {
+          "membrana": 159,
+          "celula": 1,
+          "casco": 45,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 822,
+        "eaten_particles_total": 2213,
+        "flora_level_sum": 198.176,
+        "particles_expired_total": 2383
+      },
+      "cpu": 23.67,
+      "memMiB": 208.4
+    },
+    {
+      "t": 465499,
+      "stats": {
+        "tick": 10644,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.769,
+        "observers": 52,
+        "uptime_ms": 1064403,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 575,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 433946,
+        "births_total": 229,
+        "deaths_total": {
+          "starvation": 68,
+          "predation": 6,
+          "old_age": 155
+        },
+        "population_by_species": {
+          "membrana": 159,
+          "celula": 1,
+          "casco": 45,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 827,
+        "eaten_particles_total": 2239,
+        "flora_level_sum": 198.367,
+        "particles_expired_total": 2405
+      },
+      "cpu": 25.3,
+      "memMiB": 215.2
+    },
+    {
+      "t": 475511,
+      "stats": {
+        "tick": 10743,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.769,
+        "observers": 52,
+        "uptime_ms": 1074382,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 599,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 439868,
+        "births_total": 229,
+        "deaths_total": {
+          "starvation": 71,
+          "predation": 6,
+          "old_age": 155
+        },
+        "population_by_species": {
+          "membrana": 157,
+          "celula": 1,
+          "casco": 44,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 833,
+        "eaten_particles_total": 2264,
+        "flora_level_sum": 198.309,
+        "particles_expired_total": 2412
+      },
+      "cpu": 27.36,
+      "memMiB": 214.9
+    },
+    {
+      "t": 485447,
+      "stats": {
+        "tick": 10843,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.763,
+        "observers": 52,
+        "uptime_ms": 1084357,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 603,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 446181,
+        "births_total": 232,
+        "deaths_total": {
+          "starvation": 71,
+          "predation": 6,
+          "old_age": 157
+        },
+        "population_by_species": {
+          "membrana": 160,
+          "celula": 1,
+          "casco": 42,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 839,
+        "eaten_particles_total": 2289,
+        "flora_level_sum": 198.259,
+        "particles_expired_total": 2425
+      },
+      "cpu": 23,
+      "memMiB": 218.9
+    },
+    {
+      "t": 495444,
+      "stats": {
+        "tick": 10943,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.741,
+        "observers": 52,
+        "uptime_ms": 1094355,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 614,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 452658,
+        "births_total": 234,
+        "deaths_total": {
+          "starvation": 72,
+          "predation": 6,
+          "old_age": 159
+        },
+        "population_by_species": {
+          "membrana": 162,
+          "celula": 1,
+          "casco": 39,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 845,
+        "eaten_particles_total": 2314,
+        "flora_level_sum": 198.565,
+        "particles_expired_total": 2447
+      },
+      "cpu": 26.82,
+      "memMiB": 217.3
+    },
+    {
+      "t": 505462,
+      "stats": {
+        "tick": 11043,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.754,
+        "observers": 52,
+        "uptime_ms": 1104367,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 607,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 459406,
+        "births_total": 238,
+        "deaths_total": {
+          "starvation": 73,
+          "predation": 6,
+          "old_age": 159
+        },
+        "population_by_species": {
+          "membrana": 165,
+          "celula": 1,
+          "casco": 39,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 854,
+        "eaten_particles_total": 2337,
+        "flora_level_sum": 197.783,
+        "particles_expired_total": 2473
+      },
+      "cpu": 25.01,
+      "memMiB": 215.4
+    },
+    {
+      "t": 515435,
+      "stats": {
+        "tick": 11143,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.744,
+        "observers": 52,
+        "uptime_ms": 1114350,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 616,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 466538,
+        "births_total": 239,
+        "deaths_total": {
+          "starvation": 74,
+          "predation": 6,
+          "old_age": 160
+        },
+        "population_by_species": {
+          "membrana": 165,
+          "celula": 1,
+          "casco": 38,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 856,
+        "eaten_particles_total": 2357,
+        "flora_level_sum": 198.643,
+        "particles_expired_total": 2488
+      },
+      "cpu": 27.14,
+      "memMiB": 213.8
+    },
+    {
+      "t": 525439,
+      "stats": {
+        "tick": 11243,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.744,
+        "observers": 52,
+        "uptime_ms": 1124346,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 618,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 473904,
+        "births_total": 240,
+        "deaths_total": {
+          "starvation": 74,
+          "predation": 6,
+          "old_age": 161
+        },
+        "population_by_species": {
+          "membrana": 166,
+          "celula": 1,
+          "casco": 37,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 865,
+        "eaten_particles_total": 2382,
+        "flora_level_sum": 197.941,
+        "particles_expired_total": 2513
+      },
+      "cpu": 28.53,
+      "memMiB": 217.3
+    },
+    {
+      "t": 535558,
+      "stats": {
+        "tick": 11344,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.751,
+        "observers": 52,
+        "uptime_ms": 1134399,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 625,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 481586,
+        "births_total": 242,
+        "deaths_total": {
+          "starvation": 74,
+          "predation": 6,
+          "old_age": 162
+        },
+        "population_by_species": {
+          "membrana": 167,
+          "celula": 1,
+          "casco": 37,
+          "poliedro": 45
+        },
+        "eaten_flora_total": 868,
+        "eaten_particles_total": 2410,
+        "flora_level_sum": 198.835,
+        "particles_expired_total": 2533
+      },
+      "cpu": 24.84,
+      "memMiB": 222.1
+    },
+    {
+      "t": 545523,
+      "stats": {
+        "tick": 11444,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11539,
+        "jitter_ms_p50": 1.566,
+        "jitter_ms_p99": 1.763,
+        "observers": 52,
+        "uptime_ms": 1144399,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 626,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 489941,
+        "births_total": 243,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 162
+        },
+        "population_by_species": {
+          "membrana": 167,
+          "celula": 1,
+          "casco": 37,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 871,
+        "eaten_particles_total": 2434,
+        "flora_level_sum": 198.842,
+        "particles_expired_total": 2556
+      },
+      "cpu": 23.89,
+      "memMiB": 213.4
+    },
+    {
+      "t": 555443,
+      "stats": {
+        "tick": 11543,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.774,
+        "observers": 52,
+        "uptime_ms": 1154354,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 635,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 498721,
+        "births_total": 244,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 162
+        },
+        "population_by_species": {
+          "membrana": 168,
+          "celula": 1,
+          "casco": 37,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 877,
+        "eaten_particles_total": 2451,
+        "flora_level_sum": 198.409,
+        "particles_expired_total": 2571
+      },
+      "cpu": 26.88,
+      "memMiB": 214.9
+    },
+    {
+      "t": 565576,
+      "stats": {
+        "tick": 11644,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.562,
+        "jitter_ms_p99": 1.774,
+        "observers": 52,
+        "uptime_ms": 1164395,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 651,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 507949,
+        "births_total": 244,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 163
+        },
+        "population_by_species": {
+          "membrana": 168,
+          "celula": 1,
+          "casco": 36,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 881,
+        "eaten_particles_total": 2472,
+        "flora_level_sum": 199.117,
+        "particles_expired_total": 2592
+      },
+      "cpu": 31.44,
+      "memMiB": 219.7
+    },
+    {
+      "t": 575511,
+      "stats": {
+        "tick": 11743,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.781,
+        "observers": 52,
+        "uptime_ms": 1174381,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 644,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 517030,
+        "births_total": 246,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 164
+        },
+        "population_by_species": {
+          "membrana": 170,
+          "celula": 1,
+          "casco": 35,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 886,
+        "eaten_particles_total": 2497,
+        "flora_level_sum": 198.875,
+        "particles_expired_total": 2619
+      },
+      "cpu": 25.08,
+      "memMiB": 218
+    },
+    {
+      "t": 585474,
+      "stats": {
+        "tick": 11843,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.786,
+        "observers": 52,
+        "uptime_ms": 1184359,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 631,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 526165,
+        "births_total": 246,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 165
+        },
+        "population_by_species": {
+          "membrana": 170,
+          "celula": 1,
+          "casco": 34,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 889,
+        "eaten_particles_total": 2520,
+        "flora_level_sum": 199.224,
+        "particles_expired_total": 2650
+      },
+      "cpu": 28.19,
+      "memMiB": 214.7
+    },
+    {
+      "t": 595467,
+      "stats": {
+        "tick": 11943,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.581,
+        "jitter_ms_p99": 1.786,
+        "observers": 52,
+        "uptime_ms": 1194383,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 621,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 535431,
+        "births_total": 247,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 165
+        },
+        "population_by_species": {
+          "membrana": 171,
+          "celula": 1,
+          "casco": 34,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 894,
+        "eaten_particles_total": 2545,
+        "flora_level_sum": 199.179,
+        "particles_expired_total": 2666
+      },
+      "cpu": 23.69,
+      "memMiB": 220.6
+    },
+    {
+      "t": 605484,
+      "stats": {
+        "tick": 12044,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.589,
+        "jitter_ms_p99": 1.797,
+        "observers": 52,
+        "uptime_ms": 1204396,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 612,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 545081,
+        "births_total": 247,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 165
+        },
+        "population_by_species": {
+          "membrana": 171,
+          "celula": 1,
+          "casco": 34,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 901,
+        "eaten_particles_total": 2573,
+        "flora_level_sum": 198.535,
+        "particles_expired_total": 2685
+      },
+      "cpu": 25.39,
+      "memMiB": 216.4
+    },
+    {
+      "t": 615729,
+      "stats": {
+        "tick": 12145,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.589,
+        "jitter_ms_p99": 1.786,
+        "observers": 52,
+        "uptime_ms": 1214513,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 615,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 555016,
+        "births_total": 247,
+        "deaths_total": {
+          "starvation": 76,
+          "predation": 6,
+          "old_age": 165
+        },
+        "population_by_species": {
+          "membrana": 171,
+          "celula": 1,
+          "casco": 34,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 904,
+        "eaten_particles_total": 2599,
+        "flora_level_sum": 198.956,
+        "particles_expired_total": 2695
+      },
+      "cpu": 27.18,
+      "memMiB": 214.1
+    },
+    {
+      "t": 625462,
+      "stats": {
+        "tick": 12244,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.589,
+        "jitter_ms_p99": 1.786,
+        "observers": 52,
+        "uptime_ms": 1224394,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 603,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 565081,
+        "births_total": 247,
+        "deaths_total": {
+          "starvation": 78,
+          "predation": 6,
+          "old_age": 165
+        },
+        "population_by_species": {
+          "membrana": 171,
+          "celula": 1,
+          "casco": 32,
+          "poliedro": 44
+        },
+        "eaten_flora_total": 910,
+        "eaten_particles_total": 2621,
+        "flora_level_sum": 198.328,
+        "particles_expired_total": 2727
+      },
+      "cpu": 26.19,
+      "memMiB": 210.8
+    },
+    {
+      "t": 635478,
+      "stats": {
+        "tick": 12344,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.588,
+        "jitter_ms_p99": 1.778,
+        "observers": 52,
+        "uptime_ms": 1234405,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 627,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 575286,
+        "births_total": 249,
+        "deaths_total": {
+          "starvation": 81,
+          "predation": 6,
+          "old_age": 167
+        },
+        "population_by_species": {
+          "membrana": 171,
+          "celula": 1,
+          "casco": 33,
+          "poliedro": 40
+        },
+        "eaten_flora_total": 916,
+        "eaten_particles_total": 2643,
+        "flora_level_sum": 198.18,
+        "particles_expired_total": 2749
+      },
+      "cpu": 26.61,
+      "memMiB": 212.4
+    },
+    {
+      "t": 645535,
+      "stats": {
+        "tick": 12444,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.77,
+        "observers": 52,
+        "uptime_ms": 1244427,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 631,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 585509,
+        "births_total": 254,
+        "deaths_total": {
+          "starvation": 82,
+          "predation": 6,
+          "old_age": 168
+        },
+        "population_by_species": {
+          "membrana": 175,
+          "celula": 1,
+          "casco": 33,
+          "poliedro": 39
+        },
+        "eaten_flora_total": 920,
+        "eaten_particles_total": 2665,
+        "flora_level_sum": 198.284,
+        "particles_expired_total": 2764
+      },
+      "cpu": 26.89,
+      "memMiB": 214.1
+    },
+    {
+      "t": 655591,
+      "stats": {
+        "tick": 12544,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 11799,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.77,
+        "observers": 52,
+        "uptime_ms": 1254465,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 625,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "filamento": 1794084904177
+        },
+        "cap_holds": 596058,
+        "births_total": 256,
+        "deaths_total": {
+          "starvation": 83,
+          "predation": 6,
+          "old_age": 169
+        },
+        "population_by_species": {
+          "membrana": 176,
+          "celula": 1,
+          "casco": 33,
+          "poliedro": 38
+        },
+        "eaten_flora_total": 927,
+        "eaten_particles_total": 2684,
+        "flora_level_sum": 197.758,
+        "particles_expired_total": 2788
+      },
+      "cpu": 28.24,
+      "memMiB": 222.1
+    },
+    {
+      "t": 665635,
+      "stats": {
+        "tick": 12644,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 13784,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.737,
+        "observers": 52,
+        "uptime_ms": 1264464,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 639,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 606520,
+        "births_total": 258,
+        "deaths_total": {
+          "starvation": 83,
+          "predation": 6,
+          "old_age": 172
+        },
+        "population_by_species": {
+          "membrana": 176,
+          "casco": 33,
+          "poliedro": 38
+        },
+        "eaten_flora_total": 931,
+        "eaten_particles_total": 2702,
+        "flora_level_sum": 198.317,
+        "particles_expired_total": 2811
+      },
+      "cpu": 26.83,
+      "memMiB": 226
+    },
+    {
+      "t": 675587,
+      "stats": {
+        "tick": 12745,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 13784,
+        "jitter_ms_p50": 1.585,
+        "jitter_ms_p99": 1.78,
+        "observers": 52,
+        "uptime_ms": 1274487,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 634,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 616907,
+        "births_total": 261,
+        "deaths_total": {
+          "starvation": 83,
+          "predation": 6,
+          "old_age": 172
+        },
+        "population_by_species": {
+          "membrana": 179,
+          "casco": 33,
+          "poliedro": 38
+        },
+        "eaten_flora_total": 934,
+        "eaten_particles_total": 2723,
+        "flora_level_sum": 198.786,
+        "particles_expired_total": 2836
+      },
+      "cpu": 22.94,
+      "memMiB": 215.5
+    },
+    {
+      "t": 685676,
+      "stats": {
+        "tick": 12845,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 13784,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.757,
+        "observers": 52,
+        "uptime_ms": 1284506,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 654,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 627057,
+        "births_total": 261,
+        "deaths_total": {
+          "starvation": 84,
+          "predation": 6,
+          "old_age": 175
+        },
+        "population_by_species": {
+          "membrana": 176,
+          "casco": 33,
+          "poliedro": 37
+        },
+        "eaten_flora_total": 937,
+        "eaten_particles_total": 2744,
+        "flora_level_sum": 199.023,
+        "particles_expired_total": 2860
+      },
+      "cpu": 24.94,
+      "memMiB": 209.5
+    },
+    {
+      "t": 695549,
+      "stats": {
+        "tick": 12944,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 13784,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.761,
+        "observers": 52,
+        "uptime_ms": 1294450,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 666,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 637387,
+        "births_total": 265,
+        "deaths_total": {
+          "starvation": 85,
+          "predation": 6,
+          "old_age": 176
+        },
+        "population_by_species": {
+          "membrana": 179,
+          "casco": 33,
+          "poliedro": 36
+        },
+        "eaten_flora_total": 945,
+        "eaten_particles_total": 2769,
+        "flora_level_sum": 198.306,
+        "particles_expired_total": 2878
+      },
+      "cpu": 24.15,
+      "memMiB": 215.6
+    },
+    {
+      "t": 705729,
+      "stats": {
+        "tick": 13044,
+        "population": 243,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 13784,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.761,
+        "observers": 52,
+        "uptime_ms": 1304436,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 688,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 647763,
+        "births_total": 265,
+        "deaths_total": {
+          "starvation": 86,
+          "predation": 6,
+          "old_age": 180
+        },
+        "population_by_species": {
+          "membrana": 176,
+          "casco": 33,
+          "poliedro": 34
+        },
+        "eaten_flora_total": 947,
+        "eaten_particles_total": 2789,
+        "flora_level_sum": 198.948,
+        "particles_expired_total": 2902
+      },
+      "cpu": 24.7,
+      "memMiB": 215.6
+    },
+    {
+      "t": 715506,
+      "stats": {
+        "tick": 13144,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.819,
+        "observers": 52,
+        "uptime_ms": 1314435,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 707,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 657901,
+        "births_total": 272,
+        "deaths_total": {
+          "starvation": 87,
+          "predation": 6,
+          "old_age": 181
+        },
+        "population_by_species": {
+          "membrana": 182,
+          "casco": 33,
+          "poliedro": 33
+        },
+        "eaten_flora_total": 951,
+        "eaten_particles_total": 2809,
+        "flora_level_sum": 198.972,
+        "particles_expired_total": 2930
+      },
+      "cpu": 33.34,
+      "memMiB": 211.1
+    },
+    {
+      "t": 725540,
+      "stats": {
+        "tick": 13244,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.819,
+        "observers": 52,
+        "uptime_ms": 1324460,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 698,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 668010,
+        "births_total": 275,
+        "deaths_total": {
+          "starvation": 89,
+          "predation": 6,
+          "old_age": 182
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 33,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 956,
+        "eaten_particles_total": 2839,
+        "flora_level_sum": 198.615,
+        "particles_expired_total": 2959
+      },
+      "cpu": 24.1,
+      "memMiB": 212.2
+    },
+    {
+      "t": 735551,
+      "stats": {
+        "tick": 13344,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.763,
+        "observers": 52,
+        "uptime_ms": 1334460,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 698,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 678237,
+        "births_total": 277,
+        "deaths_total": {
+          "starvation": 90,
+          "predation": 6,
+          "old_age": 182
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 34,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 959,
+        "eaten_particles_total": 2860,
+        "flora_level_sum": 198.924,
+        "particles_expired_total": 2982
+      },
+      "cpu": 24.8,
+      "memMiB": 225.2
+    },
+    {
+      "t": 745557,
+      "stats": {
+        "tick": 13444,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.767,
+        "observers": 52,
+        "uptime_ms": 1344471,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 669,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 688786,
+        "births_total": 278,
+        "deaths_total": {
+          "starvation": 90,
+          "predation": 6,
+          "old_age": 182
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 34,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 964,
+        "eaten_particles_total": 2886,
+        "flora_level_sum": 198.821,
+        "particles_expired_total": 3016
+      },
+      "cpu": 29.9,
+      "memMiB": 224.5
+    },
+    {
+      "t": 755583,
+      "stats": {
+        "tick": 13545,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.767,
+        "observers": 52,
+        "uptime_ms": 1354497,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 650,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 699470,
+        "births_total": 280,
+        "deaths_total": {
+          "starvation": 90,
+          "predation": 6,
+          "old_age": 184
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 34,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 970,
+        "eaten_particles_total": 2909,
+        "flora_level_sum": 198.226,
+        "particles_expired_total": 3049
+      },
+      "cpu": 24.67,
+      "memMiB": 220.7
+    },
+    {
+      "t": 765548,
+      "stats": {
+        "tick": 13644,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.768,
+        "observers": 52,
+        "uptime_ms": 1364474,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 640,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 710134,
+        "births_total": 280,
+        "deaths_total": {
+          "starvation": 90,
+          "predation": 6,
+          "old_age": 186
+        },
+        "population_by_species": {
+          "membrana": 183,
+          "casco": 34,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 972,
+        "eaten_particles_total": 2935,
+        "flora_level_sum": 198.909,
+        "particles_expired_total": 3075
+      },
+      "cpu": 28.78,
+      "memMiB": 224.9
+    },
+    {
+      "t": 775535,
+      "stats": {
+        "tick": 13744,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.746,
+        "observers": 52,
+        "uptime_ms": 1374475,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 652,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 721068,
+        "births_total": 283,
+        "deaths_total": {
+          "starvation": 91,
+          "predation": 6,
+          "old_age": 188
+        },
+        "population_by_species": {
+          "membrana": 183,
+          "casco": 34,
+          "poliedro": 31
+        },
+        "eaten_flora_total": 977,
+        "eaten_particles_total": 2955,
+        "flora_level_sum": 198.712,
+        "particles_expired_total": 3094
+      },
+      "cpu": 26.4,
+      "memMiB": 219.9
+    },
+    {
+      "t": 785571,
+      "stats": {
+        "tick": 13845,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.581,
+        "jitter_ms_p99": 1.736,
+        "observers": 52,
+        "uptime_ms": 1384491,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 652,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 732111,
+        "births_total": 286,
+        "deaths_total": {
+          "starvation": 91,
+          "predation": 6,
+          "old_age": 190
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 34,
+          "poliedro": 30
+        },
+        "eaten_flora_total": 978,
+        "eaten_particles_total": 2980,
+        "flora_level_sum": 199.423,
+        "particles_expired_total": 3114
+      },
+      "cpu": 29.13,
+      "memMiB": 214.1
+    },
+    {
+      "t": 795608,
+      "stats": {
+        "tick": 13945,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.733,
+        "observers": 52,
+        "uptime_ms": 1394507,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 667,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 742906,
+        "births_total": 287,
+        "deaths_total": {
+          "starvation": 92,
+          "predation": 6,
+          "old_age": 194
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 31,
+          "poliedro": 30
+        },
+        "eaten_flora_total": 981,
+        "eaten_particles_total": 3002,
+        "flora_level_sum": 199.393,
+        "particles_expired_total": 3129
+      },
+      "cpu": 26.4,
+      "memMiB": 222.2
+    },
+    {
+      "t": 805570,
+      "stats": {
+        "tick": 14045,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.732,
+        "observers": 52,
+        "uptime_ms": 1404504,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 692,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 753518,
+        "births_total": 293,
+        "deaths_total": {
+          "starvation": 93,
+          "predation": 6,
+          "old_age": 199
+        },
+        "population_by_species": {
+          "membrana": 186,
+          "casco": 31,
+          "poliedro": 28
+        },
+        "eaten_flora_total": 984,
+        "eaten_particles_total": 3025,
+        "flora_level_sum": 199.392,
+        "particles_expired_total": 3144
+      },
+      "cpu": 30.35,
+      "memMiB": 220.6
+    },
+    {
+      "t": 815583,
+      "stats": {
+        "tick": 14145,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 1414510,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 696,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 763837,
+        "births_total": 298,
+        "deaths_total": {
+          "starvation": 94,
+          "predation": 6,
+          "old_age": 200
+        },
+        "population_by_species": {
+          "membrana": 186,
+          "casco": 34,
+          "poliedro": 28
+        },
+        "eaten_flora_total": 986,
+        "eaten_particles_total": 3048,
+        "flora_level_sum": 199.54,
+        "particles_expired_total": 3169
+      },
+      "cpu": 30.31,
+      "memMiB": 221.7
+    },
+    {
+      "t": 825584,
+      "stats": {
+        "tick": 14245,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 1424516,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 707,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 774331,
+        "births_total": 300,
+        "deaths_total": {
+          "starvation": 96,
+          "predation": 6,
+          "old_age": 202
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 35,
+          "poliedro": 26
+        },
+        "eaten_flora_total": 988,
+        "eaten_particles_total": 3071,
+        "flora_level_sum": 199.44,
+        "particles_expired_total": 3189
+      },
+      "cpu": 30.51,
+      "memMiB": 221.1
+    },
+    {
+      "t": 835582,
+      "stats": {
+        "tick": 14345,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 1434514,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 749,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 784704,
+        "births_total": 304,
+        "deaths_total": {
+          "starvation": 97,
+          "predation": 6,
+          "old_age": 206
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 35,
+          "poliedro": 25
+        },
+        "eaten_flora_total": 991,
+        "eaten_particles_total": 3090,
+        "flora_level_sum": 199.189,
+        "particles_expired_total": 3206
+      },
+      "cpu": 28.42,
+      "memMiB": 217.8
+    },
+    {
+      "t": 845605,
+      "stats": {
+        "tick": 14445,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 1444529,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 759,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 794796,
+        "births_total": 310,
+        "deaths_total": {
+          "starvation": 98,
+          "predation": 6,
+          "old_age": 209
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 38,
+          "poliedro": 24
+        },
+        "eaten_flora_total": 993,
+        "eaten_particles_total": 3112,
+        "flora_level_sum": 199.325,
+        "particles_expired_total": 3238
+      },
+      "cpu": 30.99,
+      "memMiB": 215.6
+    },
+    {
+      "t": 855597,
+      "stats": {
+        "tick": 14545,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.729,
+        "observers": 52,
+        "uptime_ms": 1454525,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 773,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 804806,
+        "births_total": 314,
+        "deaths_total": {
+          "starvation": 99,
+          "predation": 6,
+          "old_age": 212
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 39,
+          "poliedro": 24
+        },
+        "eaten_flora_total": 997,
+        "eaten_particles_total": 3136,
+        "flora_level_sum": 198.84,
+        "particles_expired_total": 3259
+      },
+      "cpu": 28.5,
+      "memMiB": 215.2
+    },
+    {
+      "t": 865615,
+      "stats": {
+        "tick": 14645,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.732,
+        "observers": 52,
+        "uptime_ms": 1464538,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 748,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 814681,
+        "births_total": 317,
+        "deaths_total": {
+          "starvation": 99,
+          "predation": 6,
+          "old_age": 214
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 41,
+          "poliedro": 23
+        },
+        "eaten_flora_total": 1003,
+        "eaten_particles_total": 3166,
+        "flora_level_sum": 198.189,
+        "particles_expired_total": 3303
+      },
+      "cpu": 24.5,
+      "memMiB": 221.9
+    },
+    {
+      "t": 875597,
+      "stats": {
+        "tick": 14745,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.732,
+        "observers": 52,
+        "uptime_ms": 1474524,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 755,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 824588,
+        "births_total": 319,
+        "deaths_total": {
+          "starvation": 99,
+          "predation": 6,
+          "old_age": 217
+        },
+        "population_by_species": {
+          "membrana": 183,
+          "casco": 42,
+          "poliedro": 22
+        },
+        "eaten_flora_total": 1007,
+        "eaten_particles_total": 3190,
+        "flora_level_sum": 198.452,
+        "particles_expired_total": 3333
+      },
+      "cpu": 27.28,
+      "memMiB": 221.2
+    },
+    {
+      "t": 885607,
+      "stats": {
+        "tick": 14845,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.726,
+        "observers": 52,
+        "uptime_ms": 1484533,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 733,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 834703,
+        "births_total": 322,
+        "deaths_total": {
+          "starvation": 99,
+          "predation": 6,
+          "old_age": 218
+        },
+        "population_by_species": {
+          "membrana": 186,
+          "casco": 42,
+          "poliedro": 21
+        },
+        "eaten_flora_total": 1017,
+        "eaten_particles_total": 3215,
+        "flora_level_sum": 197.502,
+        "particles_expired_total": 3372
+      },
+      "cpu": 33.23,
+      "memMiB": 221.3
+    },
+    {
+      "t": 895601,
+      "stats": {
+        "tick": 14945,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.581,
+        "jitter_ms_p99": 1.717,
+        "observers": 52,
+        "uptime_ms": 1494532,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 726,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 845169,
+        "births_total": 323,
+        "deaths_total": {
+          "starvation": 99,
+          "predation": 6,
+          "old_age": 221
+        },
+        "population_by_species": {
+          "membrana": 184,
+          "casco": 42,
+          "poliedro": 21
+        },
+        "eaten_flora_total": 1024,
+        "eaten_particles_total": 3241,
+        "flora_level_sum": 197.543,
+        "particles_expired_total": 3406
+      },
+      "cpu": 27.38,
+      "memMiB": 220.9
+    },
+    {
+      "t": 905699,
+      "stats": {
+        "tick": 15046,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.713,
+        "observers": 52,
+        "uptime_ms": 1504603,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 745,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 855601,
+        "births_total": 328,
+        "deaths_total": {
+          "starvation": 101,
+          "predation": 6,
+          "old_age": 223
+        },
+        "population_by_species": {
+          "membrana": 186,
+          "casco": 42,
+          "poliedro": 20
+        },
+        "eaten_flora_total": 1028,
+        "eaten_particles_total": 3262,
+        "flora_level_sum": 197.958,
+        "particles_expired_total": 3430
+      },
+      "cpu": 22.91,
+      "memMiB": 214.8
+    },
+    {
+      "t": 916388,
+      "stats": {
+        "tick": 15150,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.713,
+        "observers": 52,
+        "uptime_ms": 1515033,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 770,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 866226,
+        "births_total": 331,
+        "deaths_total": {
+          "starvation": 103,
+          "predation": 6,
+          "old_age": 227
+        },
+        "population_by_species": {
+          "membrana": 183,
+          "casco": 42,
+          "poliedro": 20
+        },
+        "eaten_flora_total": 1036,
+        "eaten_particles_total": 3288,
+        "flora_level_sum": 197.436,
+        "particles_expired_total": 3450
+      },
+      "cpu": 29.06,
+      "memMiB": 209.1
+    },
+    {
+      "t": 925663,
+      "stats": {
+        "tick": 15245,
+        "population": 244,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.566,
+        "jitter_ms_p99": 1.718,
+        "observers": 52,
+        "uptime_ms": 1524551,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 800,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 875641,
+        "births_total": 336,
+        "deaths_total": {
+          "starvation": 104,
+          "predation": 6,
+          "old_age": 232
+        },
+        "population_by_species": {
+          "membrana": 182,
+          "casco": 42,
+          "poliedro": 20
+        },
+        "eaten_flora_total": 1040,
+        "eaten_particles_total": 3311,
+        "flora_level_sum": 197.992,
+        "particles_expired_total": 3462
+      },
+      "cpu": 28.22,
+      "memMiB": 209.6
+    },
+    {
+      "t": 935681,
+      "stats": {
+        "tick": 15346,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.743,
+        "observers": 52,
+        "uptime_ms": 1534578,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 791,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 885779,
+        "births_total": 342,
+        "deaths_total": {
+          "starvation": 105,
+          "predation": 6,
+          "old_age": 232
+        },
+        "population_by_species": {
+          "membrana": 188,
+          "casco": 42,
+          "poliedro": 19
+        },
+        "eaten_flora_total": 1047,
+        "eaten_particles_total": 3343,
+        "flora_level_sum": 197.536,
+        "particles_expired_total": 3482
+      },
+      "cpu": 28.09,
+      "memMiB": 214.5
+    },
+    {
+      "t": 945704,
+      "stats": {
+        "tick": 15446,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.743,
+        "observers": 52,
+        "uptime_ms": 1544601,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 786,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 896035,
+        "births_total": 343,
+        "deaths_total": {
+          "starvation": 105,
+          "predation": 6,
+          "old_age": 233
+        },
+        "population_by_species": {
+          "membrana": 188,
+          "casco": 42,
+          "poliedro": 19
+        },
+        "eaten_flora_total": 1049,
+        "eaten_particles_total": 3362,
+        "flora_level_sum": 198.464,
+        "particles_expired_total": 3512
+      },
+      "cpu": 23.87,
+      "memMiB": 212.6
+    },
+    {
+      "t": 955650,
+      "stats": {
+        "tick": 15545,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.743,
+        "observers": 52,
+        "uptime_ms": 1554565,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 787,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 906209,
+        "births_total": 344,
+        "deaths_total": {
+          "starvation": 106,
+          "predation": 6,
+          "old_age": 234
+        },
+        "population_by_species": {
+          "membrana": 187,
+          "casco": 43,
+          "poliedro": 18
+        },
+        "eaten_flora_total": 1051,
+        "eaten_particles_total": 3387,
+        "flora_level_sum": 198.968,
+        "particles_expired_total": 3533
+      },
+      "cpu": 28.12,
+      "memMiB": 219.6
+    },
+    {
+      "t": 965657,
+      "stats": {
+        "tick": 15646,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.557,
+        "jitter_ms_p99": 1.743,
+        "observers": 52,
+        "uptime_ms": 1564578,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 774,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 916785,
+        "births_total": 346,
+        "deaths_total": {
+          "starvation": 106,
+          "predation": 6,
+          "old_age": 234
+        },
+        "population_by_species": {
+          "membrana": 188,
+          "casco": 44,
+          "poliedro": 18
+        },
+        "eaten_flora_total": 1054,
+        "eaten_particles_total": 3411,
+        "flora_level_sum": 198.884,
+        "particles_expired_total": 3563
+      },
+      "cpu": 28.33,
+      "memMiB": 220.2
+    },
+    {
+      "t": 975656,
+      "stats": {
+        "tick": 15746,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.554,
+        "jitter_ms_p99": 1.726,
+        "observers": 52,
+        "uptime_ms": 1574576,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 753,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 927346,
+        "births_total": 347,
+        "deaths_total": {
+          "starvation": 106,
+          "predation": 6,
+          "old_age": 236
+        },
+        "population_by_species": {
+          "membrana": 187,
+          "casco": 44,
+          "poliedro": 18
+        },
+        "eaten_flora_total": 1059,
+        "eaten_particles_total": 3442,
+        "flora_level_sum": 198.192,
+        "particles_expired_total": 3594
+      },
+      "cpu": 26.17,
+      "memMiB": 216
+    },
+    {
+      "t": 985661,
+      "stats": {
+        "tick": 15846,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.708,
+        "observers": 52,
+        "uptime_ms": 1584592,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 752,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 938135,
+        "births_total": 348,
+        "deaths_total": {
+          "starvation": 110,
+          "predation": 6,
+          "old_age": 237
+        },
+        "population_by_species": {
+          "membrana": 185,
+          "casco": 43,
+          "poliedro": 17
+        },
+        "eaten_flora_total": 1060,
+        "eaten_particles_total": 3469,
+        "flora_level_sum": 198.565,
+        "particles_expired_total": 3630
+      },
+      "cpu": 24.32,
+      "memMiB": 211.8
+    },
+    {
+      "t": 995662,
+      "stats": {
+        "tick": 15946,
+        "population": 244,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.705,
+        "observers": 52,
+        "uptime_ms": 1594595,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 770,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 948419,
+        "births_total": 354,
+        "deaths_total": {
+          "starvation": 115,
+          "predation": 6,
+          "old_age": 239
+        },
+        "population_by_species": {
+          "membrana": 187,
+          "casco": 42,
+          "poliedro": 15
+        },
+        "eaten_flora_total": 1065,
+        "eaten_particles_total": 3501,
+        "flora_level_sum": 198.089,
+        "particles_expired_total": 3656
+      },
+      "cpu": 27.63,
+      "memMiB": 216.4
+    },
+    {
+      "t": 1005791,
+      "stats": {
+        "tick": 16046,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.566,
+        "jitter_ms_p99": 1.689,
+        "observers": 52,
+        "uptime_ms": 1604664,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 759,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 958694,
+        "births_total": 361,
+        "deaths_total": {
+          "starvation": 115,
+          "predation": 6,
+          "old_age": 240
+        },
+        "population_by_species": {
+          "membrana": 193,
+          "casco": 42,
+          "poliedro": 15
+        },
+        "eaten_flora_total": 1070,
+        "eaten_particles_total": 3524,
+        "flora_level_sum": 197.861,
+        "particles_expired_total": 3685
+      },
+      "cpu": 26.51,
+      "memMiB": 215.6
+    },
+    {
+      "t": 1015893,
+      "stats": {
+        "tick": 16147,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.566,
+        "jitter_ms_p99": 1.697,
+        "observers": 52,
+        "uptime_ms": 1614710,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 727,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 969423,
+        "births_total": 361,
+        "deaths_total": {
+          "starvation": 115,
+          "predation": 6,
+          "old_age": 240
+        },
+        "population_by_species": {
+          "membrana": 193,
+          "casco": 42,
+          "poliedro": 15
+        },
+        "eaten_flora_total": 1072,
+        "eaten_particles_total": 3550,
+        "flora_level_sum": 198.281,
+        "particles_expired_total": 3725
+      },
+      "cpu": 27.59,
+      "memMiB": 216.3
+    },
+    {
+      "t": 1025928,
+      "stats": {
+        "tick": 16247,
+        "population": 242,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.7,
+        "observers": 52,
+        "uptime_ms": 1624726,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 748,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 979873,
+        "births_total": 361,
+        "deaths_total": {
+          "starvation": 118,
+          "predation": 6,
+          "old_age": 245
+        },
+        "population_by_species": {
+          "membrana": 189,
+          "casco": 41,
+          "poliedro": 12
+        },
+        "eaten_flora_total": 1077,
+        "eaten_particles_total": 3577,
+        "flora_level_sum": 198.137,
+        "particles_expired_total": 3764
+      },
+      "cpu": 38.72,
+      "memMiB": 214.8
+    },
+    {
+      "t": 1035732,
+      "stats": {
+        "tick": 16346,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.707,
+        "observers": 52,
+        "uptime_ms": 1634632,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 750,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 989738,
+        "births_total": 370,
+        "deaths_total": {
+          "starvation": 119,
+          "predation": 6,
+          "old_age": 249
+        },
+        "population_by_species": {
+          "membrana": 193,
+          "casco": 43,
+          "poliedro": 10
+        },
+        "eaten_flora_total": 1085,
+        "eaten_particles_total": 3607,
+        "flora_level_sum": 197.487,
+        "particles_expired_total": 3800
+      },
+      "cpu": 27.3,
+      "memMiB": 213.8
+    },
+    {
+      "t": 1045673,
+      "stats": {
+        "tick": 16446,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.687,
+        "observers": 52,
+        "uptime_ms": 1644607,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 771,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 999340,
+        "births_total": 376,
+        "deaths_total": {
+          "starvation": 120,
+          "predation": 6,
+          "old_age": 255
+        },
+        "population_by_species": {
+          "membrana": 193,
+          "casco": 43,
+          "poliedro": 9
+        },
+        "eaten_flora_total": 1088,
+        "eaten_particles_total": 3637,
+        "flora_level_sum": 197.866,
+        "particles_expired_total": 3828
+      },
+      "cpu": 24.32,
+      "memMiB": 213.6
+    },
+    {
+      "t": 1055724,
+      "stats": {
+        "tick": 16546,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.687,
+        "observers": 52,
+        "uptime_ms": 1654629,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 762,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1008741,
+        "births_total": 381,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 6,
+          "old_age": 256
+        },
+        "population_by_species": {
+          "membrana": 195,
+          "casco": 43,
+          "poliedro": 9
+        },
+        "eaten_flora_total": 1096,
+        "eaten_particles_total": 3664,
+        "flora_level_sum": 197.01,
+        "particles_expired_total": 3858
+      },
+      "cpu": 27.07,
+      "memMiB": 220.3
+    },
+    {
+      "t": 1065682,
+      "stats": {
+        "tick": 16646,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.696,
+        "observers": 52,
+        "uptime_ms": 1664619,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 753,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1018376,
+        "births_total": 385,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 6,
+          "old_age": 259
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 43,
+          "poliedro": 9
+        },
+        "eaten_flora_total": 1103,
+        "eaten_particles_total": 3694,
+        "flora_level_sum": 196.815,
+        "particles_expired_total": 3886
+      },
+      "cpu": 33.55,
+      "memMiB": 216.6
+    },
+    {
+      "t": 1075682,
+      "stats": {
+        "tick": 16746,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.687,
+        "observers": 52,
+        "uptime_ms": 1674619,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 766,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1027876,
+        "births_total": 388,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 6,
+          "old_age": 265
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 43,
+          "poliedro": 8
+        },
+        "eaten_flora_total": 1107,
+        "eaten_particles_total": 3723,
+        "flora_level_sum": 197.697,
+        "particles_expired_total": 3904
+      },
+      "cpu": 27.07,
+      "memMiB": 217.8
+    },
+    {
+      "t": 1085728,
+      "stats": {
+        "tick": 16846,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.683,
+        "observers": 52,
+        "uptime_ms": 1684633,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 759,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1037235,
+        "births_total": 393,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 6,
+          "old_age": 267
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 44,
+          "poliedro": 8
+        },
+        "eaten_flora_total": 1117,
+        "eaten_particles_total": 3759,
+        "flora_level_sum": 197.474,
+        "particles_expired_total": 3939
+      },
+      "cpu": 25.79,
+      "memMiB": 222.3
+    },
+    {
+      "t": 1095694,
+      "stats": {
+        "tick": 16946,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.562,
+        "jitter_ms_p99": 1.696,
+        "observers": 52,
+        "uptime_ms": 1694617,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 764,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1046574,
+        "births_total": 395,
+        "deaths_total": {
+          "starvation": 123,
+          "predation": 6,
+          "old_age": 269
+        },
+        "population_by_species": {
+          "membrana": 195,
+          "casco": 45,
+          "poliedro": 7
+        },
+        "eaten_flora_total": 1125,
+        "eaten_particles_total": 3787,
+        "flora_level_sum": 197.005,
+        "particles_expired_total": 3964
+      },
+      "cpu": 26.18,
+      "memMiB": 220.9
+    },
+    {
+      "t": 1105838,
+      "stats": {
+        "tick": 17047,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.707,
+        "observers": 52,
+        "uptime_ms": 1704721,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 765,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1055582,
+        "births_total": 398,
+        "deaths_total": {
+          "starvation": 123,
+          "predation": 6,
+          "old_age": 272
+        },
+        "population_by_species": {
+          "membrana": 193,
+          "casco": 47,
+          "poliedro": 7
+        },
+        "eaten_flora_total": 1129,
+        "eaten_particles_total": 3819,
+        "flora_level_sum": 197.595,
+        "particles_expired_total": 3994
+      },
+      "cpu": 28.59,
+      "memMiB": 228.9
+    },
+    {
+      "t": 1115769,
+      "stats": {
+        "tick": 17146,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.696,
+        "observers": 52,
+        "uptime_ms": 1714651,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 749,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1064413,
+        "births_total": 401,
+        "deaths_total": {
+          "starvation": 123,
+          "predation": 6,
+          "old_age": 274
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 47,
+          "poliedro": 7
+        },
+        "eaten_flora_total": 1139,
+        "eaten_particles_total": 3854,
+        "flora_level_sum": 196.791,
+        "particles_expired_total": 4019
+      },
+      "cpu": 27.88,
+      "memMiB": 230.6
+    },
+    {
+      "t": 1125686,
+      "stats": {
+        "tick": 17246,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.566,
+        "jitter_ms_p99": 1.736,
+        "observers": 52,
+        "uptime_ms": 1724620,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 755,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1073279,
+        "births_total": 404,
+        "deaths_total": {
+          "starvation": 125,
+          "predation": 6,
+          "old_age": 276
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1149,
+        "eaten_particles_total": 3890,
+        "flora_level_sum": 196.5,
+        "particles_expired_total": 4045
+      },
+      "cpu": 29.55,
+      "memMiB": 226.2
+    },
+    {
+      "t": 1135853,
+      "stats": {
+        "tick": 17347,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.552,
+        "jitter_ms_p99": 1.752,
+        "observers": 52,
+        "uptime_ms": 1734674,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 763,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1082264,
+        "births_total": 407,
+        "deaths_total": {
+          "starvation": 126,
+          "predation": 6,
+          "old_age": 278
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1155,
+        "eaten_particles_total": 3921,
+        "flora_level_sum": 197.283,
+        "particles_expired_total": 4067
+      },
+      "cpu": 28.32,
+      "memMiB": 229.8
+    },
+    {
+      "t": 1145807,
+      "stats": {
+        "tick": 17447,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.558,
+        "jitter_ms_p99": 1.752,
+        "observers": 52,
+        "uptime_ms": 1744667,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 771,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1091207,
+        "births_total": 411,
+        "deaths_total": {
+          "starvation": 126,
+          "predation": 6,
+          "old_age": 279
+        },
+        "population_by_species": {
+          "membrana": 197,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1165,
+        "eaten_particles_total": 3943,
+        "flora_level_sum": 196.307,
+        "particles_expired_total": 4084
+      },
+      "cpu": 28.63,
+      "memMiB": 221.7
+    },
+    {
+      "t": 1155830,
+      "stats": {
+        "tick": 17547,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.752,
+        "observers": 52,
+        "uptime_ms": 1754671,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 772,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1100584,
+        "births_total": 411,
+        "deaths_total": {
+          "starvation": 127,
+          "predation": 6,
+          "old_age": 281
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1173,
+        "eaten_particles_total": 3976,
+        "flora_level_sum": 196.491,
+        "particles_expired_total": 4107
+      },
+      "cpu": 26.42,
+      "memMiB": 226.7
+    },
+    {
+      "t": 1166064,
+      "stats": {
+        "tick": 17649,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.579,
+        "jitter_ms_p99": 1.752,
+        "observers": 52,
+        "uptime_ms": 1764870,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 762,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1110407,
+        "births_total": 414,
+        "deaths_total": {
+          "starvation": 128,
+          "predation": 6,
+          "old_age": 283
+        },
+        "population_by_species": {
+          "membrana": 195,
+          "casco": 47,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1176,
+        "eaten_particles_total": 4003,
+        "flora_level_sum": 197.579,
+        "particles_expired_total": 4134
+      },
+      "cpu": 29.91,
+      "memMiB": 228.4
+    },
+    {
+      "t": 1175735,
+      "stats": {
+        "tick": 17746,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.76,
+        "observers": 52,
+        "uptime_ms": 1774658,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 748,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1119855,
+        "births_total": 418,
+        "deaths_total": {
+          "starvation": 128,
+          "predation": 6,
+          "old_age": 285
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1185,
+        "eaten_particles_total": 4023,
+        "flora_level_sum": 197.108,
+        "particles_expired_total": 4173
+      },
+      "cpu": 30.79,
+      "memMiB": 222.6
+    },
+    {
+      "t": 1185869,
+      "stats": {
+        "tick": 17847,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.582,
+        "jitter_ms_p99": 1.766,
+        "observers": 52,
+        "uptime_ms": 1784705,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 741,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1129855,
+        "births_total": 419,
+        "deaths_total": {
+          "starvation": 128,
+          "predation": 6,
+          "old_age": 287
+        },
+        "population_by_species": {
+          "membrana": 195,
+          "casco": 48,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1191,
+        "eaten_particles_total": 4052,
+        "flora_level_sum": 197.489,
+        "particles_expired_total": 4191
+      },
+      "cpu": 25.55,
+      "memMiB": 220.1
+    },
+    {
+      "t": 1195883,
+      "stats": {
+        "tick": 17947,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.583,
+        "jitter_ms_p99": 1.766,
+        "observers": 52,
+        "uptime_ms": 1794755,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 750,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1139648,
+        "births_total": 422,
+        "deaths_total": {
+          "starvation": 129,
+          "predation": 6,
+          "old_age": 289
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 49,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1198,
+        "eaten_particles_total": 4086,
+        "flora_level_sum": 197.644,
+        "particles_expired_total": 4205
+      },
+      "cpu": 25.91,
+      "memMiB": 229.4
+    },
+    {
+      "t": 1205802,
+      "stats": {
+        "tick": 18047,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.764,
+        "observers": 52,
+        "uptime_ms": 1804705,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 724,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1149634,
+        "births_total": 424,
+        "deaths_total": {
+          "starvation": 129,
+          "predation": 6,
+          "old_age": 290
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 50,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1205,
+        "eaten_particles_total": 4116,
+        "flora_level_sum": 197.657,
+        "particles_expired_total": 4254
+      },
+      "cpu": 23.14,
+      "memMiB": 228.2
+    },
+    {
+      "t": 1215784,
+      "stats": {
+        "tick": 18147,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.749,
+        "observers": 52,
+        "uptime_ms": 1814708,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 724,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1159628,
+        "births_total": 425,
+        "deaths_total": {
+          "starvation": 130,
+          "predation": 6,
+          "old_age": 294
+        },
+        "population_by_species": {
+          "membrana": 190,
+          "casco": 50,
+          "poliedro": 5
+        },
+        "eaten_flora_total": 1207,
+        "eaten_particles_total": 4147,
+        "flora_level_sum": 198.804,
+        "particles_expired_total": 4283
+      },
+      "cpu": 27.26,
+      "memMiB": 226.8
+    },
+    {
+      "t": 1225767,
+      "stats": {
+        "tick": 18247,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.749,
+        "observers": 52,
+        "uptime_ms": 1824702,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 709,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1169611,
+        "births_total": 430,
+        "deaths_total": {
+          "starvation": 131,
+          "predation": 6,
+          "old_age": 294
+        },
+        "population_by_species": {
+          "membrana": 194,
+          "casco": 51,
+          "poliedro": 4
+        },
+        "eaten_flora_total": 1212,
+        "eaten_particles_total": 4174,
+        "flora_level_sum": 198.769,
+        "particles_expired_total": 4315
+      },
+      "cpu": 24.19,
+      "memMiB": 226.3
+    },
+    {
+      "t": 1235786,
+      "stats": {
+        "tick": 18347,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.563,
+        "jitter_ms_p99": 1.731,
+        "observers": 52,
+        "uptime_ms": 1834717,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 705,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1179715,
+        "births_total": 433,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 295
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 50,
+          "poliedro": 4
+        },
+        "eaten_flora_total": 1219,
+        "eaten_particles_total": 4208,
+        "flora_level_sum": 197.981,
+        "particles_expired_total": 4336
+      },
+      "cpu": 28.1,
+      "memMiB": 224.1
+    },
+    {
+      "t": 1245834,
+      "stats": {
+        "tick": 18447,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.562,
+        "jitter_ms_p99": 1.702,
+        "observers": 52,
+        "uptime_ms": 1844730,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 688,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1190206,
+        "births_total": 433,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 295
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 50,
+          "poliedro": 4
+        },
+        "eaten_flora_total": 1222,
+        "eaten_particles_total": 4237,
+        "flora_level_sum": 198.401,
+        "particles_expired_total": 4355
+      },
+      "cpu": 26.3,
+      "memMiB": 224
+    },
+    {
+      "t": 1255789,
+      "stats": {
+        "tick": 18547,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.681,
+        "observers": 52,
+        "uptime_ms": 1854721,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 686,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1201042,
+        "births_total": 433,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 296
+        },
+        "population_by_species": {
+          "membrana": 196,
+          "casco": 50,
+          "poliedro": 3
+        },
+        "eaten_flora_total": 1229,
+        "eaten_particles_total": 4258,
+        "flora_level_sum": 198.33,
+        "particles_expired_total": 4384
+      },
+      "cpu": 23.29,
+      "memMiB": 219.8
+    },
+    {
+      "t": 1265791,
+      "stats": {
+        "tick": 18647,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.694,
+        "observers": 52,
+        "uptime_ms": 1864714,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 689,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1212062,
+        "births_total": 434,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 299
+        },
+        "population_by_species": {
+          "membrana": 195,
+          "casco": 49,
+          "poliedro": 3
+        },
+        "eaten_flora_total": 1238,
+        "eaten_particles_total": 4282,
+        "flora_level_sum": 197.704,
+        "particles_expired_total": 4408
+      },
+      "cpu": 24.53,
+      "memMiB": 227.3
+    },
+    {
+      "t": 1275775,
+      "stats": {
+        "tick": 18747,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.567,
+        "jitter_ms_p99": 1.678,
+        "observers": 52,
+        "uptime_ms": 1874699,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 703,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1222653,
+        "births_total": 440,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 305
+        },
+        "population_by_species": {
+          "membrana": 200,
+          "casco": 44,
+          "poliedro": 3
+        },
+        "eaten_flora_total": 1242,
+        "eaten_particles_total": 4306,
+        "flora_level_sum": 198.223,
+        "particles_expired_total": 4443
+      },
+      "cpu": 21.9,
+      "memMiB": 225.8
+    },
+    {
+      "t": 1285813,
+      "stats": {
+        "tick": 18847,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.682,
+        "observers": 52,
+        "uptime_ms": 1884723,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 706,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1233288,
+        "births_total": 444,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 309
+        },
+        "population_by_species": {
+          "membrana": 202,
+          "casco": 43,
+          "poliedro": 2
+        },
+        "eaten_flora_total": 1248,
+        "eaten_particles_total": 4337,
+        "flora_level_sum": 198.224,
+        "particles_expired_total": 4470
+      },
+      "cpu": 23.83,
+      "memMiB": 222.8
+    },
+    {
+      "t": 1295847,
+      "stats": {
+        "tick": 18947,
+        "population": 243,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.681,
+        "observers": 52,
+        "uptime_ms": 1894742,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 725,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1244098,
+        "births_total": 447,
+        "deaths_total": {
+          "starvation": 132,
+          "predation": 6,
+          "old_age": 316
+        },
+        "population_by_species": {
+          "membrana": 200,
+          "casco": 41,
+          "poliedro": 2
+        },
+        "eaten_flora_total": 1252,
+        "eaten_particles_total": 4367,
+        "flora_level_sum": 198.71,
+        "particles_expired_total": 4492
+      },
+      "cpu": 24.06,
+      "memMiB": 227.9
+    },
+    {
+      "t": 1305811,
+      "stats": {
+        "tick": 19047,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.681,
+        "observers": 52,
+        "uptime_ms": 1904730,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 723,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1254862,
+        "births_total": 455,
+        "deaths_total": {
+          "starvation": 134,
+          "predation": 6,
+          "old_age": 318
+        },
+        "population_by_species": {
+          "membrana": 206,
+          "casco": 39,
+          "poliedro": 2
+        },
+        "eaten_flora_total": 1257,
+        "eaten_particles_total": 4393,
+        "flora_level_sum": 198.415,
+        "particles_expired_total": 4521
+      },
+      "cpu": 24.78,
+      "memMiB": 226.9
+    },
+    {
+      "t": 1315818,
+      "stats": {
+        "tick": 19147,
+        "population": 244,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.67,
+        "observers": 52,
+        "uptime_ms": 1914735,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 735,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1265374,
+        "births_total": 458,
+        "deaths_total": {
+          "starvation": 135,
+          "predation": 6,
+          "old_age": 323
+        },
+        "population_by_species": {
+          "membrana": 203,
+          "casco": 39,
+          "poliedro": 2
+        },
+        "eaten_flora_total": 1266,
+        "eaten_particles_total": 4417,
+        "flora_level_sum": 197.414,
+        "particles_expired_total": 4556
+      },
+      "cpu": 22.34,
+      "memMiB": 220.8
+    },
+    {
+      "t": 1325803,
+      "stats": {
+        "tick": 19247,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.666,
+        "observers": 52,
+        "uptime_ms": 1924732,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 749,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1275489,
+        "births_total": 464,
+        "deaths_total": {
+          "starvation": 136,
+          "predation": 6,
+          "old_age": 326
+        },
+        "population_by_species": {
+          "membrana": 207,
+          "casco": 38,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1267,
+        "eaten_particles_total": 4439,
+        "flora_level_sum": 198.669,
+        "particles_expired_total": 4580
+      },
+      "cpu": 26.6,
+      "memMiB": 220.2
+    },
+    {
+      "t": 1335806,
+      "stats": {
+        "tick": 19347,
+        "population": 243,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.688,
+        "observers": 52,
+        "uptime_ms": 1934732,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 768,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1285304,
+        "births_total": 468,
+        "deaths_total": {
+          "starvation": 137,
+          "predation": 6,
+          "old_age": 332
+        },
+        "population_by_species": {
+          "membrana": 206,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1269,
+        "eaten_particles_total": 4468,
+        "flora_level_sum": 199.3,
+        "particles_expired_total": 4602
+      },
+      "cpu": 26.28,
+      "memMiB": 228.6
+    },
+    {
+      "t": 1345876,
+      "stats": {
+        "tick": 19448,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.686,
+        "observers": 52,
+        "uptime_ms": 1944763,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 755,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1294994,
+        "births_total": 475,
+        "deaths_total": {
+          "starvation": 137,
+          "predation": 6,
+          "old_age": 333
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 37,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1271,
+        "eaten_particles_total": 4496,
+        "flora_level_sum": 199.542,
+        "particles_expired_total": 4624
+      },
+      "cpu": 32.1,
+      "memMiB": 231.9
+    },
+    {
+      "t": 1355817,
+      "stats": {
+        "tick": 19547,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.715,
+        "observers": 52,
+        "uptime_ms": 1954745,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 748,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1304454,
+        "births_total": 477,
+        "deaths_total": {
+          "starvation": 138,
+          "predation": 6,
+          "old_age": 334
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 37,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1275,
+        "eaten_particles_total": 4523,
+        "flora_level_sum": 199.034,
+        "particles_expired_total": 4643
+      },
+      "cpu": 25.28,
+      "memMiB": 226.3
+    },
+    {
+      "t": 1365862,
+      "stats": {
+        "tick": 19648,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.727,
+        "observers": 52,
+        "uptime_ms": 1964783,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 731,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1314078,
+        "births_total": 478,
+        "deaths_total": {
+          "starvation": 138,
+          "predation": 6,
+          "old_age": 335
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 37,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1283,
+        "eaten_particles_total": 4555,
+        "flora_level_sum": 198.216,
+        "particles_expired_total": 4667
+      },
+      "cpu": 25.34,
+      "memMiB": 225.5
+    },
+    {
+      "t": 1375841,
+      "stats": {
+        "tick": 19748,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.73,
+        "observers": 52,
+        "uptime_ms": 1974775,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 723,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1323954,
+        "births_total": 479,
+        "deaths_total": {
+          "starvation": 138,
+          "predation": 6,
+          "old_age": 336
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 37,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1287,
+        "eaten_particles_total": 4586,
+        "flora_level_sum": 198.616,
+        "particles_expired_total": 4692
+      },
+      "cpu": 20.38,
+      "memMiB": 226.1
+    },
+    {
+      "t": 1385847,
+      "stats": {
+        "tick": 19848,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.577,
+        "jitter_ms_p99": 1.73,
+        "observers": 52,
+        "uptime_ms": 1984777,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 717,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1333990,
+        "births_total": 480,
+        "deaths_total": {
+          "starvation": 138,
+          "predation": 6,
+          "old_age": 337
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1290,
+        "eaten_particles_total": 4615,
+        "flora_level_sum": 198.918,
+        "particles_expired_total": 4715
+      },
+      "cpu": 23.51,
+      "memMiB": 222.8
+    },
+    {
+      "t": 1395920,
+      "stats": {
+        "tick": 19948,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.706,
+        "observers": 52,
+        "uptime_ms": 1994823,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 704,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1344190,
+        "births_total": 481,
+        "deaths_total": {
+          "starvation": 138,
+          "predation": 6,
+          "old_age": 337
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1295,
+        "eaten_particles_total": 4635,
+        "flora_level_sum": 198.595,
+        "particles_expired_total": 4747
+      },
+      "cpu": 23.39,
+      "memMiB": 221
+    },
+    {
+      "t": 1405895,
+      "stats": {
+        "tick": 20048,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.706,
+        "observers": 52,
+        "uptime_ms": 2004797,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 716,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1354454,
+        "births_total": 482,
+        "deaths_total": {
+          "starvation": 139,
+          "predation": 6,
+          "old_age": 340
+        },
+        "population_by_species": {
+          "membrana": 210,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1297,
+        "eaten_particles_total": 4671,
+        "flora_level_sum": 199.213,
+        "particles_expired_total": 4768
+      },
+      "cpu": 24.91,
+      "memMiB": 224.9
+    },
+    {
+      "t": 1415902,
+      "stats": {
+        "tick": 20148,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.703,
+        "observers": 52,
+        "uptime_ms": 2014804,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 719,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1364899,
+        "births_total": 485,
+        "deaths_total": {
+          "starvation": 140,
+          "predation": 6,
+          "old_age": 342
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 35,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1304,
+        "eaten_particles_total": 4694,
+        "flora_level_sum": 198.571,
+        "particles_expired_total": 4800
+      },
+      "cpu": 27.92,
+      "memMiB": 223.6
+    },
+    {
+      "t": 1425917,
+      "stats": {
+        "tick": 20248,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.694,
+        "observers": 52,
+        "uptime_ms": 2024821,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 727,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1375550,
+        "births_total": 488,
+        "deaths_total": {
+          "starvation": 142,
+          "predation": 6,
+          "old_age": 344
+        },
+        "population_by_species": {
+          "membrana": 209,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1309,
+        "eaten_particles_total": 4725,
+        "flora_level_sum": 198.424,
+        "particles_expired_total": 4817
+      },
+      "cpu": 24.01,
+      "memMiB": 224.7
+    },
+    {
+      "t": 1435866,
+      "stats": {
+        "tick": 20348,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.708,
+        "observers": 52,
+        "uptime_ms": 2034800,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 702,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1386179,
+        "births_total": 492,
+        "deaths_total": {
+          "starvation": 143,
+          "predation": 6,
+          "old_age": 344
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1316,
+        "eaten_particles_total": 4760,
+        "flora_level_sum": 197.712,
+        "particles_expired_total": 4843
+      },
+      "cpu": 22.69,
+      "memMiB": 223.4
+    },
+    {
+      "t": 1445872,
+      "stats": {
+        "tick": 20448,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.719,
+        "observers": 52,
+        "uptime_ms": 2044804,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 721,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1396977,
+        "births_total": 493,
+        "deaths_total": {
+          "starvation": 144,
+          "predation": 6,
+          "old_age": 347
+        },
+        "population_by_species": {
+          "membrana": 209,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1323,
+        "eaten_particles_total": 4785,
+        "flora_level_sum": 197.552,
+        "particles_expired_total": 4869
+      },
+      "cpu": 28.53,
+      "memMiB": 221.8
+    },
+    {
+      "t": 1455905,
+      "stats": {
+        "tick": 20548,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.741,
+        "observers": 52,
+        "uptime_ms": 2054813,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 697,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1407864,
+        "births_total": 498,
+        "deaths_total": {
+          "starvation": 145,
+          "predation": 6,
+          "old_age": 347
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 37,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1328,
+        "eaten_particles_total": 4813,
+        "flora_level_sum": 198.003,
+        "particles_expired_total": 4905
+      },
+      "cpu": 23.6,
+      "memMiB": 219.5
+    },
+    {
+      "t": 1465922,
+      "stats": {
+        "tick": 20648,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.757,
+        "observers": 52,
+        "uptime_ms": 2064815,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 684,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1419073,
+        "births_total": 499,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 347
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1332,
+        "eaten_particles_total": 4843,
+        "flora_level_sum": 198.377,
+        "particles_expired_total": 4938
+      },
+      "cpu": 27.8,
+      "memMiB": 221.8
+    },
+    {
+      "t": 1475900,
+      "stats": {
+        "tick": 20748,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.58,
+        "jitter_ms_p99": 1.757,
+        "observers": 52,
+        "uptime_ms": 2074815,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 661,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1430708,
+        "births_total": 500,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 347
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1336,
+        "eaten_particles_total": 4867,
+        "flora_level_sum": 198.781,
+        "particles_expired_total": 4978
+      },
+      "cpu": 25.81,
+      "memMiB": 220.8
+    },
+    {
+      "t": 1485863,
+      "stats": {
+        "tick": 20848,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.578,
+        "jitter_ms_p99": 1.759,
+        "observers": 52,
+        "uptime_ms": 2084801,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 642,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1442745,
+        "births_total": 500,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 347
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1341,
+        "eaten_particles_total": 4899,
+        "flora_level_sum": 198.828,
+        "particles_expired_total": 5004
+      },
+      "cpu": 22.11,
+      "memMiB": 220
+    },
+    {
+      "t": 1495932,
+      "stats": {
+        "tick": 20948,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.734,
+        "observers": 52,
+        "uptime_ms": 2094827,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 626,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1454986,
+        "births_total": 500,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 348
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1347,
+        "eaten_particles_total": 4925,
+        "flora_level_sum": 198.555,
+        "particles_expired_total": 5033
+      },
+      "cpu": 24.71,
+      "memMiB": 221.5
+    },
+    {
+      "t": 1505910,
+      "stats": {
+        "tick": 21048,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.573,
+        "jitter_ms_p99": 1.721,
+        "observers": 52,
+        "uptime_ms": 2104834,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 620,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1467081,
+        "births_total": 501,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 351
+        },
+        "population_by_species": {
+          "membrana": 210,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1351,
+        "eaten_particles_total": 4957,
+        "flora_level_sum": 198.683,
+        "particles_expired_total": 5066
+      },
+      "cpu": 23.54,
+      "memMiB": 222.4
+    },
+    {
+      "t": 1515974,
+      "stats": {
+        "tick": 21149,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.571,
+        "jitter_ms_p99": 1.709,
+        "observers": 52,
+        "uptime_ms": 2114868,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 602,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1479615,
+        "births_total": 504,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 351
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1359,
+        "eaten_particles_total": 4983,
+        "flora_level_sum": 198.005,
+        "particles_expired_total": 5096
+      },
+      "cpu": 22.72,
+      "memMiB": 217.3
+    },
+    {
+      "t": 1525956,
+      "stats": {
+        "tick": 21249,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.663,
+        "observers": 52,
+        "uptime_ms": 2124870,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 603,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1492333,
+        "births_total": 504,
+        "deaths_total": {
+          "starvation": 147,
+          "predation": 6,
+          "old_age": 351
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 36,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1363,
+        "eaten_particles_total": 5013,
+        "flora_level_sum": 198.446,
+        "particles_expired_total": 5113
+      },
+      "cpu": 22.72,
+      "memMiB": 219.1
+    },
+    {
+      "t": 1535898,
+      "stats": {
+        "tick": 21348,
+        "population": 246,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.691,
+        "observers": 52,
+        "uptime_ms": 2134838,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 622,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1504838,
+        "births_total": 505,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 355
+        },
+        "population_by_species": {
+          "membrana": 210,
+          "casco": 35,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1366,
+        "eaten_particles_total": 5040,
+        "flora_level_sum": 198.839,
+        "particles_expired_total": 5129
+      },
+      "cpu": 26.56,
+      "memMiB": 223.1
+    },
+    {
+      "t": 1545913,
+      "stats": {
+        "tick": 21448,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.673,
+        "observers": 52,
+        "uptime_ms": 2144836,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 633,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1517556,
+        "births_total": 509,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 357
+        },
+        "population_by_species": {
+          "membrana": 212,
+          "casco": 35,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1370,
+        "eaten_particles_total": 5062,
+        "flora_level_sum": 199.014,
+        "particles_expired_total": 5143
+      },
+      "cpu": 22.14,
+      "memMiB": 232.2
+    },
+    {
+      "t": 1556002,
+      "stats": {
+        "tick": 21549,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.673,
+        "observers": 52,
+        "uptime_ms": 2154894,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 643,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1530495,
+        "births_total": 512,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 361
+        },
+        "population_by_species": {
+          "membrana": 211,
+          "casco": 35,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1376,
+        "eaten_particles_total": 5081,
+        "flora_level_sum": 198.635,
+        "particles_expired_total": 5169
+      },
+      "cpu": 23.87,
+      "memMiB": 218.4
+    },
+    {
+      "t": 1566049,
+      "stats": {
+        "tick": 21649,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.702,
+        "observers": 52,
+        "uptime_ms": 2164898,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 642,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1543366,
+        "births_total": 515,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 361
+        },
+        "population_by_species": {
+          "membrana": 214,
+          "casco": 35,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1376,
+        "eaten_particles_total": 5107,
+        "flora_level_sum": 199.636,
+        "particles_expired_total": 5189
+      },
+      "cpu": 27.14,
+      "memMiB": 224.3
+    },
+    {
+      "t": 1576036,
+      "stats": {
+        "tick": 21749,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.744,
+        "observers": 52,
+        "uptime_ms": 2174911,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 651,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177
+        },
+        "cap_holds": 1556504,
+        "births_total": 515,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 363
+        },
+        "population_by_species": {
+          "membrana": 213,
+          "casco": 34,
+          "poliedro": 1
+        },
+        "eaten_flora_total": 1379,
+        "eaten_particles_total": 5132,
+        "flora_level_sum": 199.423,
+        "particles_expired_total": 5206
+      },
+      "cpu": 26.78,
+      "memMiB": 224.6
+    },
+    {
+      "t": 1585951,
+      "stats": {
+        "tick": 21849,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.751,
+        "observers": 52,
+        "uptime_ms": 2184878,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 659,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1569719,
+        "births_total": 517,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 366
+        },
+        "population_by_species": {
+          "membrana": 214,
+          "casco": 33
+        },
+        "eaten_flora_total": 1381,
+        "eaten_particles_total": 5152,
+        "flora_level_sum": 199.592,
+        "particles_expired_total": 5234
+      },
+      "cpu": 26.7,
+      "memMiB": 229.7
+    },
+    {
+      "t": 1596014,
+      "stats": {
+        "tick": 21949,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.561,
+        "jitter_ms_p99": 1.748,
+        "observers": 52,
+        "uptime_ms": 2194902,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 643,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1582924,
+        "births_total": 520,
+        "deaths_total": {
+          "starvation": 148,
+          "predation": 6,
+          "old_age": 368
+        },
+        "population_by_species": {
+          "membrana": 216,
+          "casco": 32
+        },
+        "eaten_flora_total": 1384,
+        "eaten_particles_total": 5181,
+        "flora_level_sum": 199.257,
+        "particles_expired_total": 5264
+      },
+      "cpu": 21.04,
+      "memMiB": 219.7
+    },
+    {
+      "t": 1606104,
+      "stats": {
+        "tick": 22049,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.561,
+        "jitter_ms_p99": 1.748,
+        "observers": 52,
+        "uptime_ms": 2204932,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 637,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1596365,
+        "births_total": 522,
+        "deaths_total": {
+          "starvation": 149,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 216,
+          "casco": 32
+        },
+        "eaten_flora_total": 1387,
+        "eaten_particles_total": 5201,
+        "flora_level_sum": 199.352,
+        "particles_expired_total": 5295
+      },
+      "cpu": 26.37,
+      "memMiB": 221.7
+    },
+    {
+      "t": 1615986,
+      "stats": {
+        "tick": 22149,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.751,
+        "observers": 52,
+        "uptime_ms": 2214901,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 639,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1610002,
+        "births_total": 524,
+        "deaths_total": {
+          "starvation": 150,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 32
+        },
+        "eaten_flora_total": 1390,
+        "eaten_particles_total": 5223,
+        "flora_level_sum": 199.561,
+        "particles_expired_total": 5308
+      },
+      "cpu": 26.39,
+      "memMiB": 221.3
+    },
+    {
+      "t": 1625990,
+      "stats": {
+        "tick": 22249,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.745,
+        "observers": 52,
+        "uptime_ms": 2224902,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 622,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1623681,
+        "births_total": 526,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 219,
+          "casco": 31
+        },
+        "eaten_flora_total": 1394,
+        "eaten_particles_total": 5248,
+        "flora_level_sum": 199.122,
+        "particles_expired_total": 5340
+      },
+      "cpu": 30.93,
+      "memMiB": 225.8
+    },
+    {
+      "t": 1636084,
+      "stats": {
+        "tick": 22349,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.569,
+        "jitter_ms_p99": 1.745,
+        "observers": 52,
+        "uptime_ms": 2234930,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 608,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1637887,
+        "births_total": 526,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 219,
+          "casco": 31
+        },
+        "eaten_flora_total": 1401,
+        "eaten_particles_total": 5272,
+        "flora_level_sum": 198.203,
+        "particles_expired_total": 5361
+      },
+      "cpu": 27.66,
+      "memMiB": 220.2
+    },
+    {
+      "t": 1645955,
+      "stats": {
+        "tick": 22449,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.71,
+        "observers": 52,
+        "uptime_ms": 2244886,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 598,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1652410,
+        "births_total": 526,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 219,
+          "casco": 31
+        },
+        "eaten_flora_total": 1403,
+        "eaten_particles_total": 5302,
+        "flora_level_sum": 198.717,
+        "particles_expired_total": 5380
+      },
+      "cpu": 24.17,
+      "memMiB": 228.1
+    },
+    {
+      "t": 1655955,
+      "stats": {
+        "tick": 22549,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.71,
+        "observers": 52,
+        "uptime_ms": 2254891,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 598,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1667198,
+        "births_total": 526,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 6,
+          "old_age": 369
+        },
+        "population_by_species": {
+          "membrana": 219,
+          "casco": 31
+        },
+        "eaten_flora_total": 1408,
+        "eaten_particles_total": 5329,
+        "flora_level_sum": 198.369,
+        "particles_expired_total": 5404
+      },
+      "cpu": 25.56,
+      "memMiB": 227.4
+    },
+    {
+      "t": 1665951,
+      "stats": {
+        "tick": 22649,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.574,
+        "jitter_ms_p99": 1.7,
+        "observers": 52,
+        "uptime_ms": 2264892,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 617,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1682425,
+        "births_total": 527,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 6,
+          "old_age": 370
+        },
+        "population_by_species": {
+          "membrana": 220,
+          "casco": 30
+        },
+        "eaten_flora_total": 1411,
+        "eaten_particles_total": 5347,
+        "flora_level_sum": 198.542,
+        "particles_expired_total": 5423
+      },
+      "cpu": 26.98,
+      "memMiB": 226.9
+    },
+    {
+      "t": 1675963,
+      "stats": {
+        "tick": 22749,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.57,
+        "jitter_ms_p99": 1.686,
+        "observers": 52,
+        "uptime_ms": 2274893,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 623,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1697740,
+        "births_total": 528,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 370
+        },
+        "population_by_species": {
+          "membrana": 220,
+          "casco": 30
+        },
+        "eaten_flora_total": 1417,
+        "eaten_particles_total": 5366,
+        "flora_level_sum": 197.948,
+        "particles_expired_total": 5437
+      },
+      "cpu": 25.43,
+      "memMiB": 229.9
+    },
+    {
+      "t": 1685989,
+      "stats": {
+        "tick": 22849,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.686,
+        "observers": 52,
+        "uptime_ms": 2284919,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 611,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1713269,
+        "births_total": 529,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 371
+        },
+        "population_by_species": {
+          "membrana": 220,
+          "casco": 30
+        },
+        "eaten_flora_total": 1419,
+        "eaten_particles_total": 5389,
+        "flora_level_sum": 198.356,
+        "particles_expired_total": 5463
+      },
+      "cpu": 29.08,
+      "memMiB": 230.7
+    },
+    {
+      "t": 1695986,
+      "stats": {
+        "tick": 22949,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.681,
+        "observers": 52,
+        "uptime_ms": 2294922,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 642,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1728941,
+        "births_total": 530,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 375
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 30
+        },
+        "eaten_flora_total": 1421,
+        "eaten_particles_total": 5405,
+        "flora_level_sum": 198.789,
+        "particles_expired_total": 5476
+      },
+      "cpu": 25.9,
+      "memMiB": 227.4
+    },
+    {
+      "t": 1705981,
+      "stats": {
+        "tick": 23049,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.668,
+        "observers": 52,
+        "uptime_ms": 2304916,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 636,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1744906,
+        "births_total": 533,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 376
+        },
+        "population_by_species": {
+          "membrana": 219,
+          "casco": 30
+        },
+        "eaten_flora_total": 1425,
+        "eaten_particles_total": 5426,
+        "flora_level_sum": 198.623,
+        "particles_expired_total": 5504
+      },
+      "cpu": 30.67,
+      "memMiB": 230.4
+    },
+    {
+      "t": 1715988,
+      "stats": {
+        "tick": 23149,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.572,
+        "jitter_ms_p99": 1.666,
+        "observers": 52,
+        "uptime_ms": 2314923,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 649,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1760883,
+        "births_total": 534,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 378
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 31
+        },
+        "eaten_flora_total": 1430,
+        "eaten_particles_total": 5442,
+        "flora_level_sum": 198.399,
+        "particles_expired_total": 5535
+      },
+      "cpu": 24.71,
+      "memMiB": 227.7
+    },
+    {
+      "t": 1725989,
+      "stats": {
+        "tick": 23249,
+        "population": 247,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.575,
+        "jitter_ms_p99": 1.666,
+        "observers": 52,
+        "uptime_ms": 2324921,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 670,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1776558,
+        "births_total": 537,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 382
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 30
+        },
+        "eaten_flora_total": 1433,
+        "eaten_particles_total": 5462,
+        "flora_level_sum": 198.758,
+        "particles_expired_total": 5555
+      },
+      "cpu": 27.37,
+      "memMiB": 221.5
+    },
+    {
+      "t": 1736052,
+      "stats": {
+        "tick": 23350,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.576,
+        "jitter_ms_p99": 1.687,
+        "observers": 52,
+        "uptime_ms": 2334961,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 659,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1792537,
+        "births_total": 540,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 383
+        },
+        "population_by_species": {
+          "membrana": 218,
+          "casco": 31
+        },
+        "eaten_flora_total": 1436,
+        "eaten_particles_total": 5481,
+        "flora_level_sum": 199.083,
+        "particles_expired_total": 5585
+      },
+      "cpu": 24.72,
+      "memMiB": 225.8
+    },
+    {
+      "t": 1746038,
+      "stats": {
+        "tick": 23450,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.687,
+        "observers": 52,
+        "uptime_ms": 2344963,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 675,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1808459,
+        "births_total": 543,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 386
+        },
+        "population_by_species": {
+          "membrana": 218,
+          "casco": 31
+        },
+        "eaten_flora_total": 1441,
+        "eaten_particles_total": 5505,
+        "flora_level_sum": 198.564,
+        "particles_expired_total": 5614
+      },
+      "cpu": 27.18,
+      "memMiB": 226.9
+    },
+    {
+      "t": 1756082,
+      "stats": {
+        "tick": 23550,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.671,
+        "observers": 52,
+        "uptime_ms": 2354987,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 684,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1824564,
+        "births_total": 544,
+        "deaths_total": {
+          "starvation": 152,
+          "predation": 6,
+          "old_age": 388
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 31
+        },
+        "eaten_flora_total": 1442,
+        "eaten_particles_total": 5523,
+        "flora_level_sum": 199.183,
+        "particles_expired_total": 5645
+      },
+      "cpu": 26.67,
+      "memMiB": 228.3
+    },
+    {
+      "t": 1766104,
+      "stats": {
+        "tick": 23650,
+        "population": 245,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.568,
+        "jitter_ms_p99": 1.68,
+        "observers": 52,
+        "uptime_ms": 2365016,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 712,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1840488,
+        "births_total": 546,
+        "deaths_total": {
+          "starvation": 153,
+          "predation": 6,
+          "old_age": 392
+        },
+        "population_by_species": {
+          "membrana": 214,
+          "casco": 31
+        },
+        "eaten_flora_total": 1447,
+        "eaten_particles_total": 5539,
+        "flora_level_sum": 198.696,
+        "particles_expired_total": 5664
+      },
+      "cpu": 23.91,
+      "memMiB": 227.9
+    },
+    {
+      "t": 1776065,
+      "stats": {
+        "tick": 23750,
+        "population": 248,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.567,
+        "jitter_ms_p99": 1.694,
+        "observers": 52,
+        "uptime_ms": 2374996,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 720,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1856461,
+        "births_total": 551,
+        "deaths_total": {
+          "starvation": 153,
+          "predation": 6,
+          "old_age": 394
+        },
+        "population_by_species": {
+          "membrana": 216,
+          "casco": 32
+        },
+        "eaten_flora_total": 1449,
+        "eaten_particles_total": 5554,
+        "flora_level_sum": 198.999,
+        "particles_expired_total": 5690
+      },
+      "cpu": 23.19,
+      "memMiB": 227.9
+    },
+    {
+      "t": 1786067,
+      "stats": {
+        "tick": 23850,
+        "population": 250,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.561,
+        "jitter_ms_p99": 1.724,
+        "observers": 52,
+        "uptime_ms": 2384995,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 721,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1872452,
+        "births_total": 553,
+        "deaths_total": {
+          "starvation": 153,
+          "predation": 6,
+          "old_age": 394
+        },
+        "population_by_species": {
+          "membrana": 218,
+          "casco": 32
+        },
+        "eaten_flora_total": 1450,
+        "eaten_particles_total": 5569,
+        "flora_level_sum": 199.452,
+        "particles_expired_total": 5716
+      },
+      "cpu": 23.57,
+      "memMiB": 225.4
+    },
+    {
+      "t": 1796046,
+      "stats": {
+        "tick": 23950,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.565,
+        "jitter_ms_p99": 1.73,
+        "observers": 52,
+        "uptime_ms": 2394975,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 723,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1888888,
+        "births_total": 553,
+        "deaths_total": {
+          "starvation": 153,
+          "predation": 6,
+          "old_age": 395
+        },
+        "population_by_species": {
+          "membrana": 217,
+          "casco": 32
+        },
+        "eaten_flora_total": 1455,
+        "eaten_particles_total": 5589,
+        "flora_level_sum": 199.038,
+        "particles_expired_total": 5738
+      },
+      "cpu": 26.22,
+      "memMiB": 231.5
+    },
+    {
+      "t": 1805284,
+      "stats": {
+        "tick": 24042,
+        "population": 249,
+        "tick_hz": 10,
+        "world_id": "5912c1ef66a7bb6a75c64b2bc1a4d960",
+        "step_us_max": 158306,
+        "jitter_ms_p50": 1.564,
+        "jitter_ms_p99": 1.73,
+        "observers": 52,
+        "uptime_ms": 2404188,
+        "flora_patches": 200,
+        "hunts_ok": 6,
+        "particles": 726,
+        "hunts_abandoned": 388,
+        "extinct": {
+          "celula": 1794085489451,
+          "filamento": 1794084904177,
+          "poliedro": 1794086404614
+        },
+        "cap_holds": 1904144,
+        "births_total": 554,
+        "deaths_total": {
+          "starvation": 153,
+          "predation": 6,
+          "old_age": 396
+        },
+        "population_by_species": {
+          "membrana": 216,
+          "casco": 33
+        },
+        "eaten_flora_total": 1458,
+        "eaten_particles_total": 5605,
+        "flora_level_sum": 199.259,
+        "particles_expired_total": 5762
+      },
+      "cpu": 29.82,
+      "memMiB": 227.3
+    }
+  ]
+}

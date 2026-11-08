@@ -35,7 +35,9 @@ defmodule Abyss.World.WireTest do
                :species,
                :organisms,
                :flora,
-               :particles
+               :particles,
+               :juvenile_scale,
+               :divide_s
              ])
 
     assert length(s.organisms) == 20
@@ -51,10 +53,19 @@ defmodule Abyss.World.WireTest do
            end)
 
     assert is_list(s.particles) and Enum.all?(s.particles, &(length(&1) == 9))
-    assert hd(s.species) == %{id: "membrana", code: "MBR", name: "Membrana", body_radius: 0.55}
+    assert hd(s.species) == %{
+             id: "membrana",
+             code: "MBR",
+             name: "Membrana",
+             body_radius: 0.55,
+             diet: %{kind: "particles", prey: []},
+             extinct_ms: nil
+           }
+
+    assert is_number(s.juvenile_scale) and is_number(s.divide_s)
 
     o = hd(s.organisms)
-    assert o |> Map.keys() |> Enum.sort() == [:born_ms, :id, :p, :species, :v]
+    assert o |> Map.keys() |> Enum.sort() == [:born_ms, :dividing, :e, :gen, :id, :p, :parent, :species, :stage, :v]
     assert is_binary(o.species) and length(o.p) == 3 and length(o.v) == 3
     assert {:ok, _} = Jason.encode(s)
   end
@@ -64,13 +75,13 @@ defmodule Abyss.World.WireTest do
     snap = Wire.snapshot(sim, @meta)
     t = Wire.tick(sim, @meta)
 
-    assert t |> Map.keys() |> Enum.sort() == [:f, :o, :pr, :ps, :server_ms, :tick, :world_id]
+    assert t |> Map.keys() |> Enum.sort() == [:b, :d, :f, :o, :pr, :ps, :server_ms, :tick, :world_id, :x]
     assert length(t.o) == length(snap.organisms)
 
     for {row, o} <- Enum.zip(t.o, snap.organisms) do
-      assert row == o.p ++ o.v
-      assert length(row) == 6
-      assert Enum.all?(row, &(&1 == Float.round(&1, 3)))
+      assert Enum.take(row, 6) == o.p ++ o.v
+      assert length(row) == 8
+      assert Enum.all?(Enum.take(row, 6), &(&1 == Float.round(&1, 3)))
     end
   end
 
@@ -112,5 +123,67 @@ defmodule Abyss.World.WireTest do
     assert seen != []
     assert Enum.all?(seen, fn [idx, l] -> idx in 0..199 and l == Float.round(l, 2) end)
     assert length(Wire.snapshot(sim, @meta).flora) == 200
+  end
+
+  test "tick com nascimento e morte" do
+    s = sim()
+    [dead | rest] = s.organisms
+    child = %{List.last(rest) | id: "novo", parent_id: dead.id, generation: 2, stage: :juvenile}
+
+    s = %{
+      s
+      | organisms: rest ++ [child],
+        life_events: %{deaths: [{dead.id, :starvation}], births: [child], extinct: []}
+    }
+
+    t = Wire.tick(s, @meta)
+    assert t.d == [[dead.id, "starvation"]]
+    assert [%{id: "novo", stage: "juvenile", gen: 2, parent: pid}] = t.b
+    assert pid == dead.id
+    assert length(t.o) == length(s.organisms)
+    assert t.x == []
+    assert {:ok, _} = Jason.encode(t)
+  end
+
+  test "x traz as extinções do passo" do
+    s = %{sim() | life_events: %{deaths: [], births: [], extinct: [{:filamento, 4200}]}}
+    assert Wire.tick(s, @meta).x == [["filamento", 4200]]
+  end
+
+  test "flags" do
+    s = sim()
+    [a, b, c | rest] = s.organisms
+
+    orgs = [
+      %{a | stage: :juvenile, dividing_left: 0.0},
+      %{b | stage: :adult, dividing_left: 1.5},
+      %{c | stage: :adult, dividing_left: 0.0} | rest
+    ]
+
+    t = Wire.tick(%{s | organisms: orgs}, @meta)
+    assert t.o |> Enum.take(3) |> Enum.map(&List.last/1) == [1, 2, 0]
+  end
+
+  test "energia quantizada" do
+    s = sim()
+    [a, b | rest] = s.organisms
+    max = Enum.find(Sim.species(s), &(&1.id == a.species)).energy_max
+    orgs = [%{a | energy: max * 0.123456}, %{b | energy: max * 5.0} | rest]
+    s = %{s | organisms: orgs}
+    t = Wire.tick(s, @meta)
+    assert Enum.at(t.o, 0) |> Enum.at(6) == 0.12
+    assert Enum.at(t.o, 1) |> Enum.at(6) == 1.0
+    assert Enum.all?(t.o, fn row -> e = Enum.at(row, 6); e >= 0 and e <= 1 and e == Float.round(e, 2) end)
+    assert hd(Wire.snapshot(s, @meta).organisms).e == 0.12
+  end
+
+  test "snapshot leva dieta e extinção" do
+    s = %{sim() | extinct: %{filamento: 777}}
+    species = Wire.snapshot(s, @meta).species
+    fil = Enum.find(species, &(&1.id == "filamento"))
+    assert fil.diet == %{kind: "prey", prey: ["celula"]}
+    assert fil.extinct_ms == 777
+    assert Enum.find(species, &(&1.id == "membrana")).extinct_ms == nil
+    assert {:ok, _} = Jason.encode(species)
   end
 end

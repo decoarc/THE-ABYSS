@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { PALETTE } from '../lib/palette';
 import { useSelection, useWorld } from '../services/WorldProvider';
 import { useOrganismPose } from './useOrganismPose';
+import { useVitals } from './useVitals';
 
 /** Raio do anel em relação ao corpo: um pouco maior que a criatura. */
 const RING_SCALE = 1.4;
@@ -18,6 +19,7 @@ export function SelectionRing() {
 function Ring({ id }: { id: string }) {
   const { store } = useWorld();
   const pose = useOrganismPose(id);
+  const vitals = useVitals(id);
   const camera = useThree((s) => s.camera);
   const group = useRef<THREE.Group>(null);
   // `body_radius` do snapshot já é o raio efetivo (× creature_scale): o anel acompanha a criatura menor.
@@ -46,7 +48,7 @@ function Ring({ id }: { id: string }) {
     if (!g.visible) return;
     g.position.copy(pose.pos);
     g.quaternion.copy(camera.quaternion);
-    g.scale.setScalar(bodyRadius * RING_SCALE);
+    g.scale.setScalar(bodyRadius * vitals.scale.current * RING_SCALE);
   });
 
   return (

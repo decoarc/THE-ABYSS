@@ -22,12 +22,15 @@ config :abyss, :world,
   # Espécies de teste do E1; false = mundo sem organismos (só comida).
   test_species: true,
   # Raio efetivo = body_radius × creature_scale.
-  creature_scale: 0.5
+  creature_scale: 0.5,
+  # Só para medição (ABYSS_FOOD_BOOST): multiplica a velocidade da flora e a
+  # taxa e o teto das partículas. 1.0 = a comida canônica, sem mudança.
+  food_boost: 1.0
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,
-  # Nível de 0 a 1 em 90 s, longe das fontes.
-  flora_grow_s: 90,
+  # Nível de 0 a 1 em 180 s, longe das fontes.
+  flora_grow_s: 180,
   # Crescimento × (1 + vent_boost · exp(-d²/(2·8²))), d = distância à fonte mais próxima.
   vent_boost: 2.0,
   flora_bite: 0.25,
@@ -40,6 +43,29 @@ config :abyss, :food,
   # Queda (u/s) e deriva horizontal máxima (u/s).
   particle_fall: {0.15, 0.3},
   particle_drift: 0.05
+
+# Ecologia do E2 (valores iniciais; ajustáveis na Parada 1).
+config :abyss, :ecology,
+  # Teto de proteção de organismos.
+  pop_cap: 250,
+  # Gasto = metabolism × (1 + swim_cost × (|v|/max_speed)²) por s.
+  swim_cost: 1.5,
+  flora_energy: 80,
+  particle_energy: 20,
+  # Ganho do caçador = prey_base + prey_yield × energia da presa.
+  prey_base: 25,
+  prey_yield: 0.5,
+  hunt_below: 0.7,
+  give_up_s: 15,
+  divide_s: 8.0,
+  split_parent: 0.5,
+  split_child: 0.35,
+  juvenile_scale: 0.45,
+  school_range: 4.0,
+  school_weight: 0.3,
+  corpse_particles: {3, 4.0},
+  founder_energy: {0.6, 0.9},
+  founder_age: 0.5
 
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,

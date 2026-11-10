@@ -27,7 +27,7 @@ const PULSE_MIN = 1.4;
 const PULSE_MAX = 2.6;
 
 /** Cor do núcleo: a `glow` da planta, clareada se for escura demais para passar do limiar do bloom. */
-function nucleusColor(hex: string): string {
+export function nucleusColor(hex: string): string {
   const c = new THREE.Color(hex);
   const m = Math.max(c.r, c.g, c.b);
   if (m <= 0.001) return '#7fe9dd';
@@ -35,7 +35,7 @@ function nucleusColor(hex: string): string {
   return `#${c.getHexString()}`;
 }
 
-interface Resources {
+export interface CriadaResources {
   geometry: CreatureGeometry;
   body: THREE.ShaderMaterial;
   parts: THREE.ShaderMaterial;
@@ -63,6 +63,46 @@ function aim(s: Aim, heading: THREE.Vector3, out: THREE.Quaternion): boolean {
   return true;
 }
 
+/**
+ * Geometria (compartilhada por planta, pelo cache) e materiais (desta instância) de uma planta.
+ * Nascem e morrem no mesmo efeito, não no render: no StrictMode a desmontagem simulada descarta tudo
+ * e a remontagem recria. Também usado pela prévia do editor, para mostrar o que o mundo mostra.
+ */
+export function useCriadaResources(bp: Blueprint): CriadaResources | null {
+  const [res, setRes] = useState<CriadaResources | null>(null);
+  useLayoutEffect(() => {
+    const geometry = geometryCache.acquire(bp);
+    const body = createBodyMaterial();
+    const parts = createPartsMaterial();
+    applyBlueprint(body, bp);
+    applyBlueprint(parts, bp);
+    setRes({ geometry, body, parts });
+    return () => {
+      geometryCache.release(bp);
+      body.dispose();
+      parts.dispose();
+    };
+  }, [bp]);
+  return res;
+}
+
+/** Núcleo de uma criada: cor, tamanho, pulso e lugar (no ponto do eixo mais perto do centróide; a malha já vem centrada nele). */
+export function criadaNucleus(bp: Blueprint): { nucleus: NucleusConfig; nucleusAt: [number, number, number] } {
+  const anchor = nucleusAnchor(bp);
+  return {
+    nucleus: {
+      color: nucleusColor(bp.colors.glow),
+      radius: Math.min(Math.max(anchor.radius * 0.33, 0.09), 0.24),
+      pulseHz: 0.22,
+      pulseMin: PULSE_MIN,
+      pulseMax: PULSE_MAX,
+    },
+    nucleusAt: anchor.position.toArray() as [number, number, number],
+  };
+}
+
+export const CRIADA_PULSE = { min: PULSE_MIN, max: PULSE_MAX } as const;
+
 /** Espécie criada: desenhada da sua planta, com o mesmo programa de shader para toda planta. */
 export function Criada({ id }: { id: string }) {
   const { store } = useWorld();
@@ -87,37 +127,14 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
   const offset = phase * 1000;
   const time = useRef(offset);
 
-  // Geometria (compartilhada por planta) e materiais (desta instância) nascem e morrem no mesmo efeito,
-  // não no render: no StrictMode a desmontagem simulada descarta tudo e a remontagem recria.
-  const [res, setRes] = useState<Resources | null>(null);
-  useLayoutEffect(() => {
-    const geometry = geometryCache.acquire(bp);
-    const body = createBodyMaterial();
-    const parts = createPartsMaterial();
-    applyBlueprint(body, bp);
-    applyBlueprint(parts, bp);
-    setRes({ geometry, body, parts });
-    return () => {
-      geometryCache.release(bp);
-      body.dispose();
-      parts.dispose();
-    };
-  }, [bp]);
+  const res = useCriadaResources(bp);
 
   const look = useMemo(() => {
-    const color = nucleusColor(bp.colors.glow);
-    // Núcleo no ponto do eixo mais perto do centróide (a malha já vem centrada nele).
-    const anchor = nucleusAnchor(bp);
-    const nucleus: NucleusConfig = {
-      color,
-      radius: Math.min(Math.max(anchor.radius * 0.33, 0.09), 0.24),
-      pulseHz: 0.22,
-      pulseMin: PULSE_MIN,
-      pulseMax: PULSE_MAX,
-    };
+    const { nucleus, nucleusAt } = criadaNucleus(bp);
+    const color = nucleus.color;
     return {
       nucleus,
-      nucleusAt: anchor.position.toArray() as [number, number, number],
+      nucleusAt,
       glow: new THREE.Color(bp.colors.glow),
       floor: glowOf(color, 0, 0, 0, 0).color,
       maxSpeed: previewTraits(bp).max_speed,

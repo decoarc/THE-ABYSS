@@ -59,6 +59,7 @@ defmodule Abyss.World.WireTest do
              name: "Membrana",
              body_radius: 0.55,
              diet: %{kind: "particles", prey: []},
+             blueprint: nil,
              extinct_ms: nil
            }
 
@@ -75,7 +76,7 @@ defmodule Abyss.World.WireTest do
     snap = Wire.snapshot(sim, @meta)
     t = Wire.tick(sim, @meta)
 
-    assert t |> Map.keys() |> Enum.sort() == [:b, :d, :f, :o, :pr, :ps, :server_ms, :tick, :world_id, :x]
+    assert t |> Map.keys() |> Enum.sort() == [:b, :d, :f, :o, :pr, :ps, :server_ms, :sp, :tick, :world_id, :x]
     assert length(t.o) == length(snap.organisms)
 
     for {row, o} <- Enum.zip(t.o, snap.organisms) do
@@ -185,5 +186,67 @@ defmodule Abyss.World.WireTest do
     assert fil.extinct_ms == 777
     assert Enum.find(species, &(&1.id == "membrana")).extinct_ms == nil
     assert {:ok, _} = Jason.encode(species)
+  end
+
+  describe "espécies criadas" do
+    alias Abyss.Genesis.{Catalog, Random, Traits}
+
+    defp made(i) do
+      cat = Catalog.get()
+      {bp, _} = Random.blueprint(:rand.seed_s(:exsss, i), cat)
+      Traits.species(bp, cat, %{id: "sp#{i}", code: "S#{i}", name: "G#{i}"})
+    end
+
+    test "espécie criada no snapshot e no tick" do
+      sp = %{made(1) | id: "sp1", diet: :predator}
+      s = sim() |> Sim.add_species(sp, founders: 3) |> Sim.step(0.1)
+
+      snap = Wire.snapshot(s, @meta)
+      item = Enum.find(snap.species, &(&1.id == "sp1"))
+      assert item.blueprint == sp.blueprint
+      assert item.diet == %{kind: "predator", prey: []}
+      assert item.extinct_ms == nil
+
+      t = Wire.tick(s, @meta)
+      assert [%{id: "sp1", blueprint: bp}] = t.sp
+      assert bp == sp.blueprint
+      assert t.b |> Enum.filter(&(&1.species == "sp1")) |> length() == 3
+      assert {:ok, _} = Jason.encode(snap)
+      assert {:ok, _} = Jason.encode(t)
+
+      assert Wire.tick(Sim.step(s, 0.1), @meta).sp == []
+    end
+
+    test "snapshot leva só 100 extintas" do
+      base =
+        Enum.reduce(1..130, sim(), fn i, acc ->
+          sp = made(i)
+          bounds = acc.bounds
+
+          bounds = %{
+            bounds
+            | species: Map.put(bounds.species, sp.id, sp),
+              species_list: bounds.species_list ++ [sp]
+          }
+
+          %{acc | bounds: bounds, extinct: Map.put(acc.extinct, sp.id, i * 10)}
+        end)
+
+      species = Wire.snapshot(base, @meta).species
+      extinct = Enum.filter(species, &(&1.extinct_ms != nil))
+      assert length(extinct) == 100
+      assert extinct |> Enum.map(& &1.extinct_ms) |> Enum.min() == 310
+      assert extinct |> Enum.map(& &1.extinct_ms) |> Enum.max() == 1300
+      assert length(species) == 105
+      assert hd(species).id == "membrana"
+    end
+
+    test "fio sem e-mail" do
+      sp = made(2) |> Map.put(:email, "a@b.c")
+      s = sim() |> Sim.add_species(sp, founders: 3) |> Sim.step(0.1)
+
+      refute Jason.encode!(Wire.snapshot(s, @meta)) =~ "@"
+      refute Jason.encode!(Wire.tick(s, @meta)) =~ "@"
+    end
   end
 end

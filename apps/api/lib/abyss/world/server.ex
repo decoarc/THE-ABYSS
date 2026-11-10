@@ -10,11 +10,13 @@ defmodule Abyss.World.Server do
   alias Abyss.World.Map, as: WMap
   alias Abyss.World.{Observers, Sim, Wire}
 
+  require Logger
+
   @ring_size 600
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` (medição), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` (medição), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -26,6 +28,10 @@ defmodule Abyss.World.Server do
 
   @spec stats(GenServer.server()) :: map
   def stats(server \\ __MODULE__), do: GenServer.call(server, :stats)
+
+  @doc "Registra uma espécie criada em tempo de execução; as 3 fundadoras entram no próximo passo."
+  @spec add_species(GenServer.server(), Abyss.World.Species.t()) :: :ok
+  def add_species(server, sp), do: GenServer.call(server, {:add_species, sp})
 
   # --- Callbacks ---
 
@@ -57,8 +63,18 @@ defmodule Abyss.World.Server do
           |> Map.new()
       })
 
+    loader = Keyword.get(opts, :species_loader, fn -> %{live: [], extinct: []} end)
+    %{live: live, extinct: extinct} = loader.()
+    sim = Enum.reduce(live, sim, &Sim.add_species(&2, &1, founders: 3))
+
+    sim =
+      Enum.reduce(extinct, sim, fn {sp, ms}, acc ->
+        Sim.add_species(acc, sp, founders: 0, extinct_ms: ms)
+      end)
+
     state = %{
       sim: sim,
+      on_extinct: Keyword.get(opts, :on_extinct, fn _ -> :ok end),
       world_id: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
       tick_hz: tick_hz,
       broadcast: Keyword.get(opts, :broadcast, fn _ -> :ok end),
@@ -75,6 +91,10 @@ defmodule Abyss.World.Server do
 
   @impl true
   def handle_call(:snapshot, _from, state), do: {:reply, wire_snapshot(state), state}
+
+  def handle_call({:add_species, sp}, _from, state) do
+    {:reply, :ok, %{state | sim: Sim.add_species(state.sim, sp, founders: 3)}}
+  end
 
   def handle_call(:stats, _from, state) do
     sorted = Enum.sort(state.jitters)
@@ -104,6 +124,7 @@ defmodule Abyss.World.Server do
     {step_us, sim} = :timer.tc(fn -> Sim.step(state.sim, 1 / state.tick_hz, meta.server_ms) end)
 
     state.broadcast.(Wire.tick(sim, meta))
+    notify_extinct(state.on_extinct, sim.life_events.extinct)
 
     state = %{
       state
@@ -116,6 +137,23 @@ defmodule Abyss.World.Server do
   end
 
   # --- Internos ---
+
+  # Só espécies criadas (id string); uma falha do callback não derruba o mundo.
+  defp notify_extinct(callback, extinct) do
+    case for({id, ms} <- extinct, is_binary(id), do: {id, ms}) do
+      [] ->
+        :ok
+
+      created ->
+        try do
+          callback.(created)
+        rescue
+          e ->
+            ids = Enum.map_join(created, ",", &elem(&1, 0))
+            Logger.error("on_extinct falhou (#{inspect(e.__struct__)}) para #{ids}")
+        end
+    end
+  end
 
   # Agenda o tick n+1 contra o relógio de partida (sem acumular deriva).
   defp schedule(state) do

@@ -35,6 +35,33 @@ defmodule Abyss.World.HuntTest do
     refute Hunt.can_eat?(sp(:celula), r(cel), sp(:celula), r(cel_j))
   end
 
+  test "predador come menor de outra espécie" do
+    pred = %{id: "sp1", diet: :predator}
+    assert Hunt.can_eat?(pred, 2.0, sp(:celula), 1.0)
+    refute Hunt.can_eat?(pred, 1.0, sp(:celula), 1.0)
+    refute Hunt.can_eat?(pred, 1.0, sp(:celula), 2.0)
+  end
+
+  test "predador não come a própria espécie" do
+    pred = %{id: "sp1", diet: :predator}
+    refute Hunt.can_eat?(pred, 2.0, %{id: "sp1"}, 0.5)
+    assert Hunt.can_eat?(pred, 2.0, %{id: "sp2"}, 0.5)
+  end
+
+  test "caçador de teste não come espécie criada" do
+    fil = Map.put(sp(:filamento), :diet, {:prey, [:celula]})
+    refute Hunt.can_eat?(fil, 5.0, %{id: "sp1"}, 0.5)
+  end
+
+  test "escape é determinístico e proporcional" do
+    pairs = for i <- 1..10_000, do: {"h#{i}", "p#{i}", i * 100}
+    assert Enum.all?(pairs, fn {h, p, t} -> not Hunt.escapes?(0.0, h, p, t) end)
+    assert Enum.all?(pairs, fn {h, p, t} -> Hunt.escapes?(1.0, h, p, t) end)
+    n = Enum.count(pairs, fn {h, p, t} -> Hunt.escapes?(0.3, h, p, t) end)
+    assert_in_delta n / 10_000, 0.3, 0.02
+    assert Hunt.escapes?(0.3, "a", "b", 5) == Hunt.escapes?(0.3, "a", "b", 5)
+  end
+
   test "floresta esconde" do
     assert Hunt.perceived_range(7, 0.5) == 3.5
     assert Hunt.perceived_range(7, 0.0) == 7.0

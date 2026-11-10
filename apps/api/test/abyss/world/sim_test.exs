@@ -745,6 +745,48 @@ defmodule Abyss.World.SimTest do
       assert h1.target == nil and h1.sated_left > 0
     end
 
+    test "presa com placa escapa do bote" do
+      sim =
+        hunt_world([hunter(@open), young(shift(@open, -1.0))])
+        |> with_traits(:filamento, %{diet: :predator})
+        |> with_traits(:celula, %{escape: 1.0})
+
+      sim = Sim.step(sim, 0.1)
+      h = find(sim, "FIL-0001")
+
+      assert find(sim, "CEL-0001") != nil
+      assert sim.eco_totals.hunts_escaped == 1
+      assert sim.eco_totals.hunts_ok == 0
+      assert sim.eco_totals.hunts_abandoned == 0
+      assert Sim.eco_stats(sim).hunts_escaped == 1
+      assert h.target == nil and h.sated_left == 0.0
+      assert {"CEL-0001", until} = h.gave_up
+      assert until > sim.now_ms
+
+      sim = Sim.step(sim, 0.1)
+      assert find(sim, "FIL-0001").target == nil
+      assert sim.eco_totals.hunts_escaped == 1
+    end
+
+    test "hunted vira :all com um predador na tabela" do
+      species = Enum.map(Species.all(), &if(&1.id == :filamento, do: %{&1 | diet: :predator}, else: &1))
+      sim = Sim.new(Map.put(@opts, :species, species))
+      assert sim.bounds.hunted == :all
+      assert %MapSet{} = Sim.new(@opts).bounds.hunted
+    end
+
+    test "quem pode ser caçado foge de predador" do
+      sim =
+        hunt_world([hunter(@open, energy: 100.0), young(shift(@open, -3.0))])
+        |> with_traits(:filamento, %{diet: :predator})
+        |> with_traits(:celula, %{burst: 2.0})
+
+      sim = %{sim | bounds: %{sim.bounds | hunted: :all}}
+      sim = Sim.step(sim, 0.5)
+      prey = find(sim, "CEL-0001")
+      assert norm(prey.vel) > max_speed(:celula)
+    end
+
     test "caçador cheio não caça" do
       sim = hunt_world([hunter(@open, energy: 80.0), young(shift(@open, -3.0))])
 

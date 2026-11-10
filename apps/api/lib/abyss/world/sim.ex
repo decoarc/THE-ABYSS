@@ -30,7 +30,7 @@ defmodule Abyss.World.Sim do
   @no_events %{changed: [], spawned: [], removed: []}
   @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
   @no_life %{deaths: [], births: [], extinct: []}
-  @no_eco %{births: %{}, deaths: %{}, hunts_ok: 0, hunts_abandoned: 0, cap_holds: 0}
+  @no_eco %{births: %{}, deaths: %{}, hunts_ok: 0, hunts_abandoned: 0, hunts_escaped: 0, cap_holds: 0}
 
   defstruct organisms: [],
             rng: nil,
@@ -179,13 +179,20 @@ defmodule Abyss.World.Sim do
       sponge_grid: sponge_grid,
       # Centros das regiões com cobertura (abrigo da fuga) e espécies que alguém caça.
       shelters: for(%{cover: c, center: center} <- map.regions, c > 0, do: center),
-      hunted:
-        for(%{diet: {:prey, ids}} <- species, id <- ids, into: MapSet.new(), do: id),
+      hunted: hunted(species),
       richest: %{
         flora: Enum.max_by(map.regions, & &1.flora_patches).center,
         particles: Enum.max_by(map.regions, & &1.particle_share).center
       }
     }
+  end
+
+  # Quem alguma espécie caça: `:all` se existe um `:predator` (caça qualquer
+  # menor), senão o conjunto dos ids das dietas `{:prey, ids}`.
+  defp hunted(species) do
+    if Enum.any?(species, &(&1.diet == :predator)),
+      do: :all,
+      else: for(%{diet: {:prey, ids}} <- species, id <- ids, into: MapSet.new(), do: id)
   end
 
   @doc """
@@ -248,7 +255,8 @@ defmodule Abyss.World.Sim do
       wants: [],
       prey_eaten: MapSet.new(),
       hunts_ok: 0,
-      hunts_abandoned: 0
+      hunts_abandoned: 0,
+      hunts_escaped: 0
     }
 
     # {i, id, pos, r, species, vel, energy}, do começo do passo: i é a ordem da
@@ -332,6 +340,7 @@ defmodule Abyss.World.Sim do
           |> Map.update!(:cap_holds, &(&1 + cap_holds))
           |> Map.update!(:hunts_ok, &(&1 + food.hunts_ok))
           |> Map.update!(:hunts_abandoned, &(&1 + food.hunts_abandoned))
+          |> Map.update!(:hunts_escaped, &(&1 + food.hunts_escaped))
     }
   end
 
@@ -509,6 +518,7 @@ defmodule Abyss.World.Sim do
       },
       hunts_ok: t.hunts_ok,
       hunts_abandoned: t.hunts_abandoned,
+      hunts_escaped: t.hunts_escaped,
       cap_holds: t.cap_holds,
       extinct: extinct
     }
@@ -670,6 +680,7 @@ defmodule Abyss.World.Sim do
   # saciedade (que só silencia a busca).
 
   defp forage(o, %{diet: {:prey, _}} = sp, r, dt, env, food), do: hunt(o, sp, r, dt, env, food)
+  defp forage(o, %{diet: :predator} = sp, r, dt, env, food), do: hunt(o, sp, r, dt, env, food)
 
   defp forage(o, sp, r, dt, env, food) do
     sated = max(o.sated_left - dt, 0.0)
@@ -851,21 +862,37 @@ defmodule Abyss.World.Sim do
     end
   end
 
-  defp approach_or_catch(o, {_, id, ppos, pr, _, _, pe}, sp, r, env, food) do
+  defp approach_or_catch(o, {_, id, ppos, pr, psp, _, pe}, sp, r, env, food) do
     if dist(o.pos, ppos) <= r + pr + @eat_margin do
-      o = Life.gain(o, sp, env.eco.prey_base + env.eco.prey_yield * pe)
+      escape = Map.get(spec(env.bounds, psp), :escape, 0.0)
 
-      {%{o | target: nil, chase_left: 0.0, sated_left: sp.sated_s * 1.0}, @zero,
-       %{food | prey_eaten: MapSet.put(food.prey_eaten, id), hunts_ok: food.hunts_ok + 1}}
+      if escape > 0 and Hunt.escapes?(escape, o.id, id, env.now_ms),
+        do: escaped(o, id, env, food),
+        else: catch_prey(o, id, pe, sp, env, food)
     else
       speed = sp.max_speed * sp.burst * (1 - Hunt.cover_at(env.bounds, o.pos) / 2)
       {o, ppos |> sub(o.pos) |> unit() |> scale(speed), food}
     end
   end
 
+  # A presa escapou do bote: o caçador a ignora por give_up_s, sem ganho nem saciedade.
+  defp escaped(o, id, env, food) do
+    until = env.now_ms + round(env.eco.give_up_s * 1000)
+
+    {%{o | target: nil, chase_left: 0.0, gave_up: {id, until}}, @zero,
+     %{food | hunts_escaped: food.hunts_escaped + 1}}
+  end
+
+  defp catch_prey(o, id, pe, sp, env, food) do
+    o = Life.gain(o, sp, env.eco.prey_base + env.eco.prey_yield * pe)
+
+    {%{o | target: nil, chase_left: 0.0, sated_left: sp.sated_s * 1.0}, @zero,
+     %{food | prey_eaten: MapSet.put(food.prey_eaten, id), hunts_ok: food.hunts_ok + 1}}
+  end
+
   # Só quem alguma espécie caça procura ameaça (atalho; a regra é a de Hunt.threat).
   defp flee(o, sp, r, %{bounds: bounds, grid: grid}) do
-    with true <- MapSet.member?(bounds.hunted, o.species),
+    with true <- bounds.hunted == :all or MapSet.member?(bounds.hunted, o.species),
          pos when pos != nil <- Hunt.threat(o, sp, r, grid, bounds) do
       Hunt.flee_steer(o, sp, pos, bounds)
     else

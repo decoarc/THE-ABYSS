@@ -66,6 +66,7 @@ defmodule Abyss.Genesis.BootTest do
 
     ids = ["sp#{a.id}", "sp#{b.id}"]
     assert await_founders(world, ids, 150) == [3, 3], "fundadoras não nasceram em 3 s"
+    assert Server.stats(world).extinct["sp#{c.id}"] == 1_700_000_000_123
   end
 
   test "só 100 extintas no boot" do

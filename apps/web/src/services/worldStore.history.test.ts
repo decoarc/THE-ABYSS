@@ -20,7 +20,7 @@ function snap(): WorldSnapshot {
 const tick = (n: number, x: number): TickMessage => ({
   world_id: 'w1', tick: n, server_ms: SERVER0 + n * 100,
   o: [[x, 0, 0, 0, 0, 0, 0.8, 0], [x + 1, 0, 0, 0, 0, 0, 0.8, 0]],
-  b: [], d: [], x: [], f: [], ps: [], pr: [],
+  b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [],
 });
 
 it('positionsAt devolve as posições do snapshot e dos ticks seguintes', () => {

@@ -16,7 +16,7 @@ function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   };
 }
 const tick = (n: number, over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w', tick: n, server_ms: n * 100, o: [], b: [], d: [], x: [], f: [], ps: [], pr: [], ...over,
+  world_id: 'w', tick: n, server_ms: n * 100, o: [], b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [], ...over,
 });
 const ready = (): FoodStore => {
   const f = createFoodStore();

@@ -21,6 +21,7 @@ export function formatPosition(p: Vec3): string {
 export function formatDiet(diet: SpeciesInfo['diet'], species: readonly SpeciesInfo[]): string {
   if (diet.kind === 'flora') return 'flora';
   if (diet.kind === 'particles') return 'partículas';
+  if (diet.kind === 'predator') return 'criaturas menores';
   return diet.prey.map((id) => species.find((s) => s.id === id)?.name ?? id).join(' e ');
 }
 

@@ -34,7 +34,7 @@ it('espécie extinta continua listada com a data, sem indivíduos nem expansão'
   const { store } = renderWithWorld(<SpeciesIndex />, { organisms: membranas(2) });
   act(() => {
     store.applyTick(
-      { world_id: 'w1', tick: 2, server_ms: 1_000_100, o: [[0, 0, 0, 0, 0, 0, 0.8, 0], [0, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [], x: [['celula', ms]], f: [], ps: [], pr: [] },
+      { world_id: 'w1', tick: 2, server_ms: 1_000_100, o: [[0, 0, 0, 0, 0, 0, 0.8, 0], [0, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [], x: [['celula', ms]], f: [], sp: [], ps: [], pr: [] },
       1_000_100,
     );
   });
@@ -49,7 +49,7 @@ it('fantasma some do índice e não conta em NO TERRÁRIO', () => {
   const { store } = renderWithWorld(<SpeciesIndex />, { organisms: membranas(3) });
   act(() => {
     store.applyTick(
-      { world_id: 'w1', tick: 2, server_ms: 1_000_100, o: [[0, 0, 0, 0, 0, 0, 0.8, 0], [0, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [['MBR-0002', 'starvation']], x: [], f: [], ps: [], pr: [] },
+      { world_id: 'w1', tick: 2, server_ms: 1_000_100, o: [[0, 0, 0, 0, 0, 0, 0.8, 0], [0, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [['MBR-0002', 'starvation']], x: [], f: [], sp: [], ps: [], pr: [] },
       1_000_100,
     );
   });

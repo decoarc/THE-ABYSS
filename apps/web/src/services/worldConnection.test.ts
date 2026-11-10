@@ -103,7 +103,7 @@ it('tick vai para o store', () => {
   const { store, socket } = setup();
   const ch = socket.channels[0];
   ch.fireOk(snap('w1'));
-  ch.fireTick({ world_id: 'w1', tick: 2, server_ms: 1100, o: [[5, 0, 0, 0, 0, 0, 0.8, 0], [6, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [], x: [], f: [], ps: [], pr: [] });
+  ch.fireTick({ world_id: 'w1', tick: 2, server_ms: 1100, o: [[5, 0, 0, 0, 0, 0, 0.8, 0], [6, 0, 0, 0, 0, 0, 0.8, 0]], b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [] });
   expect(store.debugBufferSize('o0')).toBe(2);
 });
 
@@ -123,8 +123,8 @@ it('resync on new world_id', () => {
   const { store, socket } = setup();
   const first = socket.channels[0];
   first.fireOk(snap('w1'));
-  first.fireTick({ world_id: 'w2', tick: 5, server_ms: 2000, o: [], f: [], ps: [], pr: [] });
-  first.fireTick({ world_id: 'w2', tick: 6, server_ms: 2100, o: [], f: [], ps: [], pr: [] });
+  first.fireTick({ world_id: 'w2', tick: 5, server_ms: 2000, o: [], f: [], sp: [], ps: [], pr: [] });
+  first.fireTick({ world_id: 'w2', tick: 6, server_ms: 2100, o: [], f: [], sp: [], ps: [], pr: [] });
   expect(first.left).toBe(true);
   expect(socket.channels).toHaveLength(2);
   expect(socket.channels[1].joins).toBe(1);

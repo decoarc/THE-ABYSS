@@ -67,13 +67,18 @@ defmodule Abyss.Genesis.TraitsTest do
   end
 
   test "cada peça muda alguma característica", %{cat: cat} do
-    fields = ~w(max_speed turn_rate burst perception escape school shelter diet metabolism)a
+    fields = ~w(max_speed turn_rate burst perception escape school shelter diet)a
     baseline = traits(base([part("raspador")]), cat)
 
     for kind <- Map.keys(cat.parts), cat.parts[kind].group != "boca" do
       sp = traits(base([part("raspador"), part(kind)]), cat)
       assert Enum.any?(fields, &(sp[&1] != baseline[&1])), "#{kind} só enfeita"
     end
+  end
+
+  test "cada boca define uma dieta distinta", %{cat: cat} do
+    diets = for m <- ~w(raspador filtro mandibula), do: traits(base([part(m)]), cat).diet
+    assert diets == [:flora, :particles, :predator]
   end
 
   test "placa freia e protege", %{cat: cat} do

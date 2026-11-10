@@ -398,5 +398,96 @@
     "cost": null,
     "traits": null,
     "error": "raio da espinha fora da faixa"
+  },
+  {
+    "name": "espinha de 2 pontos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de 3 a 6 pontos"
+  },
+  {
+    "name": "espinha de 7 pontos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-1.5, 0, 0.3],
+          [-1.0, 0, 0.3],
+          [-0.5, 0, 0.3],
+          [0.0, 0, 0.3],
+          [0.5, 0, 0.3],
+          [1.0, 0, 0.3],
+          [1.5, 0, 0.3]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de 3 a 6 pontos"
+  },
+  {
+    "name": "raio da espinha abaixo do minimo",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.11],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "raio da espinha fora da faixa"
+  },
+  {
+    "name": "ponto da espinha malformado",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0.0, 0.0],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "ponto da espinha inválido"
   }
 ]

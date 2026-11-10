@@ -77,6 +77,21 @@ defmodule Abyss.Genesis.BlueprintTest do
     end)
   end
 
+  test "plantas aleatórias têm corpos de tamanhos variados", %{cat: cat} do
+    st = :rand.seed_s(:exsss, {5, 17, 71})
+
+    {radii, _} =
+      Enum.map_reduce(1..1000, st, fn _, st ->
+        {bp, st} = Random.blueprint(st, cat)
+        {:ok, norm} = Blueprint.validate(bp, cat)
+        sp = Abyss.Genesis.Traits.species(norm, cat, %{id: "sp1", code: "S01", name: "T"})
+        {sp.body_radius, st}
+      end)
+
+    assert Enum.count(radii, &(&1 < 0.9)) >= 250
+    assert Enum.count(radii, &(&1 > 1.2)) >= 250
+  end
+
   test "tamanho máximo", %{cat: cat} do
     big = put_in(base([part("raspador")]), ["colors", "glow"], String.duplicate("a", cat.max_bytes + 10))
     assert byte_size(Jason.encode!(big)) > cat.max_bytes

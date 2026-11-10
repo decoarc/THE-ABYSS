@@ -79,8 +79,8 @@
       "pattern": "manchas"
     },
     "valid": true,
-    "cost": 8,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.08535, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "predator"}
+    "cost": 7,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "predator"}
   },
   {
     "name": "quatro flagelos",

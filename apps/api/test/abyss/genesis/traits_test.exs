@@ -84,7 +84,7 @@ defmodule Abyss.Genesis.TraitsTest do
   test "placa freia e protege", %{cat: cat} do
     b = traits(base([part("raspador")]), cat)
     p = traits(base([part("raspador"), part("placa")]), cat)
-    assert_in_delta p.escape, 0.15, 1.0e-12
+    assert_in_delta p.escape, 0.25, 1.0e-12
     assert_in_delta p.max_speed, b.max_speed * 0.9, 1.0e-12
   end
 

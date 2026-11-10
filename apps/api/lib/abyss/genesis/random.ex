@@ -3,18 +3,25 @@ defmodule Abyss.Genesis.Random do
 
   alias Abyss.Genesis.{Blueprint, Catalog}
 
+  # Classes de tamanho do corpo (comprimento da espinha, raio `r` dos pontos, curvatura relativa).
+  @len %{small: [0.5, 0.9], medium: [1.0, 1.6], large: [2.4, 4.0]}
+  @r %{small: [0.12, 0.35], medium: [0.25, 0.5], large: [0.5, 0.9]}
+  @bend %{small: 0.3, medium: 0.6, large: 1.0}
+
   @spec blueprint(:rand.state(), Catalog.t()) :: {map, :rand.state()}
   def blueprint(st, cat) do
     {n, st} = int(st, cat.body.points)
-    {len, st} = float(st, [0.5, cat.body.length_max])
+    {class, st} = pick(st, [:small, :medium, :large])
+    {len, st} = float(st, clamp(@len[class], [0.5, cat.body.length_max]))
     x0 = -len / 2
-    bend = min(cat.body.bend_max, 0.6)
+    bend = min(cat.body.bend_max, 0.6) * @bend[class]
     [rmin, rmax] = cat.body.r
+    [rlo, rhi] = clamp(@r[class], [rmin, rmax])
 
     {spine, st} =
       Enum.map_reduce(0..(n - 1), st, fn i, st ->
         {y, st} = float(st, [-bend, bend])
-        {r, st} = float(st, [rmin, rmax])
+        {r, st} = float(st, [rlo, rhi])
         {[r3(x0 + len * i / (n - 1)), r3(y), r3(r)], st}
       end)
 
@@ -34,6 +41,8 @@ defmodule Abyss.Genesis.Random do
 
     {Map.merge(bp, %{"colors" => %{"glow" => glow, "body" => body}, "pattern" => pattern}), st}
   end
+
+  defp clamp([lo, hi], [min, max]), do: [max(lo, min) * 1.0, min(hi, max) * 1.0]
 
   defp kinds(cat, fun) do
     cat.parts |> Enum.filter(fn {_, s} -> fun.(s) end) |> Enum.map(&elem(&1, 0)) |> Enum.sort()

@@ -1122,6 +1122,32 @@ defmodule Abyss.World.SimTest do
       assert s.eco_totals.cap_holds > 0
     end
 
+    test "fundadoras que entram abaixo do teto ocupam a vaga das divisões do mesmo passo" do
+      # 20 cheios com teto 22: sem fundadoras, 2 divisões começariam. As 3 fundadoras entram no
+      # mesmo passo e contam: nenhuma divisão começa, e o mundo nunca passa de 20 + 3.
+      sim = Sim.new(%{@opts | population: 20, food: %{@food | particle_rate: 0.0}})
+
+      full =
+        Enum.map(
+          sim.organisms,
+          &%{&1 | energy: Map.fetch!(sim.bounds.species, &1.species).energy_max}
+        )
+
+      sim = %{sim | organisms: full, ecology: %{sim.ecology | pop_cap: 22}}
+      s = sim |> Sim.add_species(made(2)) |> Sim.step(0.1)
+      assert length(s.organisms) == 23
+      assert Enum.all?(s.organisms, &(&1.dividing_left == 0.0))
+
+      pops =
+        Enum.map_reduce(1..120, s, fn _, s ->
+          s = Sim.step(s, 0.1)
+          {length(s.organisms), s}
+        end)
+        |> elem(0)
+
+      assert Enum.max(pops) <= 23
+    end
+
     test "ordem do fio: fundadoras antes dos filhos" do
       sim = %{bare_world() | organisms: [adult("CEL-0001", :celula, {1.0, 4.0, 0.0})]}
       s1 = Sim.step(sim, 0.1)
@@ -1206,6 +1232,100 @@ defmodule Abyss.World.SimTest do
       refute "old" in ids
       assert "y100" in ids
       assert Enum.all?(ids, &Map.has_key?(s.bounds.species, &1))
+    end
+
+    # Placa visível no bote: uma criada com mandíbula e uma criada menor com 2 placas (uma peça
+    # espelhada), postas em contato muitas vezes. Encontros ao acaso não bastam (a calibração viu 0
+    # escapes), então o cenário é dirigido: cada rodada é um bote, com ids diferentes no sorteio.
+    test "placas: a fração de botes escapados segue o escape da presa" do
+      alias Abyss.Genesis.Blueprint
+      alias Abyss.World.Organism
+
+      cat = Catalog.get()
+
+      bp = fn r, parts ->
+        %{
+          "v" => 1,
+          "body" => %{"spine" => [[-0.3, 0.0, r], [0.0, 0.0, r], [0.3, 0.0, r]]},
+          "parts" => parts,
+          "colors" => %{"glow" => "#7fe9dd", "body" => "#3f5a4a"},
+          "pattern" => "liso"
+        }
+      end
+
+      part = fn kind, mirror ->
+        %{
+          "kind" => kind,
+          "at" => 0.5,
+          "around" => 1.57,
+          "size" => 1.0,
+          "angle" => 0.0,
+          "mirror" => mirror
+        }
+      end
+
+      pred_bp = bp.(0.8, [part.("mandibula", false)])
+      prey_bp = bp.(0.3, [part.("raspador", false), part.("placa", true)])
+      bare_bp = bp.(0.3, [part.("raspador", false)])
+      for b <- [pred_bp, prey_bp, bare_bp], do: assert({:ok, _} = Blueprint.validate(b, cat))
+
+      pred = Traits.species(pred_bp, cat, %{id: "spP", code: "SP1", name: "Mandíbula"})
+      prey = Traits.species(prey_bp, cat, %{id: "spQ", code: "SQ1", name: "Placas"})
+      bare = Traits.species(bare_bp, cat, %{id: "spR", code: "SR1", name: "Sem placa"})
+
+      # 2 instâncias de placa com diminish: e + e × diminish (0,25 + 0,175 = 0,425 no catálogo atual).
+      e = cat.parts["placa"].effect.escape
+      expected = min(e + e * cat.diminish, cat.caps.escape)
+      assert_in_delta prey.escape, expected, 1.0e-9
+      assert pred.diet == :predator and bare.escape == 0.0
+      assert prey.body_radius < pred.body_radius
+
+      base =
+        empty_world()
+        |> Sim.add_species(pred, founders: 0)
+        |> Sim.add_species(prey, founders: 0)
+        |> Sim.add_species(bare, founders: 0)
+        |> immortal()
+
+      # Um bote: caçador com fome encostado na presa; passa até o bote acontecer (pega ou escapa).
+      strike = fn prey_sp, i ->
+        h = %Organism{id: "SP1-#{i}", species: "spP", born_ms: 0, pos: @open, energy: 30.0}
+
+        p = %Organism{
+          id: "#{prey_sp}-#{i}",
+          species: prey_sp,
+          born_ms: 0,
+          pos: shift(@open, -0.7)
+        }
+
+        Enum.reduce_while(1..30, %{base | organisms: [h, p]}, fn _, s ->
+          s = Sim.step(s, 0.1)
+
+          case s.eco_totals do
+            %{hunts_escaped: 1} -> {:halt, :escaped}
+            %{hunts_ok: 1} -> {:halt, :caught}
+            _ -> {:cont, s}
+          end
+        end)
+      end
+
+      n = 400
+      outcomes = Enum.frequencies(for i <- 1..n, do: strike.("spQ", i))
+      escaped = Map.get(outcomes, :escaped, 0)
+      frac = escaped / n
+
+      IO.puts(
+        "\n[placas] #{n} botes contra 2 placas: #{inspect(outcomes)}; " <>
+          "fração #{Float.round(frac, 3)}, escape da presa #{Float.round(expected, 3)}"
+      )
+
+      assert escaped + Map.get(outcomes, :caught, 0) == n
+      assert escaped > 0
+      # Sorteio determinístico, mas uniforme: 3 desvios-padrão de uma binomial com n = 400.
+      assert_in_delta frac, expected, 3 * :math.sqrt(expected * (1 - expected) / n)
+
+      # Controle: sem placa, nenhum bote escapa.
+      assert Enum.frequencies(for i <- 1..50, do: strike.("spR", i)) == %{caught: 50}
     end
   end
 end

@@ -536,13 +536,13 @@ defmodule Abyss.World.Sim do
   end
 
   # Quem quer dividir (energia cheia) começa se houver vaga: população mais
-  # divisões em curso (e nascidos deste passo) abaixo de pop_cap. Sem vaga, conta
-  # um cap_hold e tenta de novo no passo seguinte.
+  # divisões em curso (e nascidos e fundadoras deste passo) abaixo de pop_cap.
+  # Sem vaga, conta um cap_hold e tenta de novo no passo seguinte.
   defp start_divisions(orgs, _births, [], _sim), do: {orgs, 0}
 
-  defp start_divisions(orgs, births, wants, %{ecology: eco, bounds: bounds}) do
+  defp start_divisions(orgs, births, wants, %{ecology: eco, bounds: bounds} = sim) do
     in_course = Enum.count(orgs, &(&1.dividing_left > 0))
-    used = length(orgs) + length(births) + in_course
+    used = length(orgs) + length(births) + length(sim.pending_founders) + in_course
 
     {started, held, _} =
       wants

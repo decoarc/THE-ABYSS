@@ -52,3 +52,16 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Banco: DATABASE_URL (compose) ou localhost.
+if url = System.get_env("DATABASE_URL") do
+  config :abyss, Abyss.Repo, url: url
+else
+  config :abyss, Abyss.Repo,
+    username: "postgres",
+    password: "postgres",
+    hostname: "localhost",
+    database: "abyss_dev"
+end
+
+config :abyss, Abyss.Repo, stacktrace: true, show_sensitive_data_on_connection_error: true, pool_size: 10

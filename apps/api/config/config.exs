@@ -8,6 +8,7 @@
 import Config
 
 config :abyss,
+  ecto_repos: [Abyss.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Mapa compartilhado com o cliente (montado em /shared pelo compose).
@@ -69,6 +70,11 @@ config :abyss, :ecology,
   corpse_particles: {3, 4.0},
   founder_energy: {0.6, 0.9},
   founder_age: 0.5
+
+# Swoosh: sem cliente HTTP (adaptadores locais não precisam); o adaptador real é do gate O.
+config :swoosh, :api_client, false
+
+config :abyss, Abyss.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,

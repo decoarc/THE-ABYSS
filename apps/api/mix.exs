@@ -44,7 +44,10 @@ defmodule Abyss.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:ecto_sql, "~> 3.13"},
+      {:postgrex, ">= 0.0.0"},
+      {:swoosh, "~> 1.19"}
     ]
   end
 
@@ -57,6 +60,7 @@ defmodule Abyss.MixProject do
   defp aliases do
     [
       setup: ["deps.get"],
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
     ]
   end

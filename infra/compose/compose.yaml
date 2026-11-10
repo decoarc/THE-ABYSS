@@ -1,12 +1,29 @@
 services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
   api:
     build:
       context: ../../apps/api
       dockerfile: Dockerfile.dev
     # MIX_ENV is deliberately unset: dev is the mix default, and an explicit
     # MIX_ENV=dev would also force `mix test` into dev (no test/support compiled).
-    command: mix phx.server
+    # Cria e migra o banco de dev antes de subir o servidor (idempotente).
+    command: sh -c "mix ecto.create && mix ecto.migrate && mix phx.server"
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
+      - DATABASE_URL=ecto://postgres:postgres@db/abyss_dev
       # Padrão 150 (faixa 5-400); ABYSS_TEST_SPECIES=false liga o mundo vazio.
       - ABYSS_POPULATION=${ABYSS_POPULATION:-150}
       - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-true}
@@ -23,5 +40,6 @@ services:
       - api_build:/app/_build
 
 volumes:
+  db_data:
   api_deps:
   api_build:

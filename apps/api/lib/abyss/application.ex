@@ -10,6 +10,7 @@ defmodule Abyss.Application do
     children =
       [
         AbyssWeb.Telemetry,
+        Abyss.Repo,
         {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Abyss.PubSub},
         Abyss.World.Observers,

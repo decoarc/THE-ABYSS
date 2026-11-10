@@ -80,6 +80,12 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
+  database_url =
+    System.get_env("DATABASE_URL") ||
+      raise "environment variable DATABASE_URL is missing (ecto://USER:PASS@HOST/DATABASE)"
+
+  config :abyss, Abyss.Repo, url: database_url
+
   host = System.get_env("PHX_HOST") || "example.com"
 
   config :abyss, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")

@@ -1,8 +1,8 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { previewTraits } from '../genesis/blueprint';
-import { geometryCache, spineAxis, type CreatureGeometry } from '../genesis/geometry';
+import { geometryCache, nucleusAnchor, type CreatureGeometry } from '../genesis/geometry';
 import { applyBlueprint, createBodyMaterial, createPartsMaterial } from '../genesis/materials';
 import { clampDelta } from '../lib/motion';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
@@ -33,6 +33,12 @@ function nucleusColor(hex: string): string {
   if (m <= 0.001) return '#7fe9dd';
   if (m < 0.6) c.multiplyScalar(0.6 / m);
   return `#${c.getHexString()}`;
+}
+
+interface Resources {
+  geometry: CreatureGeometry;
+  body: THREE.ShaderMaterial;
+  parts: THREE.ShaderMaterial;
 }
 
 interface Aim {
@@ -81,60 +87,43 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
   const offset = phase * 1000;
   const time = useRef(offset);
 
-  // Geometria compartilhada por planta; pega no efeito (não no render) para o StrictMode não vazar.
-  const [geometry, setGeometry] = useState<CreatureGeometry | null>(null);
+  // Geometria (compartilhada por planta) e materiais (desta instância) nascem e morrem no mesmo efeito,
+  // não no render: no StrictMode a desmontagem simulada descarta tudo e a remontagem recria.
+  const [res, setRes] = useState<Resources | null>(null);
   useLayoutEffect(() => {
-    setGeometry(geometryCache.acquire(bp));
-    return () => geometryCache.release(bp);
+    const geometry = geometryCache.acquire(bp);
+    const body = createBodyMaterial();
+    const parts = createPartsMaterial();
+    applyBlueprint(body, bp);
+    applyBlueprint(parts, bp);
+    setRes({ geometry, body, parts });
+    return () => {
+      geometryCache.release(bp);
+      body.dispose();
+      parts.dispose();
+    };
   }, [bp]);
 
   const look = useMemo(() => {
     const color = nucleusColor(bp.colors.glow);
-    // Núcleo no ponto do eixo mais perto do centróide da espinha (sempre dentro do corpo).
-    const pts = bp.body.spine;
-    const cx = pts.reduce((m, p) => m + p[0], 0) / pts.length;
-    const cy = pts.reduce((m, p) => m + p[1], 0) / pts.length;
-    let best = { center: new THREE.Vector3(0, cx, cy), radius: pts[0][2] };
-    let bestD = Infinity;
-    for (let k = 0; k <= 64; k++) {
-      const a = spineAxis(bp, k / 64);
-      const d = (a.center.y - cx) ** 2 + (a.center.z - cy) ** 2;
-      if (d < bestD) {
-        bestD = d;
-        best = a;
-      }
-    }
+    // Núcleo no ponto do eixo mais perto do centróide (a malha já vem centrada nele).
+    const anchor = nucleusAnchor(bp);
     const nucleus: NucleusConfig = {
       color,
-      radius: Math.min(Math.max(best.radius * 0.33, 0.09), 0.24),
+      radius: Math.min(Math.max(anchor.radius * 0.33, 0.09), 0.24),
       pulseHz: 0.22,
       pulseMin: PULSE_MIN,
       pulseMax: PULSE_MAX,
     };
     return {
       nucleus,
-      nucleusAt: best.center.toArray() as [number, number, number],
+      nucleusAt: anchor.position.toArray() as [number, number, number],
       glow: new THREE.Color(bp.colors.glow),
       floor: glowOf(color, 0, 0, 0, 0).color,
       maxSpeed: previewTraits(bp).max_speed,
       hasParts: bp.parts.length > 0,
     };
   }, [bp]);
-
-  const materials = useMemo(() => {
-    const body = createBodyMaterial();
-    const parts = createPartsMaterial();
-    applyBlueprint(body, bp);
-    applyBlueprint(parts, bp);
-    return { body, parts };
-  }, [bp]);
-  useEffect(
-    () => () => {
-      materials.body.dispose();
-      materials.parts.dispose();
-    },
-    [materials],
-  );
 
   const scratch = useMemo(() => {
     // Antes da primeira velocidade útil, numa direção horizontal própria da instância.
@@ -155,7 +144,8 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
   useFrame((_, dt) => {
     time.current += clampDelta(dt) * motion;
     const g = group.current;
-    if (!g || !shown.current) return;
+    if (!g || !shown.current || !res) return;
+    const materials = res;
     g.position.copy(pose.pos);
     const speed = pose.vel.length();
     if (speed > MIN_HEADING_SPEED) {
@@ -191,14 +181,14 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
 
   return (
     <group ref={group} visible={false} {...selectable}>
-      {geometry && (
+      {res && (
         <>
           {/* Núcleo e peças primeiro; a pele translúcida é desenhada por cima. */}
           <group position={look.nucleusAt}>
             <Nucleus config={look.nucleus} pulseRef={pulse} glowRef={vitals.glow} fadeRef={vitals.fade} haloScale={4} timeOffset={offset} />
           </group>
-          {look.hasParts && <mesh geometry={geometry.parts} material={materials.parts} renderOrder={1} />}
-          <mesh geometry={geometry.body} material={materials.body} renderOrder={2} />
+          {look.hasParts && <mesh geometry={res.geometry.parts} material={res.parts} renderOrder={1} />}
+          <mesh geometry={res.geometry.body} material={res.body} renderOrder={2} />
         </>
       )}
     </group>

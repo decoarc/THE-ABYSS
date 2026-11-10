@@ -3,7 +3,7 @@ import fixtures from '../../../../shared/genesis/fixtures/blueprints.json';
 import { createRng } from '../lib/random';
 import type { Blueprint, BlueprintPart, PartKind } from '../services/wire';
 import { bodyRadius, CATALOG, INITIAL_BLUEPRINT, validateBlueprint } from './blueprint';
-import { buildBodyGeometry, buildPartsGeometry, geometryCache, PART_KINDS, surfaceCoords, surfaceFrame } from './geometry';
+import { buildBodyGeometry, buildPartsGeometry, centroidOffset, geometryCache, PART_KINDS, surfaceCoords, surfaceFrame } from './geometry';
 
 const valid = (fixtures as unknown as { blueprint: unknown }[])
   .map((f) => f.blueprint)
@@ -117,6 +117,57 @@ it('surfaceCoords inverte surfaceFrame', () => {
     let da = Math.abs(back.around - around);
     da = Math.min(da, Math.PI * 2 - da);
     worst = Math.max(worst, Math.abs(back.at - at), da);
+  }
+  expect(worst).toBeLessThan(0.02);
+});
+
+it('corpo centrado no centróide da espinha', () => {
+  const fx = (fixtures as unknown as { name: string; blueprint: Blueprint }[]).find((f) => f.name === 'espinha assimetrica')!;
+  const bp = fx.blueprint;
+  expect(centroidOffset(bp).length()).toBeGreaterThan(0.3);
+  const body = buildBodyGeometry(bp);
+  expect(body.boundingSphere!.center.length()).toBeLessThan(0.02);
+  // A malha é a superfície da planta menos o centróide.
+  const f = surfaceFrame(bp, 0.5, 0.3);
+  const pos = body.getAttribute('position');
+  const target = f.position.clone().sub(centroidOffset(bp));
+  let nearest = Infinity;
+  for (let i = 0; i < pos.count; i++) nearest = Math.min(nearest, target.distanceTo(new THREE.Vector3().fromBufferAttribute(pos, i)));
+  expect(nearest).toBeLessThan(0.1);
+  // A esfera da malha centrada fica a 5% de bodyRadius.
+  expect(Math.abs(body.boundingSphere!.radius - bodyRadius(bp)) / bodyRadius(bp)).toBeLessThan(0.05);
+});
+
+it('at cobre as tampas: 1 é a ponta da cabeça, 0 a da cauda', () => {
+  for (const bp of [INITIAL_BLUEPRINT, ...valid]) {
+    const n = bp.body.spine.length;
+    for (const around of [0, 1.3, -2.5]) {
+      const head = surfaceFrame(bp, 1, around);
+      const tail = surfaceFrame(bp, 0, around);
+      // Normal na ponta = tangente do eixo (frente/trás), quase +y/−y local na ponta da espinha.
+      const tipDir = new THREE.Vector3(0, bp.body.spine[n - 1][0] - bp.body.spine[n - 2][0], bp.body.spine[n - 1][1] - bp.body.spine[n - 2][1]).normalize();
+      expect(head.normal.dot(tipDir)).toBeGreaterThan(0.5);
+      expect(tail.normal.y).toBeLessThan(0);
+      expect(Math.abs(head.normal.dot(head.tangent))).toBeLessThan(1e-6);
+      // Ponta da cabeça além do último ponto da espinha.
+      expect(head.position.y).toBeGreaterThan(bp.body.spine[n - 1][0]);
+      expect(tail.position.y).toBeLessThan(bp.body.spine[0][0]);
+    }
+  }
+});
+
+it('surfaceCoords inverte surfaceFrame nas tampas', () => {
+  const rng = createRng(99);
+  let worst = 0;
+  for (let i = 0; i < 200; i++) {
+    const bp = [INITIAL_BLUEPRINT, ...valid][i % (valid.length + 1)];
+    const at = i % 2 === 0 ? rng() * 0.12 : 1 - rng() * 0.12;
+    const around = (rng() * 2 - 1) * Math.PI * 0.999;
+    const f = surfaceFrame(bp, at, around);
+    const back = surfaceCoords(bp, f.position);
+    // Perto da ponta o around colapsa: mede o erro como distância na superfície.
+    const again = surfaceFrame(bp, back.at, back.around);
+    worst = Math.max(worst, Math.abs(back.at - at), again.position.distanceTo(f.position));
   }
   expect(worst).toBeLessThan(0.02);
 });

@@ -25,6 +25,8 @@ interface Spine {
   t: Float64Array;
   r: Float64Array;
   dr: Float64Array;
+  /** Comprimento do tubo (arco da espinha). */
+  len: number;
 }
 
 const spines = new WeakMap<object, Spine>();
@@ -88,7 +90,7 @@ function spineOf(bp: Blueprint): Spine {
     t[k * 3 + 2] = tz / l;
     dr[k] = (r[b] - r[a]) / ((b - a) * ds);
   }
-  const out = { c, t, r, dr };
+  const out = { c, t, r, dr, len: total };
   spines.set(key, out);
   return out;
 }
@@ -102,8 +104,9 @@ interface Axis {
   dr: number;
 }
 
-function axisAt(s: Spine, at: number, out: Axis): Axis {
-  const u = Math.min(Math.max(at, 0), 1) * (SAMPLES - 1);
+/** Eixo do tubo numa fração `f` do comprimento do tubo (sem as tampas). */
+function axisAt(s: Spine, f: number, out: Axis): Axis {
+  const u = Math.min(Math.max(f, 0), 1) * (SAMPLES - 1);
   const i = Math.min(Math.floor(u), SAMPLES - 2);
   const w = u - i;
   const lerp = (arr: Float64Array, k: number, stride: number) => arr[i * stride + k] + (arr[(i + 1) * stride + k] - arr[i * stride + k]) * w;
@@ -119,68 +122,102 @@ function axisAt(s: Spine, at: number, out: Axis): Axis {
   return out;
 }
 
-/** Centro do eixo e raio do corpo em `at`. */
-export function spineAxis(bp: Blueprint, at: number): { center: THREE.Vector3; radius: number } {
-  const a = axisAt(spineOf(bp), at, {} as Axis);
-  return { center: new THREE.Vector3(0, a.cy, a.cz), radius: a.r };
+/**
+ * Comprimento da superfície ao longo de um meridiano: quarto de arco da tampa da cauda (r·π/2),
+ * o tubo, e o quarto de arco da tampa da cabeça. `at` é a fração disso: 0 = ponta da cauda, 1 = ponta da cabeça.
+ */
+function arcs(s: Spine) {
+  const qT = (s.r[0] * Math.PI) / 2;
+  const qH = (s.r[SAMPLES - 1] * Math.PI) / 2;
+  return { qT, qH, L: qT + s.len + qH };
+}
+
+type Region = { cap: -1 | 0 | 1; psi: number };
+
+/** Em que parte da superfície `at` cai, deixando em `a` o eixo daquele trecho (o da ponta, nas tampas). */
+function locate(s: Spine, at: number, a: Axis): Region {
+  const { qT, L } = arcs(s);
+  const u = Math.min(Math.max(at, 0), 1) * L;
+  if (u < qT) {
+    axisAt(s, 0, a);
+    return { cap: -1, psi: (qT - u) / a.r };
+  }
+  if (u > qT + s.len) {
+    axisAt(s, 1, a);
+    return { cap: 1, psi: (u - qT - s.len) / a.r };
+  }
+  axisAt(s, s.len > 0 ? (u - qT) / s.len : 0.5, a);
+  return { cap: 0, psi: 0 };
 }
 
 export interface SurfaceFrame {
   position: THREE.Vector3;
   /** Normal da superfície, para fora. */
   normal: THREE.Vector3;
-  /** Tangente da superfície ao longo da espinha (para a cabeça), perpendicular à normal. */
+  /** Tangente da superfície ao longo do meridiano, para a cabeça; perpendicular à normal. */
   tangent: THREE.Vector3;
 }
 
 // "Cima" perpendicular ao eixo: U = (0, −tz, ty); lado direito: +x. Radial n(θ) = cos θ·U + sin θ·X.
-function surfaceInto(a: Axis, around: number, out: SurfaceFrame): SurfaceFrame {
+function surfaceInto(a: Axis, reg: Region, around: number, out: SurfaceFrame): SurfaceFrame {
   const cs = Math.cos(around);
-  const sn = Math.sin(around);
-  const nx = sn;
+  const nx = Math.sin(around);
   const ny = -a.tz * cs;
   const nz = a.ty * cs;
-  out.position.set(nx * a.r, a.cy + ny * a.r, a.cz + nz * a.r);
-  // Raio variando inclina a normal: n − r'·T (e a tangente da superfície, T + r'·n).
-  out.normal.set(nx, ny - a.dr * a.ty, nz - a.dr * a.tz).normalize();
-  out.tangent.set(a.dr * nx, a.ty + a.dr * ny, a.tz + a.dr * nz).normalize();
+  if (reg.cap === 0) {
+    out.position.set(nx * a.r, a.cy + ny * a.r, a.cz + nz * a.r);
+    // Raio variando inclina a normal: n − r'·T (e a tangente da superfície, T + r'·n).
+    out.normal.set(nx, ny - a.dr * a.ty, nz - a.dr * a.tz).normalize();
+    out.tangent.set(a.dr * nx, a.ty + a.dr * ny, a.tz + a.dr * nz).normalize();
+    return out;
+  }
+  // Tampa hemisférica: ψ = 0 no anel da ponta do tubo, π/2 na ponta (normal = ±T).
+  const d = reg.cap;
+  const cp = Math.cos(reg.psi);
+  const sp = Math.sin(reg.psi);
+  out.position.set(nx * a.r * cp, a.cy + (ny * cp + d * a.ty * sp) * a.r, a.cz + (nz * cp + d * a.tz * sp) * a.r);
+  out.normal.set(nx * cp, ny * cp + d * sp * a.ty, nz * cp + d * sp * a.tz).normalize();
+  out.tangent.set(-d * sp * nx, -d * sp * ny + cp * a.ty, -d * sp * nz + cp * a.tz).normalize();
   return out;
 }
 
+const newFrame = (): SurfaceFrame => ({ position: new THREE.Vector3(), normal: new THREE.Vector3(), tangent: new THREE.Vector3() });
+
+/**
+ * Ponto da superfície em (at, around), no **espaço da planta** (x local = lado, y local = x da planta,
+ * z local = y da planta), sem centralizar. A malha desenhada é este espaço menos `centroidOffset(bp)`.
+ */
 export function surfaceFrame(bp: Blueprint, at: number, around: number): SurfaceFrame {
-  const a = axisAt(spineOf(bp), at, {} as Axis);
-  return surfaceInto(a, around, { position: new THREE.Vector3(), normal: new THREE.Vector3(), tangent: new THREE.Vector3() });
+  const s = spineOf(bp);
+  const a = {} as Axis;
+  return surfaceInto(a, locate(s, at, a), around, newFrame());
 }
 
-/** Inverso de `surfaceFrame`: o (at, around) cujo ponto da superfície fica mais perto de `point`. */
+/** Inverso de `surfaceFrame` (mesmo espaço da planta): o (at, around) cujo ponto fica mais perto de `point`. */
 export function surfaceCoords(bp: Blueprint, point: THREE.Vector3): { at: number; around: number } {
   const s = spineOf(bp);
   const a = {} as Axis;
-  const f: SurfaceFrame = { position: new THREE.Vector3(), normal: new THREE.Vector3(), tangent: new THREE.Vector3() };
-  const aroundAt = (ax: Axis) => {
-    const vy = point.y - ax.cy;
-    const vz = point.z - ax.cz;
-    // Componentes no plano perpendicular ao eixo: sobre U = (0, −tz, ty) e sobre X.
-    return Math.atan2(point.x, -ax.tz * vy + ax.ty * vz);
-  };
+  const f = newFrame();
   const err = (at: number) => {
-    axisAt(s, at, a);
-    const th = aroundAt(a);
-    surfaceInto(a, th, f);
+    const reg = locate(s, at, a);
+    // Componentes no plano perpendicular ao eixo daquele trecho: sobre U = (0, −tz, ty) e sobre X.
+    const th = Math.atan2(point.x, -a.tz * (point.y - a.cy) + a.ty * (point.z - a.cz));
+    surfaceInto(a, reg, th, f);
     return { e: f.position.distanceToSquared(point), th };
   };
+  const N = 2 * SAMPLES;
   let best = 0;
   let bestE = Infinity;
-  for (let k = 0; k < SAMPLES; k++) {
-    const e = err(k / (SAMPLES - 1)).e;
+  for (let k = 0; k < N; k++) {
+    const e = err(k / (N - 1)).e;
     if (e < bestE) {
       bestE = e;
       best = k;
     }
   }
   // Refina por seção áurea entre as amostras vizinhas.
-  let lo = Math.max(best - 1, 0) / (SAMPLES - 1);
-  let hi = Math.min(best + 1, SAMPLES - 1) / (SAMPLES - 1);
+  let lo = Math.max(best - 1, 0) / (N - 1);
+  let hi = Math.min(best + 1, N - 1) / (N - 1);
   const g = (Math.sqrt(5) - 1) / 2;
   for (let it = 0; it < 30; it++) {
     const m1 = hi - g * (hi - lo);
@@ -192,6 +229,39 @@ export function surfaceCoords(bp: Blueprint, point: THREE.Vector3): { at: number
   return { at, around: err(at).th };
 }
 
+/**
+ * Centróide da espinha no espaço local (0, x̄, ȳ): o centro de `bodyRadius`, da pose, do anel de seleção
+ * e do brilho no chão. A geometria desenhada já vem deslocada por −centroidOffset.
+ */
+export function centroidOffset(bp: Blueprint): THREE.Vector3 {
+  const pts = bp.body.spine;
+  return new THREE.Vector3(0, pts.reduce((m, p) => m + p[0], 0) / pts.length, pts.reduce((m, p) => m + p[1], 0) / pts.length);
+}
+
+/** Lugar do núcleo, já centralizado: o ponto do eixo mais perto do centróide (sempre dentro do corpo). */
+export function nucleusAnchor(bp: Blueprint): { position: THREE.Vector3; radius: number } {
+  const s = spineOf(bp);
+  const c = centroidOffset(bp);
+  let best = 0;
+  let bestD = Infinity;
+  for (let k = 0; k < SAMPLES; k++) {
+    const d = (s.c[k * 3 + 1] - c.y) ** 2 + (s.c[k * 3 + 2] - c.z) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = k;
+    }
+  }
+  return { position: new THREE.Vector3(0, s.c[best * 3 + 1], s.c[best * 3 + 2]).sub(c), radius: s.r[best] };
+}
+
+function centerPositions(pos: number[], c: THREE.Vector3) {
+  for (let i = 0; i < pos.length; i += 3) {
+    pos[i] -= c.x;
+    pos[i + 1] -= c.y;
+    pos[i + 2] -= c.z;
+  }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Corpo
 
@@ -201,46 +271,40 @@ const CAP_RINGS = 6;
 
 export function buildBodyGeometry(bp: Blueprint): THREE.BufferGeometry {
   const s = spineOf(bp);
+  const { qT, L } = arcs(s);
   const pos: number[] = [];
   const nrm: number[] = [];
   const along: number[] = [];
   const around: number[] = [];
   const a = {} as Axis;
-  const ring = (cy: number, cz: number, ty: number, tz: number, r: number, tilt: number, sideT: number, al: number) => {
-    // tilt: peso da tangente na normal (tampa); sideT: peso radial.
+  const f = newFrame();
+  const ring = (reg: Region, al: number) => {
     for (let i = 0; i <= BODY_RADIAL; i++) {
       const th = -Math.PI + (i / BODY_RADIAL) * Math.PI * 2;
-      const cs = Math.cos(th);
-      const nx = Math.sin(th);
-      const ny = -tz * cs;
-      const nz = ty * cs;
-      pos.push(nx * r, cy + ny * r, cz + nz * r);
-      const mx = nx * sideT;
-      const my = ny * sideT + ty * tilt;
-      const mz = nz * sideT + tz * tilt;
-      const l = Math.hypot(mx, my, mz) || 1;
-      nrm.push(mx / l, my / l, mz / l);
+      surfaceInto(a, reg, th, f);
+      pos.push(f.position.x, f.position.y, f.position.z);
+      nrm.push(f.normal.x, f.normal.y, f.normal.z);
       along.push(al);
       around.push(th);
     }
   };
-  // Tampa da cauda (da ponta até o anel em at = 0), o tubo, e a tampa da cabeça.
+  // Tampa da cauda (da ponta até o anel do tubo), o tubo, e a tampa da cabeça; `aAlong` é o mesmo `at`.
   axisAt(s, 0, a);
+  const r0 = a.r;
   for (let k = CAP_RINGS; k >= 1; k--) {
-    const ph = (k / CAP_RINGS) * (Math.PI / 2);
-    const off = a.r * Math.sin(ph);
-    ring(a.cy - a.ty * off, a.cz - a.tz * off, a.ty, a.tz, a.r * Math.cos(ph), -Math.sin(ph), Math.cos(ph), 0);
+    const psi = (k / CAP_RINGS) * (Math.PI / 2);
+    ring({ cap: -1, psi }, (qT - psi * r0) / L);
   }
   for (let j = 0; j < BODY_RINGS; j++) {
-    const at = j / (BODY_RINGS - 1);
-    axisAt(s, at, a);
-    ring(a.cy, a.cz, a.ty, a.tz, a.r, -a.dr, 1, at);
+    const fr = j / (BODY_RINGS - 1);
+    axisAt(s, fr, a);
+    ring({ cap: 0, psi: 0 }, (qT + fr * s.len) / L);
   }
   axisAt(s, 1, a);
+  const r1 = a.r;
   for (let k = 1; k <= CAP_RINGS; k++) {
-    const ph = (k / CAP_RINGS) * (Math.PI / 2);
-    const off = a.r * Math.sin(ph);
-    ring(a.cy + a.ty * off, a.cz + a.tz * off, a.ty, a.tz, a.r * Math.cos(ph), Math.sin(ph), Math.cos(ph), 1);
+    const psi = (k / CAP_RINGS) * (Math.PI / 2);
+    ring({ cap: 1, psi }, (qT + s.len + psi * r1) / L);
   }
   const rings = CAP_RINGS * 2 + BODY_RINGS;
   const w = BODY_RADIAL + 1;
@@ -254,21 +318,17 @@ export function buildBodyGeometry(bp: Blueprint): THREE.BufferGeometry {
       idx.push(p, q, r, q, t, r);
     }
   }
+  // Centraliza no centróide da espinha (o mesmo centro de `bodyRadius` e da pose).
+  centerPositions(pos, centroidOffset(bp));
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3));
   g.setAttribute('aAlong', new THREE.Float32BufferAttribute(along, 1));
   g.setAttribute('aAround', new THREE.Float32BufferAttribute(around, 1));
   g.setIndex(idx);
-  // Esfera em volta do centróide da espinha (o mesmo centro de `bodyRadius`).
-  const pts = bp.body.spine;
-  const center = new THREE.Vector3(0, pts.reduce((m, p) => m + p[0], 0) / pts.length, pts.reduce((m, p) => m + p[1], 0) / pts.length);
   let r2 = 0;
-  for (let i = 0; i < pos.length; i += 3) {
-    const dx = pos[i] - center.x, dy = pos[i + 1] - center.y, dz = pos[i + 2] - center.z;
-    r2 = Math.max(r2, dx * dx + dy * dy + dz * dz);
-  }
-  g.boundingSphere = new THREE.Sphere(center, Math.sqrt(r2));
+  for (let i = 0; i < pos.length; i += 3) r2 = Math.max(r2, pos[i] ** 2 + pos[i + 1] ** 2 + pos[i + 2] ** 2);
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), Math.sqrt(r2));
   return g;
 }
 
@@ -406,16 +466,16 @@ const TEMPLATES: Record<PartKind, Template> = {
       tube(b, path, 0.018, 0.004, 5, 3, { bend: v3(0, 0, 0.1), phase: i * 0.45, lum: (t) => 0.25 * t * t });
     }
   },
-  // Duas pinças curvas que se fecham à frente.
+  // Duas pinças curvas saindo pela normal (na ponta da cabeça, para a frente) e se fechando.
   mandibula(b) {
     for (const sx of [-1, 1]) {
-      const path = [v3(0.07 * sx, 0, 0), v3(0.13 * sx, 0.1, 0.14), v3(0.09 * sx, 0.15, 0.3), v3(0.01 * sx, 0.13, 0.4)];
+      const path = [v3(0.07 * sx, 0, 0), v3(0.13 * sx, 0.14, 0.03), v3(0.1 * sx, 0.3, 0.04), v3(0.01 * sx, 0.4, 0.0)];
       tube(b, path, 0.045, 0.006, 9, 5, { bend: v3(0.1 * sx, 0, 0) });
     }
   },
-  // Fio longo que afina, saindo e indo para trás.
+  // Fio longo que afina: sai pela normal (na ponta da cauda, para trás) e se curva para a cauda.
   flagelo(b) {
-    const path = [v3(0, 0, 0), v3(0, 0.12, -0.1), v3(0, 0.2, -0.4), v3(0, 0.24, -0.8), v3(0, 0.25, -1.2)];
+    const path = [v3(0, 0, 0), v3(0, 0.3, -0.05), v3(0, 0.6, -0.2), v3(0, 0.88, -0.42), v3(0, 1.1, -0.7)];
     tube(b, path, 0.032, 0.006, 36, 5, { bend: v3(0.22, 0, 0) });
   },
   // Fileira de fios curtos ao longo do corpo; a fase anda na fileira (onda).
@@ -564,6 +624,7 @@ function addInstance(out: Builder, bp: Blueprint, part: BlueprintPart, index: nu
 export function buildPartsGeometry(bp: Blueprint): THREE.BufferGeometry {
   const b = new Builder();
   bp.parts.forEach((part, i) => addInstance(b, bp, part, i));
+  centerPositions(b.p, centroidOffset(bp));
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3));

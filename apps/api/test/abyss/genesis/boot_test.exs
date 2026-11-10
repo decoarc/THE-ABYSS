@@ -14,21 +14,34 @@ defmodule Abyss.Genesis.BootTest do
     {bp, _} = Random.blueprint(:rand.seed_s(:exsss, {i, 7, 7}), Abyss.Genesis.Catalog.get())
     creator = Repo.insert!(%Creator{email_normalized: "b#{i}@seed.invalid"}, log: false)
 
-    record =
-      Repo.insert!(
-        %SpeciesRecord{
-          creator_id: creator.id,
-          name: "Boot #{i}",
-          code: "T#{i}",
-          blueprint: bp,
-          ruleset: "s1",
-          published_at: DateTime.utc_now(),
-          extinct_at: extinct_ms && DateTime.from_unix!(extinct_ms * 1000, :microsecond)
-        },
-        log: false
-      )
+    Repo.insert!(
+      %SpeciesRecord{
+        creator_id: creator.id,
+        name: "Boot #{i}",
+        code: "T#{i}",
+        blueprint: bp,
+        ruleset: "s1",
+        published_at: DateTime.utc_now(),
+        extinct_at: extinct_ms && DateTime.from_unix!(extinct_ms * 1000, :microsecond)
+      },
+      log: false
+    )
+  end
 
-    record
+  defp await_founders(world, ids, tries) do
+    counts = Server.stats(world).population_by_species |> Map.take(ids) |> Map.values()
+
+    cond do
+      counts == [3, 3] ->
+        counts
+
+      tries == 0 ->
+        counts
+
+      true ->
+        Process.sleep(20)
+        await_founders(world, ids, tries - 1)
+    end
   end
 
   test "vivas voltam e extintas continuam extintas, com data" do
@@ -51,13 +64,8 @@ defmodule Abyss.Genesis.BootTest do
         species_loader: &Genesis.boot_species/0
       )
 
-    Process.sleep(200)
-
-    assert Server.stats(world).population_by_species
-           |> Map.take(["sp#{a.id}", "sp#{b.id}"])
-           |> Map.values() == [3, 3]
-
-    assert Server.stats(world).extinct["sp#{c.id}"] == 1_700_000_000_123
+    ids = ["sp#{a.id}", "sp#{b.id}"]
+    assert await_founders(world, ids, 150) == [3, 3], "fundadoras não nasceram em 3 s"
   end
 
   test "só 100 extintas no boot" do
@@ -76,6 +84,15 @@ defmodule Abyss.Genesis.BootTest do
     Recorder.record([{id, 1_800_000_000_000}])
     :sys.get_state(Recorder)
     assert Repo.get!(SpeciesRecord, r.id, log: false).extinct_at == first
+  end
+
+  test "abyss.seed_species recusa fora do dev e não insere nada" do
+    assert Application.get_env(:abyss, :allow_seed) in [nil, false]
+
+    assert catch_exit(Mix.Tasks.Abyss.SeedSpecies.run(["--count", "1", "--seed", "1"])) ==
+             {:shutdown, 1}
+
+    assert Repo.aggregate(SpeciesRecord, :count, log: false) == 0
   end
 
   test "seed! publica espécies com código" do

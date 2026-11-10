@@ -21,6 +21,8 @@ defmodule Abyss.Genesis do
 
   alias Abyss.World.Server
 
+  require Logger
+
   @email_re ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
   @spec normalize_email(term) :: {:ok, String.t()} | :error
@@ -107,6 +109,74 @@ defmodule Abyss.Genesis do
     })
   end
 
+  @doc "Código público da espécie: \"S\" + id em base 36 (mín. 2 dígitos, maiúsculo)."
+  @spec code_for(pos_integer) :: String.t()
+  def code_for(id), do: "S" <> String.pad_leading(Integer.to_string(id, 36), 2, "0")
+
+  @doc """
+  Espécies para o boot do mundo: as vivas (por id) e as 100 extintas mais
+  recentes (com o ms da extinção). Sem banco, devolve vazio e registra o erro.
+  """
+  @spec boot_species() :: %{
+          live: [Abyss.World.Species.t()],
+          extinct: [{Abyss.World.Species.t(), integer}]
+        }
+  def boot_species do
+    live =
+      from(s in SpeciesRecord, where: is_nil(s.extinct_at), order_by: [asc: s.id])
+      |> Repo.all(log: false)
+      |> Enum.map(&species_from_record/1)
+
+    extinct =
+      from(s in SpeciesRecord,
+        where: not is_nil(s.extinct_at),
+        order_by: [desc: s.extinct_at, desc: s.id],
+        limit: 100
+      )
+      |> Repo.all(log: false)
+      |> Enum.map(&{species_from_record(&1), DateTime.to_unix(&1.extinct_at, :millisecond)})
+
+    %{live: live, extinct: extinct}
+  rescue
+    e ->
+      Logger.error("boot_species falhou (#{inspect(e.__struct__)}); mundo sem espécies criadas")
+      %{live: [], extinct: []}
+  end
+
+  @doc "Apaga criadores, espécies e tokens (reinicia os ids)."
+  @spec reset!() :: :ok
+  def reset! do
+    Ecto.Adapters.SQL.query!(
+      Repo,
+      "TRUNCATE species, creators, verification_tokens RESTART IDENTITY",
+      [],
+      log: false
+    )
+
+    :ok
+  end
+
+  @doc "Só para medição: publica `count` espécies sorteadas (criadores `seed-<i>@seed.invalid`)."
+  @spec seed!(pos_integer, integer) :: :ok
+  def seed!(count, seed) do
+    cat = Catalog.get()
+    now = DateTime.utc_now()
+
+    Enum.reduce(1..count//1, :rand.seed_s(:exsss, {seed, 7, 7}), fn i, rng ->
+      {bp, rng} = Abyss.Genesis.Random.blueprint(rng, cat)
+
+      creator =
+        Repo.insert!(%Creator{email_normalized: "seed-#{i}@seed.invalid"}, log: false)
+
+      {:ok, _} =
+        insert_species(creator, %{name: "Semente #{i}", blueprint: bp}, now)
+
+      rng
+    end)
+
+    :ok
+  end
+
   defp publish(token) do
     hash = :crypto.hash(:sha256, token)
     now = DateTime.utc_now()
@@ -167,7 +237,7 @@ defmodule Abyss.Genesis do
 
     with {:ok, record} <-
            Repo.insert(SpeciesRecord.changeset(%SpeciesRecord{}, attrs), log: false) do
-      code = "S" <> String.pad_leading(Integer.to_string(record.id, 36), 2, "0")
+      code = code_for(record.id)
       {:ok, record |> Ecto.Changeset.change(code: code) |> Repo.update!(log: false)}
     end
   end

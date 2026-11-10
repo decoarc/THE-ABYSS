@@ -10,6 +10,7 @@
     "typecheck": "pnpm --filter @abyss/web typecheck",
     "api:test": "docker compose -f infra/compose/compose.yaml run --rm api mix test",
     "api:up": "docker compose -f infra/compose/compose.yaml up -d db api",
+    "api:reset": "docker compose -f infra/compose/compose.yaml run --rm api mix abyss.reset --yes && docker compose -f infra/compose/compose.yaml restart api",
     "api:down": "docker compose -f infra/compose/compose.yaml down",
     "e2e": "pnpm build && node scripts/e2e/run.mjs",
     "load": "node scripts/load/observers.mjs"

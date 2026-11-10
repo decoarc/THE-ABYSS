@@ -65,3 +65,6 @@ else
 end
 
 config :abyss, Abyss.Repo, stacktrace: true, show_sensitive_data_on_connection_error: true, pool_size: 10
+
+# Semeadura de espécies só para medição (mix abyss.seed_species).
+config :abyss, :allow_seed, true

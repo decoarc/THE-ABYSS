@@ -48,7 +48,7 @@ const chevron = (() => {
 })();
 
 const labels = new Map<string, { material: THREE.MeshBasicMaterial; aspect: number }>();
-function label(text: string, size: number) {
+function label(text: string, size: number, opacity: number) {
   const key = `${text}${size}`;
   let l = labels.get(key);
   if (!l) {
@@ -70,7 +70,7 @@ function label(text: string, size: number) {
         map,
         color: PALETTE.fg,
         transparent: true,
-        opacity: OPACITY + 0.2,
+        opacity,
         depthWrite: false,
       }),
       aspect: 4,
@@ -85,8 +85,8 @@ const plane = new THREE.PlaneGeometry(1, 0.25);
 /** Bússola sob a criatura (espaço centrado da prévia); a altura e o raio seguem o corpo. */
 export function Compass({ bp }: { bp: Blueprint }) {
   const { radius, z } = useMemo(() => compassLayout(bp), [bp]);
-  const front = useMemo(() => label('frente', 40), []);
-  const back = useMemo(() => label('trás', 30), []);
+  const front = useMemo(() => label('frente', 40, OPACITY + 0.25), []);
+  const back = useMemo(() => label('trás', 30, OPACITY - 0.1), []);
   const k = 1 / radius; // tamanhos fixos em unidades do mundo, dentro do grupo escalado pelo raio
   return (
     <group position={[0, 0, z]} scale={radius}>
@@ -94,8 +94,8 @@ export function Compass({ bp }: { bp: Blueprint }) {
       <mesh geometry={ticks} material={material} raycast={noRaycast} />
       <mesh geometry={chevron} material={material} position={[0, 1, 0]} scale={[0.9 * k, 0.9 * k, 1]} raycast={noRaycast} />
       {/* Texto deitado no chão, com a base ao longo de +y (da câmera lateral lê-se da esquerda p/ direita). */}
-      <mesh geometry={plane} material={front.material} position={[0, 1 - 0.85 * k, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1.2 * k, 1.2 * k, 1]} raycast={noRaycast} />
-      <mesh geometry={plane} material={back.material} position={[0, -1 + 0.55 * k, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.8 * k, 0.8 * k, 1]} raycast={noRaycast} />
+      <mesh geometry={plane} material={front.material} position={[0, 1 - 0.5 * k, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.9 * k, 0.9 * k, 1]} raycast={noRaycast} />
+      <mesh geometry={plane} material={back.material} position={[0, -1 + 0.3 * k, 0]} rotation={[0, 0, Math.PI / 2]} scale={[0.6 * k, 0.6 * k, 1]} raycast={noRaycast} />
     </group>
   );
 }

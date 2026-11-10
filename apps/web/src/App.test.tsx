@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { App } from './App';
+import { navigate } from './genesis/route';
 import type { SocketLike } from './services/worldConnection';
 
 const inertChannel = { join: () => ({ receive() { return this; } }), on() {}, leave() {} };
@@ -62,4 +63,22 @@ it('link que não vale mais avisa', async () => {
   window.history.replaceState(null, '', '/#confirmar=velho');
   render(<App webglAvailable={false} socketFactory={() => inertSocket} />);
   expect(await screen.findByText('Este link não vale mais. Monte de novo e peça outro link.')).toBeInTheDocument();
+});
+
+it('publicar zera o rascunho', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () =>
+    new Response(JSON.stringify({ status: 'published', species: { id: 'sp1', name: 'Lumen', code: 'LUM-01' } }), { status: 200 }),
+  ));
+  render(<App webglAvailable={false} socketFactory={() => inertSocket} />);
+  fireEvent.click(screen.getByRole('button', { name: 'CRIAR ESPÉCIE' }));
+  fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'a@b.dev' } });
+  fireEvent.change(screen.getByLabelText('Nome da espécie'), { target: { value: 'Lumen' } });
+  fireEvent.click(screen.getByRole('button', { name: /Raspador/ }));
+  fireEvent.click(screen.getByRole('button', { name: '← Voltar ao abismo' }));
+  act(() => navigate('#confirmar=tok999'));
+  await screen.findByText('Lumen foi liberada no abismo. Procure por ela no índice.');
+  fireEvent.click(screen.getByRole('button', { name: 'CRIAR ESPÉCIE' }));
+  expect(screen.getByLabelText('Nome da espécie')).toHaveValue('');
+  expect(screen.getByLabelText('E-mail')).toHaveValue('');
+  expect(screen.getByRole('button', { name: /Raspador/ })).toBeEnabled();
 });

@@ -1,5 +1,5 @@
 import { CATALOG, INITIAL_BLUEPRINT, blueprintCost, validateBlueprint } from './blueprint';
-import { canMirror, editorReducer, initialEditorState, type EditorAction, type EditorState } from './editor';
+import { addPointBlocker, canMirror, editorReducer, initialEditorState, type EditorAction, type EditorState } from './editor';
 
 const run = (actions: EditorAction[], from: EditorState = initialEditorState) => actions.reduce(editorReducer, from);
 
@@ -103,4 +103,21 @@ it('peças nascem no lugar do tipo e ficam nas faixas', () => {
   const removed = editorReducer({ ...s, selected: { kind: 'part', index: 1 } }, { type: 'removePart', index: 1 });
   expect(removed.bp.parts.map((p) => p.kind)).toEqual(['filtro', 'placa']);
   expect(removed.selected).toBeNull();
+});
+
+it('+ ponto usa o mesmo critério do reducer', () => {
+  expect(addPointBlocker(initialEditorState)).toBeNull();
+  // Ponto 2 a 0,15 do ponto 3: não cabe outro entre eles (precisa de 2 × MIN_GAP).
+  const tight = run([
+    { type: 'movePoint', index: 1, x: 0.15, y: 0 },
+    { type: 'select', selected: { kind: 'point', index: 1 } },
+  ]);
+  expect(addPointBlocker(tight)).toBe('gap');
+  expect(editorReducer(tight, { type: 'addPoint' })).toBe(tight);
+  // Espinha cheia.
+  let full = run([{ type: 'movePoint', index: 2, x: 2, y: 0 }, { type: 'movePoint', index: 0, x: -1.5, y: 0 }]);
+  for (let i = 0; i < 10; i++) full = editorReducer(full, { type: 'addPoint' });
+  expect(full.bp.body.spine).toHaveLength(CATALOG.body.points[1]);
+  expect(addPointBlocker(full)).toBe('max');
+  expect(editorReducer(full, { type: 'addPoint' })).toBe(full);
 });

@@ -83,3 +83,46 @@ it('seleção de peça mostra os controles dela', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Remover peça' }));
   expect(screen.queryByLabelText('Tamanho')).not.toBeInTheDocument();
 });
+
+it('mudar a criatura depois do envio tira a mensagem do link', async () => {
+  vi.stubGlobal('fetch', reply(202, { status: 'sent' }));
+  render(<Harness />);
+  fillForm();
+  fireEvent.click(screen.getByRole('button', { name: /Raspador/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Liberar no abismo' }));
+  const msg = 'Enviamos um link para o seu e-mail. Ele vale por 30 minutos.';
+  await screen.findByText(msg);
+  fireEvent.click(screen.getByRole('button', { name: /^Aleta/ }));
+  expect(screen.queryByText(msg)).not.toBeInTheDocument();
+});
+
+it('mudar o nome depois do envio também tira a mensagem', async () => {
+  vi.stubGlobal('fetch', reply(202, { status: 'sent' }));
+  render(<Harness />);
+  fillForm();
+  fireEvent.click(screen.getByRole('button', { name: /Raspador/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Liberar no abismo' }));
+  const msg = 'Enviamos um link para o seu e-mail. Ele vale por 30 minutos.';
+  await screen.findByText(msg);
+  fireEvent.change(screen.getByLabelText('Nome da espécie'), { target: { value: 'Outra' } });
+  expect(screen.queryByText(msg)).not.toBeInTheDocument();
+});
+
+it('peça que não espelha não mostra o espelho', () => {
+  render(<Harness />);
+  fireEvent.click(screen.getByRole('button', { name: /Raspador/ }));
+  expect(screen.getByLabelText('Tamanho')).toBeInTheDocument();
+  expect(screen.queryByRole('checkbox', { name: 'Espelhar dos dois lados' })).not.toBeInTheDocument();
+});
+
+it('+ ponto desabilita quando não cabe, com o motivo', () => {
+  render(<Harness />);
+  const add = () => screen.getByRole('button', { name: '+ ponto' });
+  expect(add()).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'ponto 2' }));
+  fireEvent.change(screen.getByLabelText('Frente ↔ trás'), { target: { value: '0.15' } });
+  expect(add()).toBeDisabled();
+  expect(add()).toHaveAccessibleDescription('Pontos perto demais: afaste-os para pôr outro entre eles.');
+  fireEvent.change(screen.getByLabelText('Frente ↔ trás'), { target: { value: '-0.1' } });
+  expect(add()).toBeEnabled();
+});

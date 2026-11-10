@@ -146,9 +146,11 @@ function confirmMessage(result: ConfirmResult): string {
  * Rota `#confirmar=<token>`: confirma uma vez só por token (o Set sobrevive ao efeito duplo do
  * StrictMode), tira o token do endereço (recarregar não confirma de novo) e devolve o aviso.
  */
-function useConfirmation(route: Route): [string | null, () => void] {
+function useConfirmation(route: Route, onPublished: () => void): [string | null, () => void] {
   const [notice, setNotice] = useState<string | null>(null);
   const seen = useRef(new Set<string>());
+  const onPublishedRef = useRef(onPublished);
+  onPublishedRef.current = onPublished;
   useEffect(() => {
     if (route.kind !== 'confirm') return;
     const { token } = route;
@@ -156,7 +158,11 @@ function useConfirmation(route: Route): [string | null, () => void] {
     if (seen.current.has(token)) return;
     seen.current.add(token);
     confirmSpecies(token).then(
-      (result) => setNotice(confirmMessage(result)),
+      (result) => {
+        // Publicou: o rascunho desta página já virou espécie; a próxima criação começa do zero.
+        if (typeof result === 'object') onPublishedRef.current();
+        setNotice(confirmMessage(result));
+      },
       () => setNotice('Não foi possível falar com o abismo. Abra o link do e-mail de novo.'),
     );
   }, [route]);
@@ -177,7 +183,7 @@ export function App({
   const route = useRoute();
   // O rascunho mora aqui: sair da criação e voltar mantém a criatura enquanto a página estiver aberta.
   const [draft, setDraft] = useState<Draft>(initialDraft);
-  const [notice, clearNotice] = useConfirmation(route);
+  const [notice, clearNotice] = useConfirmation(route, () => setDraft(initialDraft));
   const creating = route.kind === 'create';
 
   return (

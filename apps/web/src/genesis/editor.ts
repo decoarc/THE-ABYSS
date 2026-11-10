@@ -46,6 +46,22 @@ function placement(kind: PartKind, existing: number): { at: number; around: numb
   return { at: nudge(0.5, 1), around: side };
 }
 
+/** Índice do ponto depois do qual `addPoint` insere: o selecionado (ou o do meio), nunca o último. */
+function addPointAfter(state: EditorState): number {
+  const n = state.bp.body.spine.length;
+  const sel = state.selected?.kind === 'point' ? state.selected.index : Math.floor((n - 1) / 2);
+  return Math.min(sel, n - 2);
+}
+
+/** Por que `addPoint` seria recusado agora: `'max'` (espinha cheia), `'gap'` (vizinhos perto demais) ou null se cabe. */
+export function addPointBlocker(state: EditorState): 'max' | 'gap' | null {
+  const spine = state.bp.body.spine;
+  if (spine.length >= CATALOG.body.points[1]) return 'max';
+  const a = addPointAfter(state);
+  if (spine[a + 1][0] - spine[a][0] < 2 * MIN_GAP) return 'gap';
+  return null;
+}
+
 /** Planta com mais orçamento, tipo ou peças além do permitido? */
 function overLimits(bp: Blueprint): boolean {
   const inst = instances(bp);
@@ -136,13 +152,10 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       return commit(state, withSpine(bp, spine.map((p, k) => (k === i ? [p[0], p[1], r] : p))));
     }
     case 'addPoint': {
-      const n = spine.length;
-      if (n >= CATALOG.body.points[1]) return state;
-      const sel = state.selected?.kind === 'point' ? state.selected.index : Math.floor((n - 1) / 2);
-      const a = Math.min(sel, n - 2);
+      if (addPointBlocker(state) !== null) return state;
+      const a = addPointAfter(state);
       const p = spine[a];
       const q = spine[a + 1];
-      if (q[0] - p[0] < 2 * MIN_GAP) return state;
       const mid: [number, number, number] = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2, (p[2] + q[2]) / 2];
       const next = [...spine.slice(0, a + 1), mid, ...spine.slice(a + 1)];
       return commit(state, withSpine(bp, next), { kind: 'point', index: a + 1 });

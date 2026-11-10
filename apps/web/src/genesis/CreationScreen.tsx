@@ -2,7 +2,7 @@ import { useState, type ComponentType, type CSSProperties, type ReactNode } from
 import { PALETTE } from '../lib/palette';
 import type { PartKind, Pattern } from '../services/wire';
 import { CATALOG, blueprintCost, nextInstanceCost, previewTraits, validateBlueprint } from './blueprint';
-import { canMirror, editorReducer, initialEditorState, type EditorAction, type EditorState } from './editor';
+import { addPointBlocker, canMirror, editorReducer, initialEditorState, type EditorAction, type EditorState } from './editor';
 import { submitSpecies } from './genesisApi';
 
 export interface Draft {
@@ -60,7 +60,7 @@ const CSS = `
 .gen-part { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%; text-align: left; background: transparent; border: 1px solid rgba(220,235,232,0.22); padding: 7px 9px; }
 .gen-part:not(:disabled):hover { border-color: ${PALETTE.cyan}; }
 .gen-chip { background: transparent; border: 1px solid rgba(220,235,232,0.22); padding: 4px 8px; }
-.gen-chip[aria-pressed="true"], .gen-chip[aria-checked="true"] { border-color: ${PALETTE.cyan}; color: ${PALETTE.cyan}; }
+.gen-chip[aria-pressed="true"] { border-color: ${PALETTE.cyan}; color: ${PALETTE.cyan}; }
 .gen-range { width: 100%; accent-color: ${PALETTE.cyan}; }
 .gen-color { width: 44px; height: 28px; padding: 0; border: 1px solid rgba(220,235,232,0.25); background: transparent; }
 .gen-release { width: 100%; padding: 11px 10px; letter-spacing: 0.08em; background: rgba(18,60,71,0.6); border: 1px solid ${PALETTE.cyan}; }
@@ -142,7 +142,12 @@ export function CreationScreen({
 }) {
   const { editor, email, name } = draft;
   const { bp, selected } = editor;
-  const [send, setSend] = useState<SendState>('idle');
+  // O resultado do envio vale só para a versão enviada: qualquer mudança na planta, no e-mail ou
+  // no nome volta a "idle" (o link publica a versão enviada, não a que está na tela).
+  const [sent, setSent] = useState<{ state: SendState; bp: Draft['editor']['bp']; email: string; name: string }>(
+    () => ({ state: 'idle', bp, email, name }),
+  );
+  const send: SendState = sent.bp === bp && sent.email === email && sent.name === name ? sent.state : 'idle';
   const [serverErrors, setServerErrors] = useState<Record<string, string[]>>({});
 
   const dispatch = (action: EditorAction) => onDraftChange((d) => {
@@ -163,17 +168,20 @@ export function CreationScreen({
 
   const release = async () => {
     if (!canRelease) return;
-    setSend('sending');
+    // A resposta fica marcada com a versão enviada; se a pessoa mudou algo no meio, ela não aparece.
+    const version = { bp, email, name };
+    const finish = (state: SendState) => setSent({ state, ...version });
+    finish('sending');
     setServerErrors({});
     try {
       const result = await submitSpecies({ email: email.trim(), name: name.trim(), blueprint: bp });
-      if (result === 'sent' || result === 'slow_down') setSend(result);
+      if (result === 'sent' || result === 'slow_down') finish(result);
       else {
         setServerErrors(result.errors);
-        setSend('idle');
+        finish('idle');
       }
     } catch {
-      setSend('failed');
+      finish('failed');
     }
   };
 
@@ -184,6 +192,11 @@ export function CreationScreen({
   const point = selected?.kind === 'point' ? bp.body.spine[selected.index] : undefined;
   const spine = bp.body.spine;
   const [pmin, pmax] = CATALOG.body.points;
+  const pointBlocker = addPointBlocker(editor);
+  const pointBlockerText =
+    pointBlocker === 'max' ? `A espinha já tem ${pmax} pontos.`
+    : pointBlocker === 'gap' ? 'Pontos perto demais: afaste-os para pôr outro entre eles.'
+    : null;
 
   return (
     <div className="gen-root">
@@ -241,7 +254,7 @@ export function CreationScreen({
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {GROUPS.map((g) => (
               <div key={g.title} role="group" aria-label={g.title}>
-                <div style={{ font: `10px/1.4 ${MONO}`, letterSpacing: '0.08em', opacity: 0.45, marginBottom: 4 }}>{g.title}</div>
+                <div style={{ font: `10px/1.4 ${MONO}`, letterSpacing: '0.08em', opacity: 0.65, marginBottom: 4 }}>{g.title}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {g.kinds.map((kind) => {
                     const next = nextInstanceCost(bp, kind);
@@ -256,7 +269,7 @@ export function CreationScreen({
                       >
                         <span>
                           {info.name}
-                          <span style={{ opacity: 0.55 }}> · {info.effect}</span>
+                          <span style={{ opacity: 0.65 }}> · {info.effect}</span>
                         </span>
                         <span style={{ color: PALETTE.cyan }}>{next === null ? '—' : `+${next}`}</span>
                       </button>
@@ -293,15 +306,20 @@ export function CreationScreen({
               </button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
             <button
               type="button"
               className="gen-chip"
-              disabled={spine.length >= pmax}
+              disabled={pointBlocker !== null}
+              title={pointBlockerText ?? undefined}
+              aria-describedby={pointBlockerText ? 'gen-addpoint-why' : undefined}
               onClick={() => dispatch({ type: 'addPoint' })}
             >
               + ponto
             </button>
+            {pointBlockerText && (
+              <span id="gen-addpoint-why" style={{ font: `11px/1.4 ${MONO}`, opacity: 0.7 }}>{pointBlockerText}</span>
+            )}
           </div>
 
           {part && selected && (
@@ -315,15 +333,17 @@ export function CreationScreen({
                 format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => dispatch({ type: 'movePart', index: selected.index, at: v, around: part.around })} />
               <Slider id="gen-around" label="Em volta" value={part.around} min={-Math.PI} max={Math.PI} step={0.05}
                 format={(v) => `${Math.round((v * 180) / Math.PI)}°`} onChange={(v) => dispatch({ type: 'movePart', index: selected.index, at: part.at, around: v })} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, font: `12px/1.4 ${MONO}` }}>
-                <input
-                  type="checkbox"
-                  checked={part.mirror}
-                  disabled={!part.mirror && !canMirror(bp, selected.index)}
-                  onChange={() => dispatch({ type: 'toggleMirror', index: selected.index })}
-                />
-                Espelhar dos dois lados
-              </label>
+              {CATALOG.parts[part.kind].mirror && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, font: `12px/1.4 ${MONO}` }}>
+                  <input
+                    type="checkbox"
+                    checked={part.mirror}
+                    disabled={!part.mirror && !canMirror(bp, selected.index)}
+                    onChange={() => dispatch({ type: 'toggleMirror', index: selected.index })}
+                  />
+                  Espelhar dos dois lados
+                </label>
+              )}
               <button type="button" className="gen-chip" style={{ marginTop: 10 }} onClick={() => dispatch({ type: 'removePart', index: selected.index })}>
                 Remover peça
               </button>
@@ -351,7 +371,7 @@ export function CreationScreen({
             </div>
           )}
           {!selected && (
-            <p style={{ margin: '8px 0 0', font: `11px/1.5 ${MONO}`, opacity: 0.5 }}>
+            <p style={{ margin: '8px 0 0', font: `11px/1.5 ${MONO}`, opacity: 0.65 }}>
               Escolha um ponto ou uma peça para ajustar. Na criatura: arraste os pontos para esticar e curvar, a roda do mouse sobre um ponto muda a espessura, e as peças deslizam sobre o corpo.
             </p>
           )}
@@ -368,13 +388,12 @@ export function CreationScreen({
               Corpo
             </label>
           </div>
-          <div role="radiogroup" aria-label="Padrão" style={{ display: 'flex', gap: 4, marginTop: 10, flexWrap: 'wrap' }}>
+          <div role="group" aria-label="Padrão" style={{ display: 'flex', gap: 4, marginTop: 10, flexWrap: 'wrap' }}>
             {(CATALOG.patterns as Pattern[]).map((p) => (
               <button
                 key={p}
                 type="button"
-                role="radio"
-                aria-checked={bp.pattern === p}
+                aria-pressed={bp.pattern === p}
                 className="gen-chip"
                 onClick={() => dispatch({ type: 'setPattern', pattern: p })}
               >

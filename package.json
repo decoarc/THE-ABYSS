@@ -13,6 +13,7 @@
     "api:reset": "docker compose -f infra/compose/compose.yaml run --rm api mix abyss.reset --yes && docker compose -f infra/compose/compose.yaml restart api",
     "api:down": "docker compose -f infra/compose/compose.yaml down",
     "e2e": "pnpm build && node scripts/e2e/run.mjs",
+    "e2e:genesis": "pnpm build && node scripts/e2e/genesis.mjs",
     "load": "node scripts/load/observers.mjs"
   },
   "devDependencies": {

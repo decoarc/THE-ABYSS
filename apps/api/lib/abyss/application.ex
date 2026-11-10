@@ -11,6 +11,7 @@ defmodule Abyss.Application do
       [
         AbyssWeb.Telemetry,
         Abyss.Repo,
+        Abyss.Genesis.RateLimit,
         {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Abyss.PubSub},
         Abyss.World.Observers,

@@ -3,13 +3,12 @@ defmodule Abyss.Genesis.VerificationToken do
   import Ecto.Changeset
 
   # O e-mail nunca pode aparecer em logs.
-  @derive {Inspect, except: [:email_normalized]}
   schema "verification_tokens" do
-    field :token_hash, :binary
-    field :email_normalized, :string
-    field :name, :string
-    field :blueprint, :map
-    field :expires_at, :utc_datetime_usec
+    field(:token_hash, :binary)
+    field(:email_normalized, :string, redact: true)
+    field(:name, :string)
+    field(:blueprint, :map)
+    field(:expires_at, :utc_datetime_usec)
     timestamps(type: :utc_datetime_usec, updated_at: false)
   end
 

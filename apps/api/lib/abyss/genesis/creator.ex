@@ -3,9 +3,8 @@ defmodule Abyss.Genesis.Creator do
   import Ecto.Changeset
 
   # O e-mail nunca pode aparecer em logs.
-  @derive {Inspect, except: [:email_normalized]}
   schema "creators" do
-    field :email_normalized, :string
+    field(:email_normalized, :string, redact: true)
     timestamps(type: :utc_datetime_usec, updated_at: false)
   end
 

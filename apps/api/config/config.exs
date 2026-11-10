@@ -77,6 +77,16 @@ config :abyss, :genesis,
   web_url: "http://localhost:5173",
   limits: [submit_ip: {10, 600}, submit_email: {3, 3600}, confirm_ip: {20, 600}]
 
+# Origens do cliente web autorizadas no CORS.
+config :abyss, :web_origins, [
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:4175"
+]
+
+# Parâmetros que o log de requisição do Phoenix mascara.
+config :phoenix, :filter_parameters, ["password", "email", "token"]
+
 # Swoosh: sem cliente HTTP (adaptadores locais não precisam); o adaptador real é do gate O.
 config :swoosh, :api_client, false
 

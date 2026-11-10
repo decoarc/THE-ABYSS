@@ -38,9 +38,13 @@ defmodule AbyssWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  # CORS antes do parser: o preflight não gasta nada.
+  plug AbyssWeb.Plugs.Cors
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
+    length: 16_384,
     json_decoder: Phoenix.json_library()
 
   plug Plug.MethodOverride

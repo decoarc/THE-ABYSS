@@ -118,16 +118,23 @@ defmodule Abyss.Genesis.ConfirmTest do
     assert Repo.aggregate(SpeciesRecord, :count) == 1
   end
 
-  test "dois tokens do mesmo e-mail em paralelo publicam uma vez", %{world: world} do
+  test "dois tokens do mesmo e-mail publicam uma vez", %{world: world} do
     t1 = submit_token("ana@x.com", {1, 1, 1, 1})
-    t2 = submit_token("ana@x.com", {1, 1, 1, 2})
 
-    results =
-      for t <- [t1, t2], do: Task.async(fn -> Genesis.confirm(t, world: world) end)
+    # segundo token do mesmo e-mail, criado à mão (o envio já o recusaria)
+    Repo.insert!(%VerificationToken{
+      token_hash: :crypto.hash(:sha256, "segundo"),
+      email_normalized: "ana@x.com",
+      name: "Outra",
+      blueprint: blueprint(),
+      expires_at: DateTime.add(DateTime.utc_now(), 600, :second)
+    })
 
-    results = Enum.map(results, &Task.await/1)
-    assert Enum.count(results, &match?({:ok, _}, &1)) == 1
-    assert Enum.count(results, &(&1 == {:error, :taken})) == 1
+    # Em sequência é determinístico: o primeiro publica e apaga os tokens do
+    # e-mail; o segundo, já apagado, é :invalid. (O :taken, sem a limpeza, é o
+    # teste "maiúsculas e espaços".)
+    assert {:ok, _} = Genesis.confirm(t1, world: world)
+    assert {:error, :invalid} = Genesis.confirm("segundo", world: world)
     assert Repo.aggregate(SpeciesRecord, :count) == 1
     assert Repo.all(VerificationToken) == []
   end

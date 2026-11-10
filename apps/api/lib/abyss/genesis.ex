@@ -85,8 +85,11 @@ defmodule Abyss.Genesis do
       true ->
         case publish(token) do
           {:ok, record, email} ->
-            Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email))
-            spawn_in_world(world, species_from_record(record))
+            Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email),
+              log: false
+            )
+
+            spawn_in_world(world, record)
             {:ok, %{id: "sp#{record.id}", name: record.name, code: record.code}}
 
           {:error, reason} ->
@@ -109,24 +112,28 @@ defmodule Abyss.Genesis do
     now = DateTime.utc_now()
 
     result =
-      Repo.transaction(fn ->
-        # DELETE ... RETURNING é o uso único: só uma transação leva a linha.
-        {_, rows} =
-          Repo.delete_all(
-            from(t in VerificationToken,
-              where: t.token_hash == ^hash and t.expires_at > ^now,
-              select: t
+      Repo.transaction(
+        fn ->
+          # DELETE ... RETURNING é o uso único: só uma transação leva a linha.
+          {_, rows} =
+            Repo.delete_all(
+              from(t in VerificationToken,
+                where: t.token_hash == ^hash and t.expires_at > ^now,
+                select: t
+              ),
+              log: false
             )
-          )
 
-        row = List.first(rows) || Repo.rollback(:invalid)
-        creator = find_or_create_creator(row.email_normalized)
+          row = List.first(rows) || Repo.rollback(:invalid)
+          creator = find_or_create_creator(row.email_normalized)
 
-        case insert_species(creator, row, now) do
-          {:ok, record} -> {record, row.email_normalized}
-          {:error, _changeset} -> Repo.rollback(:taken)
-        end
-      end)
+          case insert_species(creator, row, now) do
+            {:ok, record} -> {record, row.email_normalized}
+            {:error, _changeset} -> Repo.rollback(:taken)
+          end
+        end,
+        log: false
+      )
 
     case result do
       {:ok, {record, email}} -> {:ok, record, email}
@@ -137,10 +144,11 @@ defmodule Abyss.Genesis do
   defp find_or_create_creator(email) do
     Repo.insert!(%Creator{email_normalized: email},
       on_conflict: :nothing,
-      conflict_target: :email_normalized
+      conflict_target: :email_normalized,
+      log: false
     )
 
-    Repo.get_by!(Creator, email_normalized: email)
+    Repo.get_by!(Creator, [email_normalized: email], log: false)
   end
 
   # O código depende do id do banco: insere com um código provisório único e
@@ -157,19 +165,21 @@ defmodule Abyss.Genesis do
       published_at: now
     }
 
-    with {:ok, record} <- Repo.insert(SpeciesRecord.changeset(%SpeciesRecord{}, attrs)) do
+    with {:ok, record} <-
+           Repo.insert(SpeciesRecord.changeset(%SpeciesRecord{}, attrs), log: false) do
       code = "S" <> String.pad_leading(Integer.to_string(record.id, 36), 2, "0")
-      {:ok, record |> Ecto.Changeset.change(code: code) |> Repo.update!()}
+      {:ok, record |> Ecto.Changeset.change(code: code) |> Repo.update!(log: false)}
     end
   end
 
   # A publicação já está no banco; mundo ausente ou morto não falha a confirmação
   # (o próximo boot carrega a espécie).
-  defp spawn_in_world(world, species) do
-    if GenServer.whereis(world), do: Server.add_species(world, species)
+  defp spawn_in_world(world, record) do
+    if GenServer.whereis(world), do: Server.add_species(world, species_from_record(record))
     :ok
   catch
     :exit, _ -> :ok
+    :error, _ -> :ok
   end
 
   defp rate_limited?(ip, email) do
@@ -214,7 +224,7 @@ defmodule Abyss.Genesis do
   # O destinatário é o e-mail normalizado (trim + downcase).
   defp deliver(to, name, blueprint) do
     now = DateTime.utc_now()
-    Repo.delete_all(from(t in VerificationToken, where: t.expires_at < ^now))
+    Repo.delete_all(from(t in VerificationToken, where: t.expires_at < ^now), log: false)
 
     if has_species?(to) do
       {:ok, _} = Mailer.deliver(Email.already_used(to))
@@ -228,7 +238,8 @@ defmodule Abyss.Genesis do
           name: name,
           blueprint: blueprint,
           expires_at: DateTime.add(now, config(:token_ttl_s), :second)
-        })
+        }),
+        log: false
       )
 
       {:ok, _} = Mailer.deliver(Email.verify(to, "#{config(:web_url)}/#confirmar=#{token}"))
@@ -243,7 +254,8 @@ defmodule Abyss.Genesis do
         join: c in Creator,
         on: c.id == s.creator_id,
         where: c.email_normalized == ^norm_email
-      )
+      ),
+      log: false
     )
   end
 

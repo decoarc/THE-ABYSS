@@ -15,9 +15,10 @@ defmodule Abyss.Eco do
   @doc """
   `opts`: `seed` (padrão 1), `minutes` (padrão 10), `population` (padrão o da
   configuração do mundo), `food_boost` (padrão o da configuração do mundo, 1.0;
-  só para medição, ver `Sim.boost_food/2`) e `genesis` (padrão 0: quantas espécies
+  só para medição, ver `Sim.boost_food/2`), `test_species` (padrão o da
+  configuração do mundo) e `genesis` (padrão 0: quantas espécies
   `Random.blueprint` somar, 3 fundadoras cada, ids `sp1`…, sorteio próprio da semente). Cada linha: `%{minute, pop, births, births_by, deaths,
-  extinct}`; `births` e `deaths` contam só aquele minuto, `pop` é o fim dele.
+  hunts_ok, hunts_escaped, extinct}`; `births`, `deaths` e `hunts_*` contam só aquele minuto, `pop` é o fim dele.
   """
   @spec run(keyword) :: [map]
   def run(opts) do
@@ -34,7 +35,7 @@ defmodule Abyss.Eco do
         now_ms: 0,
         map: WMap.load!(Application.fetch_env!(:abyss, :map_path)),
         creature_scale: Keyword.fetch!(world, :creature_scale),
-        test_species: Keyword.fetch!(world, :test_species),
+        test_species: Keyword.get(opts, :test_species, Keyword.fetch!(world, :test_species)),
         food: :abyss |> Application.fetch_env!(:food) |> Map.new() |> Sim.boost_food(boost),
         ecology: :abyss |> Application.fetch_env!(:ecology) |> Map.new()
       })
@@ -56,6 +57,8 @@ defmodule Abyss.Eco do
           births_by:
             Map.new(ids, &{&1, Map.get(sim.eco_totals.births, &1, 0) - Map.get(before_by, &1, 0)}),
           deaths: Map.new(now.deaths_total, fn {c, n} -> {c, n - before.deaths_total[c]} end),
+          hunts_ok: now.hunts_ok - before.hunts_ok,
+          hunts_escaped: now.hunts_escaped - before.hunts_escaped,
           extinct: now.extinct
         }
 

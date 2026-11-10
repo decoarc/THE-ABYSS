@@ -108,3 +108,58 @@ Nas outras, o caçador morre de fome antes de alcançar alguém.
 
 Nenhuma. A única mudança de código foi no `mix abyss.eco`: colunas `hunts_ok` e `hunts_escaped` por
 minuto e a opção `test_species` em `Abyss.Eco.run` (commit `feat: mix abyss.eco conta botes certos e escapes da placa`).
+
+## Ajuste leve (Parada 1)
+
+Decisão do autor na Parada 1, aplicada no commit `art: ajuste leve do catálogo (placa e mandíbula) e corpos variados no sorteio`:
+
+- `placa`: `escape` 0,15 → 0,25 (teto `caps.escape` 0,6 e `speed_factor` 0,9 ficam).
+- `mandibula`: `cost` 5 → 4 e `metab` 0,020 → 0,010.
+- `Random.blueprint`: cada planta sorteia uma classe de tamanho (pequena, média ou grande, 1/3 cada) e
+  sorteia comprimento da espinha, `r` dos pontos e curvatura dentro da faixa da classe. Antes quase todo corpo
+  saía com `body_radius` 1,3–1,6; agora (teste com 1.000 plantas) ao menos 25% têm < 0,9 e ao menos 25% têm > 1,2
+  (nas 60 espécies sorteadas da recalibração: 23 < 0,9, 22 > 1,2).
+- Fixtures: só "mandibula" mudou (`cost` 8 → 7, `metabolism` 0,08535 → 0,07535, regenerados por script);
+  nenhuma fixture tem placa. O plano `docs/superpowers/plans/2026-11-10-gate-s1-genese.md` não foi editado.
+
+Recalibração: mesmo comando e métricas do Step 1, sementes 1..3, 60 min, 20 sorteadas, sem e com espécies de teste
+(`tmp/calib.exs`, `CONC=1`, mesmo `Abyss.Eco.run`). Como o `Random` mudou, as 20 sorteadas de cada semente são
+outras plantas: a comparação é de panorama, não espécie a espécie. "Antes" vem da tabela do Step 1.
+
+| Teste | Semente | | Criadas vivas no min 60 | > 60% | Fome | Predação | Velhice | Botes certos | Escapes (placa) | Dividiram ≤ 20 min |
+|---|---|---|---|---|---|---|---|---|---|---|
+| com | 1 | antes | 2/20 | `celula`, min 21, 61%, 40 min | 400 | 42 | 620 | 42 | 0 | 9/20 |
+| com | 1 | depois | 2/20 | `celula`, min 19, 61%, 17 min | 505 | 158 | 725 | 158 | 0 | 7/20 |
+| com | 2 | antes | 0/20 | `celula`, min 24, 62%, 25 min | 401 | 66 | 616 | 66 | 0 | 11/20 |
+| com | 2 | depois | 4/20 | `celula`, min 31, 61%, 3 min | 394 | 45 | 736 | 45 | 0 | 10/20 |
+| com | 3 | antes | 0/20 | `celula`, min 16, 61%, 22 min | 534 | 305 | 708 | 305 | 0 | 8/20 |
+| com | 3 | depois | 1/20 | `celula`, min 23, 60%, 12 min | 529 | 541 | 558 | 541 | 0 | 8/20 |
+| sem | 1 | antes | 4/20 | `sp5` (raspador), min 55, 60%, 6 min | 452 | 9 | 229 | 9 | 1 | 5/20 |
+| sem | 1 | depois | 1/20 | `sp5` (raspador, placa ×2), min 11, 65%, 50 min | 219 | 2 | 133 | 2 | 0 | 6/20 |
+| sem | 2 | antes | 2/20 | `sp13` (raspador), min 9, 64%, 52 min | 525 | 0 | 252 | 0 | 0 | 7/20 |
+| sem | 2 | depois | 6/20 | nenhuma | 370 | 0 | 490 | 0 | 0 | 11/20 |
+| sem | 3 | antes | 4/20 | `sp1` (raspador), min 40, 62%, 21 min | 409 | 5 | 239 | 5 | 0 | 7/20 |
+| sem | 3 | depois | 4/20 | nenhuma | 508 | 0 | 232 | 0 | 0 | 9/20 |
+
+Totais (3 sementes): com teste, criadas vivas 2 → 7 de 60 (antes 2+0+0, depois 2+4+1); sem teste, 10 → 11 de 60;
+`hunts_ok` com teste 413 → 744, sem teste 14 → 2; `hunts_escaped` 1 → 0 em todas.
+
+Leitura:
+- Predador criado vivo no minuto 60: nenhum, antes e depois (13 das 60 sorteadas têm mandíbula).
+- Sem espécies de teste, 2 das 3 sementes não têm mais espécie acima de 60%; com teste, `celula` ainda passa de 60%
+  nas três (61%, 61%, 60%), por menos minutos.
+- A placa (escape 0,25) ainda não escapa de nenhum bote nestas corridas (`hunts_escaped` = 0): as caçadas quase
+  só acontecem com espécies de teste, cujas presas não têm placa.
+- Não se ajustou mais nada (equilíbrio não é critério de aceitação).
+
+### Espécie típica com mandíbula (depois)
+
+Mesma planta (mandíbula + flagelo ×2 + aleta, raio 1,0, `mature_s` 120) somada às 20 sorteadas (3 fundadoras),
+20 min, sementes 1..5. Metabolismo 0,170 → 0,160, custo 17.
+
+| | Antes | Depois |
+|---|---|---|
+| Dividiu em 20 min, com teste | 1/5 | 1/5 (semente 5) |
+| Dividiu em 20 min, sem teste | 1/5 | 1/5 (semente 4) |
+
+Continua quase nunca dividindo: a mandíbula típica morre de fome antes de alcançar presa.

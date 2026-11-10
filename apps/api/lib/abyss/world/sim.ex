@@ -335,6 +335,7 @@ defmodule Abyss.World.Sim do
         sim
         | bounds: bounds,
           next_seq: Map.filter(sim.next_seq, fn {id, _} -> keep.(id) end),
+          pending_species: Enum.filter(sim.pending_species, &keep.(&1.id)),
           extinct: Map.filter(extinct, fn {id, _} -> keep.(id) end)
       }
     end

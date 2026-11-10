@@ -71,7 +71,7 @@ defmodule Abyss.Eco do
     catalog = Catalog.get()
 
     {sim, _rng} =
-      Enum.reduce(1..n, {sim, :rand.seed_s(:exsss, seed)}, fn i, {sim, rng} ->
+      Enum.reduce(1..n, {sim, :rand.seed_s(:exsss, {seed, 0x5EED, 1})}, fn i, {sim, rng} ->
         {bp, rng} = Random.blueprint(rng, catalog)
 
         code =

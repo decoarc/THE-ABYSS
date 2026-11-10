@@ -1100,15 +1100,26 @@ defmodule Abyss.World.SimTest do
 
     test "fundadoras entram acima do teto" do
       sim = Sim.new(%{@opts | population: 20, food: %{@food | particle_rate: 0.0}})
-      sim = %{sim | ecology: %{sim.ecology | pop_cap: 20}} |> Sim.add_species(made(2))
-      s = Sim.step(sim, 0.1)
+
+      full =
+        Enum.map(
+          sim.organisms,
+          &%{&1 | energy: Map.fetch!(sim.bounds.species, &1.species).energy_max}
+        )
+
+      sim = %{sim | organisms: full, ecology: %{sim.ecology | pop_cap: 20}}
+      s = sim |> Sim.add_species(made(2)) |> Sim.step(0.1)
       assert length(s.organisms) == 23
 
-      Enum.reduce(1..50, s, fn _, s ->
-        s = Sim.step(s, 0.1)
-        if length(s.organisms) >= 20, do: assert(s.life_events.births == [])
-        s
-      end)
+      {s, _} =
+        Enum.reduce(1..50, {s, 0}, fn _, {s, n} ->
+          before = length(s.organisms)
+          s = Sim.step(s, 0.1)
+          if before >= 20, do: assert(s.life_events.births == [])
+          {s, n + 1}
+        end)
+
+      assert s.eco_totals.cap_holds > 0
     end
 
     test "ordem do fio: fundadoras antes dos filhos" do
@@ -1156,9 +1167,45 @@ defmodule Abyss.World.SimTest do
       assert empty_world().bounds.max_r == 1.6 * 0.5
     end
 
-    test "fundadora não é lançada para dentro de esponja nem muda a dieta caçada" do
-      sim = empty_world() |> Sim.add_species(made(5))
-      assert sim.bounds.hunted == :all or is_struct(sim.bounds.hunted, MapSet)
+    test "fundadoras ficam fora das esponjas e a dieta caçada é recalculada" do
+      base = empty_world()
+      assert %MapSet{} = base.bounds.hunted
+
+      sim =
+        Enum.reduce(1..10, base, fn i, sim ->
+          Sim.add_species(sim, %{made(i) | id: "f#{i}", code: "F#{i}", diet: :flora})
+        end)
+
+      assert length(sim.pending_founders) == 30
+
+      for o <- sim.pending_founders,
+          sp <- sim.bounds.map.sponges,
+          {x, y, z} = o.pos,
+          y < sp.h do
+        r = Sim.body_radius(sim, o.species)
+        assert :math.sqrt((x - sp.x) ** 2 + (z - sp.z) ** 2) >= sp.r + r - 1.0e-9
+      end
+
+      pred = %{made(6) | id: "pred", code: "PRD", diet: :predator}
+      assert Sim.add_species(base, pred).bounds.hunted == :all
+    end
+
+    test "poda também tira a espécie pendente do fio" do
+      sim =
+        Enum.reduce(1..100, empty_world(), fn i, sim ->
+          Sim.add_species(sim, %{made(1) | id: "y#{i}", code: "Y#{i}"},
+            extinct_ms: 1000 + i,
+            founders: 0
+          )
+        end)
+
+      sim = Sim.add_species(sim, %{made(1) | id: "old", code: "OLD"}, extinct_ms: 1, founders: 0)
+      refute Map.has_key?(sim.bounds.species, "old")
+      s = Sim.step(sim, 0.1)
+      ids = Enum.map(s.life_events.species, & &1.id)
+      refute "old" in ids
+      assert "y100" in ids
+      assert Enum.all?(ids, &Map.has_key?(s.bounds.species, &1))
     end
   end
 end

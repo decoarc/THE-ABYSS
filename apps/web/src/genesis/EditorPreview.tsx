@@ -16,6 +16,8 @@ import { isClick, type Point } from '../lib/pointer';
 import { CRIADA_PULSE, criadaNucleus, useCriadaResources } from '../organisms/Criada';
 import { Nucleus } from '../organisms/Nucleus';
 import type { Blueprint } from '../services/wire';
+import { Compass } from './CompassGuide';
+import { fitDistance } from './compassMath';
 import { centroidOffset, surfaceCoords, surfaceFrame } from './geometry';
 import type { PreviewProps } from './CreationScreen';
 import type { EditorAction } from './editor';
@@ -26,6 +28,8 @@ const HANDLE = 0.055;
 const COLOR_IDLE = new THREE.Color(PALETTE.fg);
 const COLOR_SELECTED = new THREE.Color(PALETTE.amber);
 const WHEEL_STEP = 0.0008;
+const CAMERA_FOV = 38;
+const CAMERA_ELEV = 0.42;
 
 function Creature({ bp, view, bodyRef }: { bp: Blueprint; view: THREE.Vector3; bodyRef: RefObject<THREE.Mesh | null> }) {
   const res = useCriadaResources(bp);
@@ -179,6 +183,7 @@ function Editable({ state, dispatch }: PreviewProps) {
   return (
     <>
       <Creature bp={bp} view={view} bodyRef={bodyRef} />
+      <Compass bp={bp} />
       {points.map((pos, i) => {
         const isSel = selected?.kind === 'point' && selected.index === i;
         return (
@@ -212,7 +217,7 @@ function Editable({ state, dispatch }: PreviewProps) {
         enableZoom={hover === 0}
         enablePan={false}
         minDistance={1.6}
-        maxDistance={9}
+        maxDistance={14}
         target={[0, 0, 0]}
       />
     </>
@@ -222,11 +227,17 @@ function Editable({ state, dispatch }: PreviewProps) {
 /** Canvas da prévia. Câmera de lado: com +z para cima, a frente da criatura (+y local) fica à direita. */
 export function EditorPreview({ state, dispatch }: PreviewProps) {
   const downAt = useRef<Point | null>(null);
+  // Só na montagem: câmera a ~25° de elevação (para o chão aparecer), afastada o bastante para o corpo caber.
+  const start = useRef<[number, number, number] | null>(null);
+  if (!start.current) {
+    const d = fitDistance(state.bp, CAMERA_FOV);
+    start.current = [d * Math.cos(CAMERA_ELEV), 0, d * Math.sin(CAMERA_ELEV)];
+  }
   return (
     <Canvas
       dpr={[1, 2]}
       gl={{ antialias: true }}
-      camera={{ position: [4.2, 0, 0.6], up: [0, 0, 1], fov: 38, near: 0.05, far: 60 }}
+      camera={{ position: start.current, up: [0, 0, 1], fov: CAMERA_FOV, near: 0.05, far: 60 }}
       style={{ position: 'absolute', inset: 0, background: PALETTE.bg, touchAction: 'none' }}
       onCreated={({ gl, scene }) => {
         scene.background = null;

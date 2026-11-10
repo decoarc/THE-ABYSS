@@ -15,8 +15,11 @@ defmodule Abyss.Genesis do
     Email,
     RateLimit,
     SpeciesRecord,
+    Traits,
     VerificationToken
   }
+
+  alias Abyss.World.Server
 
   @email_re ~r/^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -60,6 +63,114 @@ defmodule Abyss.Genesis do
   end
 
   def submit(_, ip), do: submit(%{}, ip)
+
+  @doc """
+  Confirma um token (uso único), publica a espécie no banco e a faz nascer no
+  mundo. `opts`: `:ip` (limite de confirmações) e `:world` (servidor).
+  """
+  @spec confirm(term, keyword) ::
+          {:ok, %{id: String.t(), name: String.t(), code: String.t()}}
+          | {:error, :invalid | :taken | :rate_limited}
+  def confirm(token, opts \\ []) do
+    ip = Keyword.get(opts, :ip, {127, 0, 0, 1})
+    world = Keyword.get(opts, :world, Server)
+
+    cond do
+      RateLimit.hit({:confirm_ip, ip}, limit(:confirm_ip)) == :limited ->
+        {:error, :rate_limited}
+
+      not is_binary(token) ->
+        {:error, :invalid}
+
+      true ->
+        case publish(token) do
+          {:ok, record, email} ->
+            Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email))
+            spawn_in_world(world, species_from_record(record))
+            {:ok, %{id: "sp#{record.id}", name: record.name, code: record.code}}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+    end
+  end
+
+  @spec species_from_record(SpeciesRecord.t()) :: Abyss.World.Species.t()
+  def species_from_record(%SpeciesRecord{} = record) do
+    Traits.species(record.blueprint, Catalog.get(), %{
+      id: "sp#{record.id}",
+      code: record.code,
+      name: record.name
+    })
+  end
+
+  defp publish(token) do
+    hash = :crypto.hash(:sha256, token)
+    now = DateTime.utc_now()
+
+    result =
+      Repo.transaction(fn ->
+        # DELETE ... RETURNING é o uso único: só uma transação leva a linha.
+        {_, rows} =
+          Repo.delete_all(
+            from(t in VerificationToken,
+              where: t.token_hash == ^hash and t.expires_at > ^now,
+              select: t
+            )
+          )
+
+        row = List.first(rows) || Repo.rollback(:invalid)
+        creator = find_or_create_creator(row.email_normalized)
+
+        case insert_species(creator, row, now) do
+          {:ok, record} -> {record, row.email_normalized}
+          {:error, _changeset} -> Repo.rollback(:taken)
+        end
+      end)
+
+    case result do
+      {:ok, {record, email}} -> {:ok, record, email}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp find_or_create_creator(email) do
+    Repo.insert!(%Creator{email_normalized: email},
+      on_conflict: :nothing,
+      conflict_target: :email_normalized
+    )
+
+    Repo.get_by!(Creator, email_normalized: email)
+  end
+
+  # O código depende do id do banco: insere com um código provisório único e
+  # o corrige na mesma transação.
+  defp insert_species(creator, row, now) do
+    placeholder = "tmp-" <> Base.encode16(:crypto.strong_rand_bytes(8))
+
+    attrs = %{
+      creator_id: creator.id,
+      name: row.name,
+      code: placeholder,
+      blueprint: row.blueprint,
+      ruleset: "s1",
+      published_at: now
+    }
+
+    with {:ok, record} <- Repo.insert(SpeciesRecord.changeset(%SpeciesRecord{}, attrs)) do
+      code = "S" <> String.pad_leading(Integer.to_string(record.id, 36), 2, "0")
+      {:ok, record |> Ecto.Changeset.change(code: code) |> Repo.update!()}
+    end
+  end
+
+  # A publicação já está no banco; mundo ausente ou morto não falha a confirmação
+  # (o próximo boot carrega a espécie).
+  defp spawn_in_world(world, species) do
+    if GenServer.whereis(world), do: Server.add_species(world, species)
+    :ok
+  catch
+    :exit, _ -> :ok
+  end
 
   defp rate_limited?(ip, email) do
     ip_hit = RateLimit.hit({:submit_ip, ip}, limit(:submit_ip))

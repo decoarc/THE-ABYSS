@@ -4,8 +4,8 @@ defmodule Abyss.Genesis.Creator do
 
   # O e-mail nunca pode aparecer em logs.
   schema "creators" do
-    field(:email_normalized, :string, redact: true)
-    timestamps(type: :utc_datetime_usec, updated_at: false)
+    field :email_normalized, :string, redact: true
+    timestamps type: :utc_datetime_usec, updated_at: false
   end
 
   def changeset(creator, attrs) do

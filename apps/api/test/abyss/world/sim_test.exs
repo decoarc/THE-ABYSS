@@ -85,13 +85,19 @@ defmodule Abyss.World.SimTest do
     assert length(Sim.new(Map.put(%{@opts | population: 400}, :ecology, eco)).organisms) == 400
 
     big = Map.put(eco, :pop_cap, 401)
-    assert_raise ArgumentError, fn -> Sim.new(Map.put(%{@opts | population: 45}, :ecology, big)) end
+
+    assert_raise ArgumentError, fn ->
+      Sim.new(Map.put(%{@opts | population: 45}, :ecology, big))
+    end
   end
 
   test "população inicial respeita o teto" do
     eco = Map.new(Application.fetch_env!(:abyss, :ecology)) |> Map.put(:pop_cap, 20)
     assert length(Sim.new(Map.put(%{@opts | population: 20}, :ecology, eco)).organisms) == 20
-    assert_raise ArgumentError, fn -> Sim.new(Map.put(%{@opts | population: 21}, :ecology, eco)) end
+
+    assert_raise ArgumentError, fn ->
+      Sim.new(Map.put(%{@opts | population: 21}, :ecology, eco))
+    end
   end
 
   test "mundo vazio" do
@@ -167,7 +173,10 @@ defmodule Abyss.World.SimTest do
   test "respeita max_speed" do
     Enum.reduce(1..300, Sim.new(@opts), fn _, s ->
       s = Sim.step(s, 0.1)
-      for o <- s.organisms, do: assert(norm(o.vel) <= max_speed(o.species) * burst(o.species) * 1.001)
+
+      for o <- s.organisms,
+          do: assert(norm(o.vel) <= max_speed(o.species) * burst(o.species) * 1.001)
+
       s
     end)
   end
@@ -399,17 +408,23 @@ defmodule Abyss.World.SimTest do
       end
 
       assert sim.organisms |> Enum.map(& &1.energy) |> Enum.uniq() |> length() > 10
-      assert sim.life_events == %{deaths: [], births: [], extinct: []}
+      assert sim.life_events == %{deaths: [], births: [], extinct: [], species: []}
     end
 
     test "forrageia até encher" do
       hungry =
-        bare() |> with_patch(5.0, 0.0) |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 50.0) |> run(1)
+        bare()
+        |> with_patch(5.0, 0.0)
+        |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 50.0)
+        |> run(1)
 
       assert hd(hungry.organisms).target == {:flora, 0}
 
       full =
-        bare() |> with_patch(5.0, 0.0) |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 100.0) |> run(1)
+        bare()
+        |> with_patch(5.0, 0.0)
+        |> with_org(:celula, {0.0, 4.0, 0.0}, energy: 100.0)
+        |> run(1)
 
       assert hd(full.organisms).target == nil
     end
@@ -569,7 +584,10 @@ defmodule Abyss.World.SimTest do
     defp step_until_birth(sim, max) do
       Enum.reduce_while(1..max, {sim, []}, fn _, {s, hist} ->
         s = Sim.step(s, 0.1)
-        if s.life_events.births != [], do: {:halt, {s, [s | hist]}}, else: {:cont, {s, [s | hist]}}
+
+        if s.life_events.births != [],
+          do: {:halt, {s, [s | hist]}},
+          else: {:cont, {s, [s | hist]}}
       end)
     end
 
@@ -620,7 +638,12 @@ defmodule Abyss.World.SimTest do
     test "jovem não divide" do
       o = adult("CEL-0001", :celula, {1.0, 4.0, 0.0}, stage: :juvenile)
       sim = %{bare_world() | organisms: [o]}
-      sim = Enum.reduce(1..100, sim, fn _, s -> Sim.step(%{s | organisms: Enum.map(s.organisms, &%{&1 | energy: 100.0})}, 0.1) end)
+
+      sim =
+        Enum.reduce(1..100, sim, fn _, s ->
+          Sim.step(%{s | organisms: Enum.map(s.organisms, &%{&1 | energy: 100.0})}, 0.1)
+        end)
+
       assert [%{dividing_left: +0.0, stage: :juvenile}] = sim.organisms
       assert sim.eco_totals.births == %{}
     end
@@ -630,7 +653,9 @@ defmodule Abyss.World.SimTest do
       {final, _} = step_until_birth(sim, round(sim.ecology.divide_s * 10) + 20)
       [child] = final.life_events.births
       assert child.species == :poliedro
-      assert Map.fetch!(final.bounds.species, child.species) == Map.fetch!(sim.bounds.species, :poliedro)
+
+      assert Map.fetch!(final.bounds.species, child.species) ==
+               Map.fetch!(sim.bounds.species, :poliedro)
     end
 
     test "ids não se repetem" do
@@ -638,17 +663,30 @@ defmodule Abyss.World.SimTest do
 
       parents =
         for {sp, i} <- Enum.with_index([:celula, :membrana, :casco]),
-            do: adult("#{String.upcase(String.slice("#{sp}", 0, 3))}-0001", sp, {1.0 + i * 8, 4.0, 0.0})
+            do:
+              adult(
+                "#{String.upcase(String.slice("#{sp}", 0, 3))}-0001",
+                sp,
+                {1.0 + i * 8, 4.0, 0.0}
+              )
 
       sim = %{sim | organisms: parents}
       codes = Map.new(Species.all(), &{&1.id, &1.code})
       sim = %{sim | organisms: Enum.map(parents, &%{&1 | id: "#{codes[&1.species]}-0001"})}
 
+      # 200 × divide_s passos: o mesmo número de divisões por pai, qualquer que seja divide_s.
       {sim, ids, births} =
-        # 200 × divide_s passos: o mesmo número de divisões por pai, qualquer que seja divide_s.
         1..round(200 * sim.ecology.divide_s)
-        |> Enum.reduce({sim, MapSet.new(Enum.map(sim.organisms, & &1.id)), 0}, fn i, {s, ids, b} ->
-          s = %{s | organisms: Enum.map(s.organisms, fn o -> if o.stage == :adult, do: %{o | energy: 100.0}, else: o end)}
+        |> Enum.reduce({sim, MapSet.new(Enum.map(sim.organisms, & &1.id)), 0}, fn i,
+                                                                                  {s, ids, b} ->
+          s = %{
+            s
+            | organisms:
+                Enum.map(s.organisms, fn o ->
+                  if o.stage == :adult, do: %{o | energy: 100.0}, else: o
+                end)
+          }
+
           s = Sim.step(s, 0.1)
           new_ids = Enum.map(s.life_events.births, & &1.id)
           assert Enum.all?(new_ids, &(not MapSet.member?(ids, &1)))
@@ -670,7 +708,15 @@ defmodule Abyss.World.SimTest do
     end
 
     test "teto segura a divisão" do
-      orgs = for i <- 1..20, do: adult("CEL-#{String.pad_leading("#{i}", 4, "0")}", :celula, {1.0 + i * 1.0, 4.0, 0.0})
+      orgs =
+        for i <- 1..20,
+            do:
+              adult(
+                "CEL-#{String.pad_leading("#{i}", 4, "0")}",
+                :celula,
+                {1.0 + i * 1.0, 4.0, 0.0}
+              )
+
       sim = %{bare_world(20) | organisms: orgs}
 
       sim = Enum.reduce(1..100, sim, fn _, s -> Sim.step(s, 0.1) end)
@@ -696,17 +742,30 @@ defmodule Abyss.World.SimTest do
 
     # Mundo vazio, sem flora nem partículas novas; os testes põem caçador e presa.
     defp hunt_world(orgs, seed \\ 7) do
-      sim = Sim.new(%{@opts | seed: seed, test_species: false, food: %{@food | particle_rate: 0.0}})
+      sim =
+        Sim.new(%{@opts | seed: seed, test_species: false, food: %{@food | particle_rate: 0.0}})
+
       %{sim | flora: Flora.put_patches(sim.flora, {}), organisms: orgs}
     end
 
     defp hunter(pos, extra \\ []),
-      do: struct!(%Organism{id: "FIL-0001", species: :filamento, born_ms: 0, pos: pos, energy: 30.0}, extra)
+      do:
+        struct!(
+          %Organism{id: "FIL-0001", species: :filamento, born_ms: 0, pos: pos, energy: 30.0},
+          extra
+        )
 
     defp young(pos, extra \\ []),
       do:
         struct!(
-          %Organism{id: "CEL-0001", species: :celula, born_ms: 0, pos: pos, stage: :juvenile, energy: 50.0},
+          %Organism{
+            id: "CEL-0001",
+            species: :celula,
+            born_ms: 0,
+            pos: pos,
+            stage: :juvenile,
+            energy: 50.0
+          },
           extra
         )
 
@@ -769,7 +828,9 @@ defmodule Abyss.World.SimTest do
     end
 
     test "hunted vira :all com um predador na tabela" do
-      species = Enum.map(Species.all(), &if(&1.id == :filamento, do: %{&1 | diet: :predator}, else: &1))
+      species =
+        Enum.map(Species.all(), &if(&1.id == :filamento, do: %{&1 | diet: :predator}, else: &1))
+
       sim = Sim.new(Map.put(@opts, :species, species))
       assert sim.bounds.hunted == :all
       assert %MapSet{} = Sim.new(@opts).bounds.hunted
@@ -885,7 +946,12 @@ defmodule Abyss.World.SimTest do
     # Só o Casco "já teve indivíduos"; as outras espécies nunca existiram.
     defp casco_world do
       sim = bare_world()
-      %{sim | next_seq: Map.new(sim.next_seq, fn {sp, _} -> {sp, if(sp == :casco, do: 4, else: 1)} end)}
+
+      %{
+        sim
+        | next_seq:
+            Map.new(sim.next_seq, fn {sp, _} -> {sp, if(sp == :casco, do: 4, else: 1)} end)
+      }
     end
 
     defp casco(n, extra \\ []),
@@ -938,14 +1004,26 @@ defmodule Abyss.World.SimTest do
 
       aa =
         Map.merge(base, %{
-          id: :aa, code: "AAA", name: "Alfa", max_speed: 0.3, body_radius: 0.8,
-          diet: :flora, burst: 1.5, metabolism: 0.3
+          id: :aa,
+          code: "AAA",
+          name: "Alfa",
+          max_speed: 0.3,
+          body_radius: 0.8,
+          diet: :flora,
+          burst: 1.5,
+          metabolism: 0.3
         })
 
       bb =
         Map.merge(base, %{
-          id: :bb, code: "BBB", name: "Beta", max_speed: 0.7, body_radius: 1.4,
-          diet: {:prey, [:aa]}, burst: 2.0, metabolism: 0.4
+          id: :bb,
+          code: "BBB",
+          name: "Beta",
+          max_speed: 0.7,
+          body_radius: 1.4,
+          diet: {:prey, [:aa]},
+          burst: 2.0,
+          metabolism: 0.4
         })
 
       sim = Sim.new(Map.merge(@opts, %{population: 30, species: [aa, bb]}))
@@ -983,6 +1061,104 @@ defmodule Abyss.World.SimTest do
       assert st.deaths_total == %{starvation: 0, predation: 0, old_age: 0}
       assert st.hunts_ok == 0 and st.hunts_abandoned == 0 and st.cap_holds == 0
       assert st.extinct == %{}
+    end
+  end
+
+  describe "espécies em tempo de execução" do
+    alias Abyss.Genesis.{Catalog, Random, Traits}
+
+    defp made(i) do
+      cat = Catalog.get()
+      {bp, _} = Random.blueprint(:rand.seed_s(:exsss, i), cat)
+      Traits.species(bp, cat, %{id: "sp#{i}", code: "S#{i}", name: "G#{i}"})
+    end
+
+    defp empty_world(cap \\ 250) do
+      sim = Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
+      %{sim | ecology: %{sim.ecology | pop_cap: cap}}
+    end
+
+    test "fundadoras nascem adultas, juntas, no tick seguinte" do
+      sp = made(1)
+      sim = empty_world() |> Sim.add_species(sp)
+      assert sim.organisms == []
+      s = Sim.step(sim, 0.1)
+
+      assert s.life_events.species == [sp]
+      assert [f1, f2, f3 | _] = s.life_events.births
+      assert Enum.map([f1, f2, f3], & &1.id) == ["S1-0001", "S1-0002", "S1-0003"]
+      assert Enum.all?([f1, f2, f3], &(&1.stage == :adult and &1.energy == 0.9 * sp.energy_max))
+
+      assert dist(f1.pos, f2.pos) <= 3.0 and dist(f1.pos, f3.pos) <= 3.0 and
+               dist(f2.pos, f3.pos) <= 3.0
+
+      assert length(s.organisms) == 3
+      assert s.pending_species == [] and s.pending_founders == []
+      assert Sim.eco_stats(s).births_total == 0
+      assert Sim.step(s, 0.1).life_events.species == []
+    end
+
+    test "fundadoras entram acima do teto" do
+      sim = Sim.new(%{@opts | population: 20, food: %{@food | particle_rate: 0.0}})
+      sim = %{sim | ecology: %{sim.ecology | pop_cap: 20}} |> Sim.add_species(made(2))
+      s = Sim.step(sim, 0.1)
+      assert length(s.organisms) == 23
+
+      Enum.reduce(1..50, s, fn _, s ->
+        s = Sim.step(s, 0.1)
+        if length(s.organisms) >= 20, do: assert(s.life_events.births == [])
+        s
+      end)
+    end
+
+    test "ordem do fio: fundadoras antes dos filhos" do
+      sim = %{bare_world() | organisms: [adult("CEL-0001", :celula, {1.0, 4.0, 0.0})]}
+      s1 = Sim.step(sim, 0.1)
+      {_final, [_birth, before | _]} = step_until_birth(s1, 100)
+      final = before |> Sim.add_species(made(3)) |> Sim.step(0.1)
+      assert [f1, f2, f3, child] = final.life_events.births
+      assert String.starts_with?(f1.id, "S3-") and child.id == "CEL-0002"
+      assert Enum.take(final.organisms, -4) == [f1, f2, f3, child]
+    end
+
+    test "extinta registrada não volta" do
+      sim = empty_world() |> Sim.add_species(made(9), extinct_ms: 123, founders: 0)
+      assert sim.extinct["sp9"] == 123
+      s = run(sim, 5)
+      assert s.organisms == []
+      assert s.extinct["sp9"] == 123
+    end
+
+    test "poda das extintas criadas" do
+      sim =
+        Enum.reduce(1..120, Sim.new(@opts), fn i, sim ->
+          sp = %{made(1) | id: "x#{i}", code: "X#{i}"}
+          Sim.add_species(sim, sp, extinct_ms: i, founders: 0)
+        end)
+
+      ids = sim |> Sim.species() |> Enum.map(& &1.id)
+      assert length(ids) == 105
+      assert Enum.count(ids, &is_atom/1) == 5
+      refute "x1" in ids
+      assert "x120" in ids
+      assert map_size(sim.extinct) == 100
+      assert %Sim{} = run(sim, 3)
+    end
+
+    test "registrar duas vezes não duplica" do
+      sim = empty_world() |> Sim.add_species(made(4))
+      again = Sim.add_species(sim, made(4))
+      assert again == sim
+      assert length(Sim.step(again, 0.1).organisms) == 3
+    end
+
+    test "o raio máximo da grade não muda com espécie maior" do
+      assert empty_world().bounds.max_r == 1.6 * 0.5
+    end
+
+    test "fundadora não é lançada para dentro de esponja nem muda a dieta caçada" do
+      sim = empty_world() |> Sim.add_species(made(5))
+      assert sim.bounds.hunted == :all or is_struct(sim.bounds.hunted, MapSet)
     end
   end
 end

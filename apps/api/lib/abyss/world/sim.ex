@@ -26,11 +26,21 @@ defmodule Abyss.World.Sim do
   @max_food_dt 0.5
   @eat_margin 0.6
   @drift_weight 0.15
+  @max_body_radius 1.6
+  @founder_spread 1.5
+  @max_extinct_created 100
 
   @no_events %{changed: [], spawned: [], removed: []}
   @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
-  @no_life %{deaths: [], births: [], extinct: []}
-  @no_eco %{births: %{}, deaths: %{}, hunts_ok: 0, hunts_abandoned: 0, hunts_escaped: 0, cap_holds: 0}
+  @no_life %{deaths: [], births: [], extinct: [], species: []}
+  @no_eco %{
+    births: %{},
+    deaths: %{},
+    hunts_ok: 0,
+    hunts_abandoned: 0,
+    hunts_escaped: 0,
+    cap_holds: 0
+  }
 
   defstruct organisms: [],
             rng: nil,
@@ -46,7 +56,9 @@ defmodule Abyss.World.Sim do
             life_events: @no_life,
             eco_totals: @no_eco,
             extinct: %{},
-            next_seq: %{}
+            next_seq: %{},
+            pending_species: [],
+            pending_founders: []
 
   @type food_events :: %{
           changed: [{non_neg_integer, float}],
@@ -65,10 +77,17 @@ defmodule Abyss.World.Sim do
           now_ms: integer,
           food_events: food_events,
           totals: map,
-          life_events: %{deaths: [{String.t(), atom}], births: [Organism.t()], extinct: [tuple]},
+          life_events: %{
+            deaths: [{String.t(), atom}],
+            births: [Organism.t()],
+            extinct: [tuple],
+            species: [Species.t()]
+          },
           eco_totals: map,
           extinct: %{atom => integer},
-          next_seq: %{atom => pos_integer}
+          next_seq: %{atom => pos_integer},
+          pending_species: [Species.t()],
+          pending_founders: [Organism.t()]
         }
 
   @doc """
@@ -76,7 +95,8 @@ defmodule Abyss.World.Sim do
   `creature_scale` (raio efetivo = body_radius × escala), `test_species`
   (false = mundo sem organismos), `food` (mapa do bloco `:food`), `species`
   (tabela de espécies, padrão `Species.all/0`) e `ecology` (mapa do bloco
-  `:ecology`, padrão o da configuração).
+  `:ecology`, padrão o da configuração) e `max_body_radius` (maior raio de corpo que
+  uma espécie registrada depois pode ter; padrão 1.6, o do catálogo da gênese).
   """
   @spec new(map) :: t
   def new(
@@ -97,7 +117,7 @@ defmodule Abyss.World.Sim do
       Map.get_lazy(opts, :ecology, fn -> Map.new(Application.fetch_env!(:abyss, :ecology)) end)
 
     validate_population!(pop, ecology)
-    bounds = bounds(map, scale, species)
+    bounds = bounds(map, scale, species, Map.get(opts, :max_body_radius, @max_body_radius))
     rng = :rand.seed_s(:exsss, seed)
 
     {organisms, rng} =
@@ -154,13 +174,19 @@ defmodule Abyss.World.Sim do
       do: raise(ArgumentError, "pop_cap deve ser no máximo #{@max_population}, recebido: #{cap}")
 
     if pop > cap,
-      do: raise(ArgumentError, "população deve estar entre 5 e #{cap} (pop_cap), recebido: #{pop}")
+      do:
+        raise(ArgumentError, "população deve estar entre 5 e #{cap} (pop_cap), recebido: #{pop}")
   end
 
   # Fixos do mapa, calculados uma vez: esponjas numa grade de discos (alcance
   # máximo de sponge_steer/keep_out_sponges) e o centro mais rico por dieta.
-  defp bounds(map, scale, species) do
-    max_r = species |> Enum.map(& &1.body_radius) |> Enum.max() |> Kernel.*(scale)
+  defp bounds(map, scale, species, max_body_radius) do
+    max_r =
+      species
+      |> Enum.map(& &1.body_radius)
+      |> Enum.max()
+      |> max(max_body_radius)
+      |> Kernel.*(scale)
 
     sponge_grid =
       map.sponges
@@ -211,6 +237,107 @@ defmodule Abyss.World.Sim do
         particle_rate: food.particle_rate * k,
         particle_cap: round(food.particle_cap * k)
     }
+  end
+
+  @doc """
+  Registra uma espécie em tempo de execução (id já existente: no-op). `opts`:
+  `founders` (padrão 3) adultas juntas num ponto de uma região sorteada com
+  peso 1 (sem relação com a dieta), entregues no próximo `step` sem contar o
+  teto; `extinct_ms` registra a espécie já extinta, sem organismos.
+  """
+  @spec add_species(t, Species.t(), keyword) :: t
+  def add_species(%__MODULE__{bounds: bounds} = sim, sp, opts \\ []) do
+    if Map.has_key?(bounds.species, sp.id) do
+      sim
+    else
+      list = bounds.species_list ++ [sp]
+      extinct_ms = Keyword.get(opts, :extinct_ms)
+      n = if extinct_ms, do: 0, else: Keyword.get(opts, :founders, 3)
+
+      bounds = %{
+        bounds
+        | species: Map.put(bounds.species, sp.id, sp),
+          species_list: list,
+          hunted: hunted(list)
+      }
+
+      sim = %{
+        sim
+        | bounds: bounds,
+          next_seq: Map.put(sim.next_seq, sp.id, n + 1),
+          pending_species: sim.pending_species ++ [sp],
+          extinct: if(extinct_ms, do: Map.put(sim.extinct, sp.id, extinct_ms), else: sim.extinct)
+      }
+
+      sim |> add_founders(sp, n) |> prune_extinct()
+    end
+  end
+
+  defp add_founders(sim, _sp, 0), do: sim
+
+  defp add_founders(%{bounds: bounds} = sim, sp, n) do
+    {{cx, y, cz}, rng} = random_position(%{diet: nil}, bounds, sim.rng)
+    r = eff_radius(sp, bounds)
+
+    {founders, rng} =
+      Enum.map_reduce(1..n, rng, fn k, rng ->
+        {u, rng} = :rand.uniform_s(rng)
+        {a, rng} = uniform_range(rng, 0.0, 2 * :math.pi())
+        {yaw, rng} = uniform_range(rng, -:math.pi(), :math.pi())
+        {mode_left, rng} = initial_mode_left(sp, rng)
+        rho = @founder_spread * :math.sqrt(u)
+        pos = keep_out_sponges({cx + rho * :math.cos(a), y, cz + rho * :math.sin(a)}, r, bounds)
+
+        {%Organism{
+           id: "#{sp.code}-#{k |> Integer.to_string() |> String.pad_leading(4, "0")}",
+           species: sp.id,
+           born_ms: sim.now_ms,
+           pos: pos,
+           yaw: yaw,
+           mode: :run,
+           mode_left: mode_left,
+           energy: 0.9 * sp.energy_max,
+           stage: :adult,
+           stage_ms: sim.now_ms,
+           generation: 1,
+           parent_id: nil,
+           dividing_left: 0.0
+         }, rng}
+      end)
+
+    %{sim | rng: rng, pending_founders: sim.pending_founders ++ founders}
+  end
+
+  # Só as 100 extintas criadas (id string) mais recentes ficam; as de teste
+  # (id átomo) nunca saem. Some de `bounds`, `next_seq` e `extinct` juntos.
+  defp prune_extinct(%{extinct: extinct} = sim) do
+    created = for {id, ms} <- extinct, is_binary(id), do: {ms, id}
+
+    if length(created) <= @max_extinct_created do
+      sim
+    else
+      drop =
+        created
+        |> Enum.sort()
+        |> Enum.take(length(created) - @max_extinct_created)
+        |> MapSet.new(&elem(&1, 1))
+
+      keep = fn id -> not MapSet.member?(drop, id) end
+      list = Enum.filter(sim.bounds.species_list, &keep.(&1.id))
+
+      bounds = %{
+        sim.bounds
+        | species: Map.filter(sim.bounds.species, fn {id, _} -> keep.(id) end),
+          species_list: list
+      }
+
+      %{
+        sim
+        | bounds: bounds,
+          next_seq: Map.filter(sim.next_seq, fn {id, _} -> keep.(id) end),
+          extinct: Map.filter(extinct, fn {id, _} -> keep.(id) end)
+      }
+    end
   end
 
   @doc "Espécies da simulação, na ordem dada."
@@ -292,7 +419,7 @@ defmodule Abyss.World.Sim do
     # de uma presa que concluiu a divisão no seu próprio passo e depois foi comida.
     {new_orgs, births, next_seq} = complete_divisions(orgs, new_orgs, sim, now_ms)
     {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim)
-    new_orgs = new_orgs ++ births
+    new_orgs = new_orgs ++ sim.pending_founders ++ births
 
     # Remoção única no fim: comidos (:predation, sem corpo), fome e velhice.
     {survivors, dead} =
@@ -327,12 +454,16 @@ defmodule Abyss.World.Sim do
         totals: totals,
         next_seq: next_seq,
         extinct: extinct,
+        pending_species: [],
+        pending_founders: [],
         life_events: %{
           @no_life
           | deaths: corpse_events.deaths,
-            births: births,
-            extinct: new_extinct
+            births: sim.pending_founders ++ births,
+            extinct: new_extinct,
+            species: sim.pending_species
         },
+        # Fundadoras não são nascimentos da ecologia: só as divisões contam.
         eco_totals:
           sim.eco_totals
           |> count_deaths(corpse_events.dead_by)
@@ -342,6 +473,7 @@ defmodule Abyss.World.Sim do
           |> Map.update!(:hunts_abandoned, &(&1 + food.hunts_abandoned))
           |> Map.update!(:hunts_escaped, &(&1 + food.hunts_escaped))
     }
+    |> prune_extinct()
   end
 
   # Espécie que já teve indivíduos (`next_seq` > 1) e agora não tem nenhum entra
@@ -626,17 +758,23 @@ defmodule Abyss.World.Sim do
     {o, seek, food} =
       if dividing? do
         left = o.dividing_left - dt
-        {%{o | dividing_left: if(left <= @divide_eps, do: 0.0, else: left), target: nil}, @zero, food}
+
+        {%{o | dividing_left: if(left <= @divide_eps, do: 0.0, else: left), target: nil}, @zero,
+         food}
       else
         forage(o, sp, r, dt, env, food)
       end
 
     food =
-      if not dividing? and Life.wants_divide?(o, sp), do: %{food | wants: [o.id | food.wants]}, else: food
+      if not dividing? and Life.wants_divide?(o, sp),
+        do: %{food | wants: [o.id | food.wants]},
+        else: food
 
     # Quem divide só estica devagar: não foge nem anda em cardume.
     {flee, school} =
-      if dividing?, do: {@zero, @zero}, else: {flee(o, sp, r, env), Hunt.school_steer(o, sp, snapshot, env.eco)}
+      if dividing?,
+        do: {@zero, @zero},
+        else: {flee(o, sp, r, env), Hunt.school_steer(o, sp, snapshot, env.eco)}
 
     # Caçando ou fugindo, o arranque manda: sem o vagar de cruzeiro, e o teto de
     # velocidade sobe ao do steer mais forte (max_speed × burst).

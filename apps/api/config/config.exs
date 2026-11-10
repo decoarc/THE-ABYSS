@@ -13,6 +13,9 @@ config :abyss,
 # Mapa compartilhado com o cliente (montado em /shared pelo compose).
 config :abyss, :map_path, "/shared/world/map-e1.json"
 
+# Catálogo de peças do gate S1 (compartilhado com o cliente).
+config :abyss, :catalog_path, "/shared/genesis/catalog-s1.json"
+
 # Mundo simulado (valores iniciais; ajustáveis na Parada 1).
 # seed: nil -> aleatório na partida; inteiro -> determinístico.
 config :abyss, :world,

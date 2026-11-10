@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "budget": 24,
+  "max_bytes": 8192,
+  "body": {
+    "points": [3, 6], "length_max": 4.0, "bend_max": 1.2, "r": [0.12, 0.9],
+    "radius": [0.4, 1.6], "cost_per_radius": 4
+  },
+  "parts_max": 14,
+  "part_size": [0.5, 1.6],
+  "part_angle": [-0.8, 0.8],
+  "patterns": ["liso", "manchas", "listras", "aneis"],
+  "diminish": 0.7,
+  "base": { "max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0,
+            "wander": 0.3, "sated_s": 12, "energy_max": 100.0, "escape": 0.0 },
+  "caps": { "max_speed": 0.9, "turn_rate": 1.8, "burst": 2.5, "perception": 10.0, "escape": 0.6 },
+  "metabolism": { "base": 0.04, "per_radius2": 0.06 },
+  "life": { "mature_s": [60, 60], "adult_life_s": [500, 400] },
+  "parts": {
+    "raspador":  { "group": "boca", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.010, "diet": "flora" },
+    "filtro":    { "group": "boca", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.010, "diet": "particles" },
+    "mandibula": { "group": "boca", "cost": 5, "step": 0, "max": 1, "mirror": false, "metab": 0.020, "diet": "predator" },
+    "flagelo":   { "group": "movimento", "cost": 3, "step": 1, "max": 4, "mirror": true,  "metab": 0.020, "effect": { "max_speed": 0.12 } },
+    "cilios":    { "group": "movimento", "cost": 2, "step": 1, "max": 4, "mirror": true,  "metab": 0.015, "effect": { "burst": 0.3 } },
+    "aleta":     { "group": "movimento", "cost": 2, "step": 1, "max": 4, "mirror": true,  "metab": 0.010, "effect": { "turn_rate": 0.35 } },
+    "ocelo":     { "group": "sentidos", "cost": 2, "step": 1, "max": 4, "mirror": true,  "metab": 0.010, "effect": { "perception": 1.5 } },
+    "cardume":   { "group": "comportamento", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.005, "effect": { "school": true } },
+    "gancho":    { "group": "comportamento", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.005, "effect": { "shelter": true } },
+    "placa":     { "group": "defesa", "cost": 3, "step": 1, "max": 4, "mirror": true,  "metab": 0.015, "effect": { "escape": 0.15, "speed_factor": 0.9 } }
+  }
+}

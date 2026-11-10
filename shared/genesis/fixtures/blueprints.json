@@ -1,0 +1,496 @@
+[
+ {
+  "name": "nucleo inicial sem boca",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": false,
+  "cost": null,
+  "traits": null
+ },
+ {
+  "name": "raspador",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": true,
+  "cost": 5,
+  "traits": null
+ },
+ {
+  "name": "filtro",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "filtro",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": true,
+  "cost": 5,
+  "traits": null
+ },
+ {
+  "name": "mandibula",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "mandibula",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": true,
+  "cost": 8,
+  "traits": null
+ },
+ {
+  "name": "quatro flagelos",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    },
+    {
+     "kind": "flagelo",
+     "at": 0.05,
+     "around": 1.57,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    },
+    {
+     "kind": "flagelo",
+     "at": 0.2,
+     "around": 1,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": true,
+  "cost": 23,
+  "traits": null
+ },
+ {
+  "name": "misto",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    },
+    {
+     "kind": "cilios",
+     "at": 0.3,
+     "around": 1,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    },
+    {
+     "kind": "ocelo",
+     "at": 0.9,
+     "around": 0.5,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    },
+    {
+     "kind": "gancho",
+     "at": 0.5,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": true,
+  "cost": 14,
+  "traits": null
+ },
+ {
+  "name": "espelho em cardume",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    },
+    {
+     "kind": "cardume",
+     "at": 0.5,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": false,
+  "cost": null,
+  "traits": null
+ },
+ {
+  "name": "estouro de orcamento",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "mandibula",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    },
+    {
+     "kind": "flagelo",
+     "at": 0.05,
+     "around": 1.57,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    },
+    {
+     "kind": "placa",
+     "at": 0.2,
+     "around": 1,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    },
+    {
+     "kind": "aleta",
+     "at": 0.4,
+     "around": 1,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": true
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": false,
+  "cost": null,
+  "traits": null
+ },
+ {
+  "name": "x fora de ordem",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0.3,
+      0,
+      0.45
+     ],
+     [
+      0,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas"
+  },
+  "valid": false,
+  "cost": null,
+  "traits": null
+ },
+ {
+  "name": "chave a mais",
+  "blueprint": {
+   "v": 1,
+   "body": {
+    "spine": [
+     [
+      -0.3,
+      0,
+      0.35
+     ],
+     [
+      0,
+      0,
+      0.45
+     ],
+     [
+      0.3,
+      0,
+      0.35
+     ]
+    ]
+   },
+   "parts": [
+    {
+     "kind": "raspador",
+     "at": 1,
+     "around": 0,
+     "size": 1,
+     "angle": 0.2,
+     "mirror": false
+    }
+   ],
+   "colors": {
+    "glow": "#7fe9dd",
+    "body": "#3f5a4a"
+   },
+   "pattern": "manchas",
+   "extra": 1
+  },
+  "valid": false,
+  "cost": null,
+  "traits": null
+ }
+]

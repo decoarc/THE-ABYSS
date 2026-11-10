@@ -18,4 +18,11 @@ defmodule Abyss.World.SpeciesTest do
       with {:prey, prey} <- sp.diet, do: assert(Enum.all?(prey, &(&1 in ids)))
     end
   end
+
+  test "toda espécie de teste tem escape 0 e blueprint nil" do
+    for sp <- Species.all() do
+      assert sp.escape == 0.0
+      assert sp.blueprint == nil
+    end
+  end
 end

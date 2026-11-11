@@ -1,6 +1,6 @@
 # The Abyss — Pacote de aceite do gate S1 (Gênese de Espécies)
 
-**Data:** 2026-11-11 · **Branch:** `gate-s` (a partir de `main` em `e3eb09a`; plano commitado em `99e3c1f`, ledger de execução em `ff678ad`)
+**Data:** 2026-11-11 · **Branch:** `gate-s` (a partir de `main` em `e3eb09a`; design em `ff678ad`, plano em `99e3c1f`)
 **Spec:** `docs/superpowers/specs/2026-11-08-gate-s1-genese-design.md` · **Plano:** `docs/superpowers/plans/2026-11-10-gate-s1-genese.md`
 **Status:** aguardando a Parada 2. Parada 1 (visual) aprovada pelo autor em 2026-11-10. Critérios 1–7 com evidência abaixo. **Critério 8: respondido "sim" na Parada 1; fecha de vez só com a aprovação explícita do autor na Parada 2.**
 
@@ -58,7 +58,7 @@ Catálogo de 10 peças (boca exatamente uma: raspador, filtro, mandíbula; movim
 **Do construtor (design §8):**
 
 - **Números do catálogo:** em `shared/genesis/catalog-s1.json`: orçamento 24; corpo com custo por raio (4 por unidade) e raio limitado a 0,4–1,6; máximo de 14 peças; metabolismo = 0,04 + 0,06·raio² + soma das peças; `max` por peça (4 para as de movimento, sentido e placa; 1 para boca, cardume e gancho).
-- **Ritmo de vida:** derivado do corpo, não escolhido (tempo de jovem 60 s; vida adulta de 500 a 400 s conforme o raio).
+- **Ritmo de vida:** derivado do corpo, não escolhido (tempo de jovem = 60 + 60 × raio s; vida adulta = 500 + 400 × raio s).
 - **Nome:** livre e sem filtro; 2 a 32 caracteres (aparados), sem caracteres de controle; nomes repetidos permitidos. Identificação por código curto `S` + base 36.
 - **Token:** link único, de uso único, vale 30 minutos (`token_ttl_s: 1800`), guardado só como hash. Limites: 10 envios por 10 min por rede, 3 por hora por e-mail, 20 confirmações por 10 min por rede. Confirmar apaga os outros tokens do e-mail.
 - **Reset:** `mix abyss.reset --yes` (`pnpm api:reset`); sem o `--yes` não faz nada.

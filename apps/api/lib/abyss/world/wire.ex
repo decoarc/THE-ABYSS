@@ -5,6 +5,8 @@ defmodule Abyss.World.Wire do
 
   # Passo de quantização do nível de flora (igual ao de Abyss.World.Flora).
   @quant 0.02
+  # Extintas que o snapshot carrega (as mais recentes).
+  @max_extinct 100
 
   @type meta :: %{world_id: String.t(), tick_hz: pos_integer, server_ms: integer}
 
@@ -20,17 +22,7 @@ defmodule Abyss.World.Wire do
       map_id: sim.bounds.map.id,
       creature_scale: sim.bounds.creature_scale,
       bounds: Map.take(sim.bounds, [:y_min, :y_max]),
-      species:
-        Enum.map(Sim.species(sim), fn sp ->
-          %{
-            id: Atom.to_string(sp.id),
-            code: sp.code,
-            name: sp.name,
-            body_radius: Sim.body_radius(sim, sp.id),
-            diet: diet(sp.diet),
-            extinct_ms: Map.get(sim.extinct, sp.id)
-          }
-        end),
+      species: Enum.map(snapshot_species(sim), &species_info(sim, &1)),
       juvenile_scale: sim.ecology.juvenile_scale,
       divide_s: sim.ecology.divide_s,
       organisms: Enum.map(sim.organisms, &organism(&1, emax)),
@@ -59,19 +51,48 @@ defmodule Abyss.World.Wire do
         Enum.map(sim.organisms, fn o ->
           vec(o.pos) ++ vec(o.vel) ++ [energy(o, emax), flags(o)]
         end),
+      sp: Enum.map(Map.get(ev, :species, []), &species_info(sim, &1)),
       b: Enum.map(ev.births, &organism(&1, emax)),
       d: Enum.map(ev.deaths, fn {id, cause} -> [id, Atom.to_string(cause)] end),
-      x: Enum.map(ev.extinct, fn {id, ms} -> [Atom.to_string(id), ms] end),
+      x: Enum.map(ev.extinct, fn {id, ms} -> [to_string(id), ms] end),
       f: Enum.map(sim.food_events.changed, fn {idx, level} -> [idx, level] end),
       ps: Enum.map(sim.food_events.spawned, &particle/1),
       pr: sim.food_events.removed
     }
   end
 
+  # Vivas + as 100 extintas mais recentes, na ordem original da tabela.
+  defp snapshot_species(sim) do
+    all = Sim.species(sim)
+
+    kept =
+      for(sp <- all, ms = Map.get(sim.extinct, sp.id), ms != nil, do: {ms, sp.id})
+      |> Enum.sort(:desc)
+      |> Enum.take(@max_extinct)
+      |> MapSet.new(&elem(&1, 1))
+
+    Enum.filter(all, fn sp ->
+      not Map.has_key?(sim.extinct, sp.id) or MapSet.member?(kept, sp.id)
+    end)
+  end
+
+  # Whitelist: nunca serializa o mapa da espécie inteiro.
+  defp species_info(sim, sp) do
+    %{
+      id: to_string(sp.id),
+      code: sp.code,
+      name: sp.name,
+      body_radius: Sim.body_radius(sim, sp.id),
+      diet: diet(sp.diet),
+      blueprint: sp.blueprint,
+      extinct_ms: Map.get(sim.extinct, sp.id)
+    }
+  end
+
   defp organism(o, emax) do
     %{
       id: o.id,
-      species: Atom.to_string(o.species),
+      species: to_string(o.species),
       born_ms: o.born_ms,
       p: vec(o.pos),
       v: vec(o.vel),
@@ -92,10 +113,10 @@ defmodule Abyss.World.Wire do
 
   # bit 1 = jovem; bit 2 = dividindo.
   defp flags(o) do
-    (if o.stage == :juvenile, do: 1, else: 0) + if o.dividing_left > 0, do: 2, else: 0
+    if(o.stage == :juvenile, do: 1, else: 0) + if o.dividing_left > 0, do: 2, else: 0
   end
 
-  defp diet({:prey, ids}), do: %{kind: "prey", prey: Enum.map(ids, &Atom.to_string/1)}
+  defp diet({:prey, ids}), do: %{kind: "prey", prey: Enum.map(ids, &to_string/1)}
   defp diet(kind) when is_atom(kind), do: %{kind: Atom.to_string(kind), prey: []}
 
   # [id, x, y, z, vx, vy, vz, born_ms, life_ms]; `rest_y` fica fora (o cliente lê do mapa).

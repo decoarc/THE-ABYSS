@@ -1,15 +1,43 @@
 // Tipos que espelham o formato "no fio" do canal world:main (JSON).
 export type Vec3 = [number, number, number];
 
+export type PartKind =
+  | 'raspador' | 'filtro' | 'mandibula'
+  | 'flagelo' | 'cilios' | 'aleta'
+  | 'ocelo' | 'cardume' | 'gancho' | 'placa';
+export type Pattern = 'liso' | 'manchas' | 'listras' | 'aneis';
+
+export interface BlueprintPart {
+  kind: PartKind;
+  /** Ao longo da espinha: 0 = cauda, 1 = cabeça. */
+  at: number;
+  /** Em volta do eixo: 0 = topo, +π/2 = lado direito. */
+  around: number;
+  size: number;
+  angle: number;
+  mirror: boolean;
+}
+
+/** Planta da criatura (v1): o mesmo JSON que o servidor valida. */
+export interface Blueprint {
+  v: 1;
+  body: { spine: [number, number, number][] };
+  parts: BlueprintPart[];
+  colors: { glow: string; body: string };
+  pattern: Pattern;
+}
+
 export interface SpeciesInfo {
   id: string;
   code: string;
   name: string;
   /** Raio efetivo (já multiplicado por `creature_scale`). */
   body_radius: number;
-  diet: { kind: 'flora' | 'particles' | 'prey'; prey: string[] };
+  diet: { kind: 'flora' | 'particles' | 'prey' | 'predator'; prey: string[] };
   /** Instante (ms do servidor) da extinção, ou null se a espécie vive. */
   extinct_ms: number | null;
+  /** Planta da espécie criada; null (ou ausente) nas de teste. */
+  blueprint?: Blueprint | null;
 }
 
 export interface OrganismInfo {
@@ -66,6 +94,8 @@ export interface TickMessage {
   server_ms: number;
   /** Uma linha por vivo, na ordem do roster depois de aplicar `d` e `b`. */
   o: TickRow[];
+  /** Espécies registradas desde o tick anterior; idempotente por id e aplicado antes de `b`. */
+  sp: SpeciesInfo[];
   /** Nascidos neste tick, acrescentados ao fim. */
   b: OrganismInfo[];
   /** Mortos neste tick: [id, causa]. */

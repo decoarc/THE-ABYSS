@@ -10,6 +10,9 @@ defmodule Abyss.Application do
     children =
       [
         AbyssWeb.Telemetry,
+        Abyss.Repo,
+        Abyss.Genesis.RateLimit,
+        Abyss.Genesis.Recorder,
         {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Abyss.PubSub},
         Abyss.World.Observers,
@@ -30,6 +33,8 @@ defmodule Abyss.Application do
          Application.fetch_env!(:abyss, :world) ++
            [
              name: Abyss.World.Server,
+             species_loader: &Abyss.Genesis.boot_species/0,
+             on_extinct: &Abyss.Genesis.Recorder.record/1,
              broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)
            ]}
       ]

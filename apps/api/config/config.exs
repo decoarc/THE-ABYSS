@@ -8,10 +8,14 @@
 import Config
 
 config :abyss,
+  ecto_repos: [Abyss.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Mapa compartilhado com o cliente (montado em /shared pelo compose).
 config :abyss, :map_path, "/shared/world/map-e1.json"
+
+# Catálogo de peças do gate S1 (compartilhado com o cliente).
+config :abyss, :catalog_path, "/shared/genesis/catalog-s1.json"
 
 # Mundo simulado (valores iniciais; ajustáveis na Parada 1).
 # seed: nil -> aleatório na partida; inteiro -> determinístico.
@@ -66,6 +70,27 @@ config :abyss, :ecology,
   corpse_particles: {3, 4.0},
   founder_energy: {0.6, 0.9},
   founder_age: 0.5
+
+# Gênese de espécies (gate S1): link de verificação por e-mail.
+config :abyss, :genesis,
+  token_ttl_s: 1800,
+  web_url: "http://localhost:5173",
+  limits: [submit_ip: {10, 600}, submit_email: {3, 3600}, confirm_ip: {20, 600}]
+
+# Origens do cliente web autorizadas no CORS.
+config :abyss, :web_origins, [
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:4175"
+]
+
+# Parâmetros que o log de requisição do Phoenix mascara.
+config :phoenix, :filter_parameters, ["password", "email", "token"]
+
+# Swoosh: sem cliente HTTP (adaptadores locais não precisam); o adaptador real é do gate O.
+config :swoosh, :api_client, false
+
+config :abyss, Abyss.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure the endpoint
 config :abyss, AbyssWeb.Endpoint,

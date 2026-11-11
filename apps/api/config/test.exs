@@ -19,3 +19,23 @@ config :phoenix,
 
 # O mundo global não sobe nos testes; cada teste inicia o seu Server.
 config :abyss, start_world: false
+
+# Banco de teste: mesmo servidor do DATABASE_URL, outro nome de banco.
+test_db = "abyss_test#{System.get_env("MIX_TEST_PARTITION")}"
+
+if url = System.get_env("DATABASE_URL") do
+  uri = URI.parse(url)
+  config :abyss, Abyss.Repo, url: URI.to_string(%{uri | path: "/" <> test_db})
+else
+  config :abyss, Abyss.Repo,
+    username: "postgres",
+    password: "postgres",
+    hostname: "localhost",
+    database: test_db
+end
+
+config :abyss, Abyss.Repo,
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: System.schedulers_online() * 2
+
+config :abyss, Abyss.Mailer, adapter: Swoosh.Adapters.Test

@@ -2,7 +2,7 @@ defmodule Abyss.World.Species do
   @moduledoc "Tabela fixa de espécies do mundo (ordem canônica)."
 
   @type t :: %{
-          id: atom,
+          id: atom | String.t(),
           code: String.t(),
           name: String.t(),
           max_speed: float,
@@ -11,7 +11,7 @@ defmodule Abyss.World.Species do
           body_radius: float,
           run_s: {number, number} | nil,
           pause_s: number | nil,
-          diet: :flora | :particles | {:prey, [atom]},
+          diet: :flora | :particles | :predator | {:prey, [atom]},
           perception: float,
           sated_s: number,
           school: boolean,
@@ -20,7 +20,9 @@ defmodule Abyss.World.Species do
           energy_max: float,
           metabolism: float,
           mature_s: number,
-          adult_life_s: number
+          adult_life_s: number,
+          escape: float,
+          blueprint: map | nil
         }
 
   @species [
@@ -43,7 +45,9 @@ defmodule Abyss.World.Species do
       energy_max: 100.0,
       metabolism: 0.18,
       mature_s: 150,
-      adult_life_s: 900
+      adult_life_s: 900,
+      escape: 0.0,
+      blueprint: nil
     },
     %{
       id: :filamento,
@@ -64,7 +68,9 @@ defmodule Abyss.World.Species do
       energy_max: 100.0,
       metabolism: 0.06,
       mature_s: 120,
-      adult_life_s: 700
+      adult_life_s: 700,
+      escape: 0.0,
+      blueprint: nil
     },
     %{
       id: :casco,
@@ -85,7 +91,9 @@ defmodule Abyss.World.Species do
       energy_max: 100.0,
       metabolism: 0.14,
       mature_s: 180,
-      adult_life_s: 1200
+      adult_life_s: 1200,
+      escape: 0.0,
+      blueprint: nil
     },
     %{
       id: :celula,
@@ -106,7 +114,9 @@ defmodule Abyss.World.Species do
       energy_max: 100.0,
       metabolism: 0.25,
       mature_s: 90,
-      adult_life_s: 600
+      adult_life_s: 600,
+      escape: 0.0,
+      blueprint: nil
     },
     %{
       id: :poliedro,
@@ -127,7 +137,9 @@ defmodule Abyss.World.Species do
       energy_max: 100.0,
       metabolism: 0.02,
       mature_s: 200,
-      adult_life_s: 2400
+      adult_life_s: 2400,
+      escape: 0.0,
+      blueprint: nil
     }
   ]
 

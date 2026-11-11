@@ -16,6 +16,9 @@ config :abyss, AbyssWeb.Endpoint,
 # (ABYSS_TEST_SPECIES=true em runtime ainda as liga).
 config :abyss, :world, test_species: false
 
+# E-mail em produção: o adaptador real entra no gate O; até lá, o Local (caixa em memória).
+config :abyss, Abyss.Mailer, adapter: Swoosh.Adapters.Local
+
 # Do not print debug messages in production
 config :logger, level: :info
 

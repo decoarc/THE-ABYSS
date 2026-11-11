@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "date": "2026-11-10T22:35:55.821Z",
+    "base": "http://localhost:4174/",
+    "suite": "s1",
+    "seed": "7"
+  },
+  "grew": false,
+  "run": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "world": {
+      "species": 5,
+      "createdSpecies": 0,
+      "createdSpeciesAlive": 0,
+      "organisms": 247,
+      "createdOrganisms": 0
+    },
+    "before": {
+      "programs": 27,
+      "api": {
+        "world_id": "ddf7ed352e4c4d6f8376c4517c3ba36e",
+        "uptime_ms": 97944,
+        "population": 250,
+        "births_total": 2,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 2,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 195.854,
+        "particles": 346,
+        "step_us_max": 6511
+      },
+      "world": {
+        "species": 5,
+        "createdSpecies": 0,
+        "createdSpeciesAlive": 0,
+        "organisms": 250,
+        "createdOrganisms": 0
+      }
+    },
+    "after": {
+      "programs": 27,
+      "api": {
+        "world_id": "ddf7ed352e4c4d6f8376c4517c3ba36e",
+        "uptime_ms": 218255,
+        "population": 249,
+        "births_total": 7,
+        "deaths_total": {
+          "starvation": 6,
+          "predation": 2,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 198.154,
+        "particles": 636,
+        "step_us_max": 7108
+      }
+    },
+    "populationDuringBirths": {
+      "min": 247,
+      "max": 250,
+      "samples": 54
+    },
+    "resync": {
+      "removed": 248,
+      "rosterAfterRemove": 248,
+      "before": {
+        "programs": 27,
+        "api": {
+          "world_id": "ddf7ed352e4c4d6f8376c4517c3ba36e",
+          "uptime_ms": 219313,
+          "population": 248,
+          "births_total": 7,
+          "deaths_total": {
+            "starvation": 7,
+            "predation": 2,
+            "old_age": 0
+          },
+          "flora_patches": 200,
+          "flora_level_sum": 198.039,
+          "particles": 642,
+          "step_us_max": 7108
+        }
+      },
+      "after": {
+        "programs": 27,
+        "api": {
+          "world_id": "ddf7ed352e4c4d6f8376c4517c3ba36e",
+          "uptime_ms": 240165,
+          "population": 247,
+          "births_total": 9,
+          "deaths_total": {
+            "starvation": 9,
+            "predation": 3,
+            "old_age": 0
+          },
+          "flora_patches": 200,
+          "flora_level_sum": 198.888,
+          "particles": 663,
+          "step_us_max": 7108
+        },
+        "roster": 248
+      },
+      "links": [
+        {
+          "t": 1200,
+          "sig": "ShaderMaterial/UpsamplingMaterial pl0"
+        },
+        {
+          "t": 1209,
+          "sig": "ShaderMaterial/EffectMaterial pl0"
+        },
+        {
+          "t": 1344,
+          "sig": "MeshBasicMaterial pl0"
+        },
+        {
+          "t": 1359,
+          "sig": "MeshStandardMaterial pl5"
+        },
+        {
+          "t": 1434,
+          "sig": "MeshBasicMaterial pl0 inst"
+        },
+        {
+          "t": 1450,
+          "sig": "MeshPhysicalMaterial pl5"
+        },
+        {
+          "t": 1590,
+          "sig": "LineBasicMaterial pl0"
+        },
+        {
+          "t": 1597,
+          "sig": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0"
+        },
+        {
+          "t": 1602,
+          "sig": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0"
+        },
+        {
+          "t": 1650,
+          "sig": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0"
+        },
+        {
+          "t": 1699,
+          "sig": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0"
+        },
+        {
+          "t": 210884,
+          "sig": "MeshBasicMaterial pl0"
+        },
+        {
+          "t": 210888,
+          "sig": "MeshStandardMaterial pl5"
+        },
+        {
+          "t": 210895,
+          "sig": "MeshBasicMaterial pl0 inst"
+        },
+        {
+          "t": 210898,
+          "sig": "MeshPhysicalMaterial pl5"
+        },
+        {
+          "t": 210906,
+          "sig": "LineBasicMaterial pl0"
+        },
+        {
+          "t": 210909,
+          "sig": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0"
+        },
+        {
+          "t": 210910,
+          "sig": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0"
+        },
+        {
+          "t": 210912,
+          "sig": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0"
+        },
+        {
+          "t": 210913,
+          "sig": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0"
+        }
+      ]
+    },
+    "birthsDuring": 5,
+    "birthsTotal": 9,
+    "deathsTotal": {
+      "starvation": 9,
+      "predation": 3,
+      "old_age": 0
+    }
+  }
+}

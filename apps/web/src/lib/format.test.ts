@@ -12,6 +12,9 @@ it('dieta: flora e partículas', () => {
   expect(formatDiet({ kind: 'flora', prey: [] }, ALL)).toBe('flora');
   expect(formatDiet({ kind: 'particles', prey: [] }, ALL)).toBe('partículas');
 });
+it('predador', () => {
+  expect(formatDiet({ kind: 'predator', prey: [] }, ALL)).toBe('criaturas menores');
+});
 it('dieta: presas pelo nome, com " e "', () => {
   expect(formatDiet({ kind: 'prey', prey: ['filamento', 'celula'] }, ALL)).toBe('Filamento e Célula');
 });

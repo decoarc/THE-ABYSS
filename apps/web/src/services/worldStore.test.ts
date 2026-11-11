@@ -15,7 +15,7 @@ function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   };
 }
 const tick = (n: number, x: number, over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o: [[x, 0, 0, 1, 0, 0, 0.8, 0]], b: [], d: [], x: [], f: [], ps: [], pr: [], ...over,
+  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o: [[x, 0, 0, 1, 0, 0, 0.8, 0]], b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [], ...over,
 });
 // Mensagem com latência fixa de 5 ms: local = server_ms + 5.
 const L = (serverMs: number) => serverMs + 5;

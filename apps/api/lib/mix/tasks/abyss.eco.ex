@@ -1,17 +1,26 @@
 defmodule Mix.Tasks.Abyss.Eco do
   @shortdoc "Roda um experimento ecológico offline e imprime CSV por minuto"
   @moduledoc """
-  Uso: `mix abyss.eco --seed N --minutes M [--population P] [--food-boost K]`.
+  Uso: `mix abyss.eco --seed N --minutes M [--population P] [--food-boost K] [--genesis N]`.
+
+  `--genesis N` soma N espécies sorteadas (3 fundadoras cada), colunas `pop_sp1`…
 
   `--food-boost` (só para medição) multiplica a comida, ver `Abyss.World.Sim.boost_food/2`.
 
   Imprime uma linha CSV por minuto simulado (passo fixo de 0,1 s, repetível
-  pela semente): população por espécie, nascimentos e mortes por causa.
+  pela semente): população por espécie, nascimentos, mortes por causa e botes (certos e
+  escapados pela placa).
   """
 
   use Mix.Task
 
-  @switches [seed: :integer, minutes: :integer, population: :integer, food_boost: :float]
+  @switches [
+    seed: :integer,
+    minutes: :integer,
+    population: :integer,
+    food_boost: :float,
+    genesis: :integer
+  ]
 
   @impl Mix.Task
   def run(args) do
@@ -27,7 +36,10 @@ defmodule Mix.Tasks.Abyss.Eco do
     header =
       ["minute"] ++
         Enum.map(ids, &"pop_#{&1}") ++
-        ["births"] ++ Enum.map(ids, &"births_#{&1}") ++ Enum.map(causes, &"deaths_#{&1}")
+        ["births"] ++
+        Enum.map(ids, &"births_#{&1}") ++
+        Enum.map(causes, &"deaths_#{&1}") ++
+        ["hunts_ok", "hunts_escaped"]
 
     IO.puts(Enum.join(header, ","))
 
@@ -35,7 +47,10 @@ defmodule Mix.Tasks.Abyss.Eco do
       cols =
         [r.minute] ++
           Enum.map(ids, &r.pop[&1]) ++
-          [r.births] ++ Enum.map(ids, &r.births_by[&1]) ++ Enum.map(causes, &r.deaths[&1])
+          [r.births] ++
+          Enum.map(ids, &r.births_by[&1]) ++
+          Enum.map(causes, &r.deaths[&1]) ++
+          [r.hunts_ok, r.hunts_escaped]
 
       IO.puts(Enum.join(cols, ","))
     end

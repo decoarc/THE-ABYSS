@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "date": "2026-11-10T23:08:30.616Z",
+    "base": "http://localhost:4174/",
+    "suite": "s1",
+    "seed": "7",
+    "viewport": "1920×1080"
+  },
+  "budget": [
+    {
+      "name": "Arc low: p95 ≤ 33 ms",
+      "value": null,
+      "pass": true
+    },
+    {
+      "name": "RTX high: p50 ≤ 16,7 ms",
+      "value": 16.7,
+      "pass": true
+    }
+  ],
+  "targets": [
+    {
+      "name": "depois do aquecimento: 0 programas ligados",
+      "value": 0,
+      "pass": true
+    },
+    {
+      "name": "depois do aquecimento: 0 quadros > 50 ms",
+      "value": 0,
+      "pass": true
+    },
+    {
+      "name": "S1: ≥ 50 espécies criadas vivas em cada cenário",
+      "value": 50,
+      "pass": true
+    }
+  ],
+  "programsRun": null,
+  "runs": [
+    {
+      "label": "floresta · GPU alto desempenho (RTX) · high",
+      "scenario": "floresta",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": true,
+      "api": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 53999,
+        "population": 250,
+        "births_total": 2,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 2,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 190.065,
+        "particles": 191,
+        "step_us_max": 12192
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 193.41999991610646,
+        "particles": 265
+      },
+      "programs": {
+        "start": 29,
+        "end": 29
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 50,
+        "organisms": 250,
+        "createdOrganisms": 150
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 602,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "max": 16.8,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 250,
+        "max": 250,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 74640,
+        "population": 250,
+        "births_total": 2,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 2,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.602,
+        "particles": 268,
+        "step_us_max": 12192
+      }
+    },
+    {
+      "label": "floresta · GPU alto desempenho (RTX) · high · sem vsync",
+      "scenario": "floresta",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": false,
+      "api": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 75137,
+        "population": 250,
+        "births_total": 2,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 2,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.497,
+        "particles": 270,
+        "step_us_max": 12192
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 195.55999989062548,
+        "particles": 318
+      },
+      "programs": {
+        "start": 29,
+        "end": 29
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 50,
+        "organisms": 250,
+        "createdOrganisms": 150
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 1482,
+        "p50": 6.9,
+        "p95": 9.2,
+        "p99": 10.8,
+        "max": 12.9,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 249,
+        "max": 250,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 95948,
+        "population": 250,
+        "births_total": 3,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 3,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 195.925,
+        "particles": 320,
+        "step_us_max": 12192
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { createWorldStore, DISSOLVE_MS, type Vitals } from './worldStore';
-import type { DeathCause, OrganismInfo, TickMessage, TickRow, Vec3, WorldSnapshot } from './wire';
+import type { DeathCause, OrganismInfo, SpeciesInfo, TickMessage, TickRow, Vec3, WorldSnapshot } from './wire';
 
 const SERVER0 = 1_000_000;
 const org = (id: string, over: Partial<OrganismInfo> = {}): OrganismInfo => ({
@@ -20,7 +20,7 @@ function snap(ids: string[] = ['a', 'b', 'c'], over: Partial<WorldSnapshot> = {}
 }
 const row = (x: number, e = 0.8, flags = 0): TickRow => [x, 0, 0, 0, 0, 0, e, flags];
 const tick = (n: number, o: TickRow[], over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o, b: [], d: [], x: [], f: [], ps: [], pr: [], ...over,
+  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o, b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [], ...over,
 });
 const L = (n: number) => SERVER0 + (n - 1) * 100 + 5;
 type Store = ReturnType<typeof createWorldStore>;
@@ -202,4 +202,72 @@ it('fantasma guarda juvenil/divisão do momento da morte', () => {
   expect(out).toMatchObject({ juvenile: true, dividing: false, dyingSinceMs: L(4) });
   s.vitals('b', out);
   expect(out).toMatchObject({ juvenile: false, dividing: true, dividingSinceMs: L(2), dyingSinceMs: L(4) });
+});
+
+const criada = (over: Partial<SpeciesInfo> = {}): SpeciesInfo => ({
+  id: 'sp1', code: 'S01', name: 'Nova', body_radius: 0.65, diet: { kind: 'predator', prey: [] }, extinct_ms: null, blueprint: null, ...over,
+});
+
+it('sp acrescenta espécie antes dos nascidos', () => {
+  const s = ready();
+  const sp0 = s.species();
+  const seen: string[][] = [];
+  s.subscribe(() => seen.push(s.species().map((x) => x.id)));
+  const filho = org('d', { species: 'sp1', p: [9, 0, 0] });
+  expect(s.applyTick(tick(2, [row(0), row(1), row(2), row(9)], { sp: [criada()], b: [filho] }), L(2))).toBe('ok');
+  expect(s.species()).not.toBe(sp0);
+  expect(s.species().map((x) => x.id)).toEqual(['casco', 'fil', 'sp1']);
+  expect(s.species().find((x) => x.id === 'sp1')!.diet.kind).toBe('predator');
+  expect(ids(s)).toEqual(['a', 'b', 'c', 'd']);
+  expect(seen[0]).toContain('sp1');
+});
+
+it('sp repetida não duplica nem muda a identidade', () => {
+  const s = ready();
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: [criada()] }), L(2));
+  const after = s.species();
+  s.applyTick(tick(3, [row(0), row(1), row(2)], { sp: [criada()] }), L(3));
+  expect(s.species()).toBe(after);
+  expect(s.species().filter((x) => x.id === 'sp1')).toHaveLength(1);
+  // Conteúdo novo para o mesmo id substitui; extinct_ms alimenta o mapa.
+  s.applyTick(tick(4, [row(0), row(1), row(2)], { sp: [criada({ extinct_ms: 555 })] }), L(4));
+  expect(s.species().filter((x) => x.id === 'sp1')).toHaveLength(1);
+  expect(s.extinct().get('sp1')).toBe(555);
+});
+
+it('nascido de espécie desconhecida não quebra', () => {
+  const s = ready();
+  const filho = org('d', { species: 'fantasma', p: [9, 0, 0] });
+  expect(s.applyTick(tick(2, [row(0), row(1), row(2), row(9)], { b: [filho] }), L(2))).toBe('ok');
+  expect(ids(s)).toEqual(['a', 'b', 'c', 'd']);
+  expect(at(s, 'd', L(2) + 200)![0]).toBeCloseTo(9, 6);
+  // Tick antigo sem `sp` também vale.
+  const old = tick(3, [row(0), row(1), row(2), row(9)]) as Partial<TickMessage>;
+  delete old.sp;
+  expect(s.applyTick(old as TickMessage, L(3))).toBe('ok');
+});
+
+it('índice de espécies: vivas sempre; só as 100 extintas mais recentes', () => {
+  const s = ready();
+  const mk = (i: number): SpeciesInfo => ({
+    id: `x${i}`, code: `X${i}`, name: `X${i}`, body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null,
+  });
+  const extra = Array.from({ length: 120 }, (_, i) => mk(i));
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: extra }), L(2));
+  expect(s.extinct().size).toBe(1); // só a 'fil' do snapshot
+  for (let k = 0; k < 120; k += 40) {
+    const x = extra.slice(k, k + 40).map((e, j) => [e.id, 10_000 + k + j] as [string, number]);
+    s.applyTick(tick(3 + k / 40, [row(0), row(1), row(2)], { x }), L(3 + k / 40));
+  }
+  expect(s.extinct().size).toBe(100);
+  const all = s.species().map((x) => x.id);
+  // a 'fil' (777) e as 19 mais antigas extintas saem; as 100 mais recentes ficam
+  expect(s.extinct().has('fil')).toBe(false);
+  for (let i = 0; i < 20; i++) expect(all).not.toContain(`x${i}`);
+  expect(all).toContain('x20');
+  expect(all).toContain('x119');
+  expect(all).toContain('casco');
+  const before = s.species();
+  s.applyTick(tick(6, [row(0), row(1), row(2)]), L(6));
+  expect(s.species()).toBe(before);
 });

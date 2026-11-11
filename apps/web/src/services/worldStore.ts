@@ -62,6 +62,8 @@ export interface WorldStore {
 
 /** Quantos ticks recentes ficam guardados para `positionsAt` (~3 s a 10 Hz). */
 const HISTORY_TICKS = 32;
+/** Índice de espécies: as vivas e só as extintas mais recentes (spec §5.7). */
+const MAX_EXTINCT = 100;
 
 interface HistoryEntry {
   tick: number;
@@ -98,6 +100,9 @@ interface Ghost {
   dividingSinceMs: number | null;
 }
 
+/** Mesma espécie, mesmo conteúdo: o reenvio de `sp` não deve mudar a identidade da lista. */
+const sameSpecies = (a: SpeciesInfo, b: SpeciesInfo) => JSON.stringify(a) === JSON.stringify(b);
+
 const makeLive = (info: OrganismInfo, localMs: number): Live => ({
   info,
   ring: { data: new Float64Array(BUFFER_SAMPLES * STRIDE), head: 0, count: 0 },
@@ -120,6 +125,16 @@ export function createWorldStore(): WorldStore {
   let species: readonly SpeciesInfo[] = [];
   let extinct: ReadonlyMap<string, number> = new Map();
   let lives: Live[] = [];
+
+  /** Mantém só as MAX_EXTINCT extintas mais recentes; identidade estável se nada sai. */
+  function capExtinct(): boolean {
+    if (extinct.size <= MAX_EXTINCT) return false;
+    const keep = [...extinct].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1)).slice(0, MAX_EXTINCT);
+    const kept = new Map(keep);
+    species = species.filter((sp) => !extinct.has(sp.id) || kept.has(sp.id));
+    extinct = kept;
+    return true;
+  }
   const ghosts: Ghost[] = [];
   let index = new Map<string, number>();
   let history: HistoryEntry[] = [];
@@ -229,12 +244,37 @@ export function createWorldStore(): WorldStore {
       for (const [id] of t.d) if (!index.has(id)) return 'resync';
       if (t.o.length !== lives.length - t.d.length + t.b.length) return 'resync';
 
+      let speciesChanged = false;
       lastTick = t.tick;
       food.applyTick(t);
+
+      // Espécies novas antes dos nascidos: idempotente por id, nova identidade só se algo mudou.
+      const sp = t.sp ?? [];
+      if (sp.length > 0) {
+        let next: SpeciesInfo[] | null = null;
+        let ex: Map<string, number> | null = null;
+        for (const s of sp) {
+          const list = next ?? (species as SpeciesInfo[]);
+          const i = list.findIndex((x) => x.id === s.id);
+          if (i >= 0 && sameSpecies(list[i], s)) continue;
+          if (next === null) next = [...species];
+          if (i >= 0) next[i] = s;
+          else next.push(s);
+          if (s.extinct_ms !== null && extinct.get(s.id) !== s.extinct_ms) {
+            ex ??= new Map(extinct);
+            ex.set(s.id, s.extinct_ms);
+          }
+        }
+        if (next !== null) {
+          species = next;
+          if (ex !== null) extinct = ex;
+          speciesChanged = true;
+        }
+      }
       observe(localMs, t.server_ms);
 
       let rosterChanged = false;
-      let changed = false;
+      let changed = speciesChanged;
 
       // Fantasmas cujo desfazer acabou saem.
       for (let i = ghosts.length - 1; i >= 0; i--) {
@@ -293,6 +333,7 @@ export function createWorldStore(): WorldStore {
         extinct = m;
         changed = true;
       }
+      if (capExtinct()) changed = true;
 
       if (rosterChanged) rebuildRoster();
       remember(t.tick, rosterIds, t.o);

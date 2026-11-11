@@ -14,12 +14,24 @@ defmodule Abyss.World.Hunt do
 
   @zero {0.0, 0.0, 0.0}
 
-  @doc "O caçador come a presa se ela está na dieta `{:prey, list}` e é estritamente menor."
+  @doc "O caçador come a presa se ela está na dieta `{:prey, list}` e é estritamente
+  menor; `:predator` come qualquer estritamente menor de outra espécie."
   @spec can_eat?(map, number, map, number) :: boolean
   def can_eat?(%{diet: {:prey, list}}, hunter_r, %{id: prey_id}, prey_r),
     do: prey_id in list and prey_r < hunter_r
 
+  def can_eat?(%{diet: :predator, id: hid}, hunter_r, %{id: prey_id}, prey_r),
+    do: prey_id != hid and prey_r < hunter_r
+
   def can_eat?(_hunter_sp, _hunter_r, _prey_sp, _prey_r), do: false
+
+  @doc """
+  Sorteio determinístico do escape da presa no bote (`escape` = chance, 0..1),
+  pelo trio caçador, presa e relógio do passo.
+  """
+  @spec escapes?(number, term, term, integer) :: boolean
+  def escapes?(escape, hunter_id, prey_id, now_ms),
+    do: :erlang.phash2({hunter_id, prey_id, now_ms}, 1_000_000) / 1_000_000 < escape
 
   @doc "Alcance com que uma presa numa região de `cover` c é percebida: `range × (1 − c)`."
   @spec perceived_range(number, number) :: float

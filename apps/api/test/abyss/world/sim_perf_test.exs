@@ -2,6 +2,8 @@ defmodule Abyss.World.SimPerfTest do
   # Síncrono: roda depois dos testes assíncronos, sozinho, para medir sem disputa.
   use ExUnit.Case, async: false
 
+  alias Abyss.Genesis
+  alias Abyss.Genesis.{Catalog, Random, Traits}
   alias Abyss.World.{Particles, Sim}
   alias Abyss.World.Map, as: WMap
 
@@ -25,11 +27,11 @@ defmodule Abyss.World.SimPerfTest do
   # Fundadores como o Sim.new os faz (adultos, idade e energia variadas), num
   # mundo cuja comida já está cheia. O relógio dos fundadores é o do fim do
   # enchimento, então nenhuma idade é zerada nem deslocada.
-  defp mature_at_cap do
+  defp mature_at_cap(population \\ @population) do
     food = Sim.boost_food(@food, @boost)
 
     base = %{
-      population: @population,
+      population: population,
       seed: @seed,
       now_ms: 0,
       map: @map,
@@ -46,6 +48,36 @@ defmodule Abyss.World.SimPerfTest do
     %{sim | flora: filled.flora, particles: filled.particles}
   end
 
+  # S1: `count` espécies criadas, as mesmas plantas do `mix abyss.seed_species --count N --seed 7`
+  # (Genesis.seed!), com 3 fundadoras cada, e as de teste completando o teto.
+  defp created_at_cap(count) do
+    cat = Catalog.get()
+    sim = mature_at_cap(@population - 3 * count)
+
+    {sim, _} =
+      Enum.reduce(1..count, {sim, :rand.seed_s(:exsss, {@seed, 7, 7})}, fn i, {sim, rng} ->
+        {bp, rng} = Random.blueprint(rng, cat)
+
+        sp =
+          Traits.species(bp, cat, %{id: "sp#{i}", code: Genesis.code_for(i), name: "Semente #{i}"})
+
+        {Sim.add_species(sim, sp), rng}
+      end)
+
+    # As fundadoras entram no passo seguinte ao registro.
+    Sim.step(sim, 0.1)
+  end
+
+  # Passa `@steps` ticks medindo cada um: {final, tempos, populações}.
+  defp measure(sim) do
+    :erlang.garbage_collect()
+
+    Enum.reduce(1..@steps, {sim, [], []}, fn _, {s, acc, pops} ->
+      {us, s} = :timer.tc(fn -> Sim.step(s, 0.1) end)
+      {s, [us | acc], [length(s.organisms) | pops]}
+    end)
+  end
+
   test "3000 ticks com 250 organismos maduros no teto e o ciclo acontecendo: passo máximo <= 20 ms" do
     sim = mature_at_cap()
     orgs = sim.organisms
@@ -56,13 +88,7 @@ defmodule Abyss.World.SimPerfTest do
     assert orgs |> Enum.map(& &1.energy) |> Enum.uniq() |> length() > 200
 
     before = Sim.eco_stats(sim)
-    :erlang.garbage_collect()
-
-    {final, times, pops} =
-      Enum.reduce(1..@steps, {sim, [], []}, fn _, {s, acc, pops} ->
-        {us, s} = :timer.tc(fn -> Sim.step(s, 0.1) end)
-        {s, [us | acc], [length(s.organisms) | pops]}
-      end)
+    {final, times, pops} = measure(sim)
 
     now = Sim.eco_stats(final)
     births = now.births_total - before.births_total
@@ -90,6 +116,50 @@ defmodule Abyss.World.SimPerfTest do
     assert hunts > 0
     assert Enum.max(pops) <= @population
     # A maior parte do tempo no teto (ou a uma divisão dele).
+    assert at_floor >= @steps * 0.9
+    assert max <= @max_step_us
+  end
+
+  test "S1: 50 espécies criadas diferentes (150 fundadoras) e as de teste no teto: passo máximo <= 20 ms" do
+    sim = created_at_cap(50)
+    orgs = sim.organisms
+    created = Enum.filter(orgs, &is_binary(&1.species))
+
+    assert length(orgs) == @population
+    assert length(created) == 150
+    assert created |> Enum.map(& &1.species) |> Enum.uniq() |> length() == 50
+    assert sim.bounds.hunted == :all
+
+    before = Sim.eco_stats(sim)
+    {final, times, pops} = measure(sim)
+
+    now = Sim.eco_stats(final)
+    births = now.births_total - before.births_total
+    hunts = now.hunts_ok - before.hunts_ok
+    escaped = now.hunts_escaped - before.hunts_escaped
+
+    alive =
+      final.organisms
+      |> Enum.filter(&is_binary(&1.species))
+      |> Enum.map(& &1.species)
+      |> Enum.uniq()
+
+    sorted = Enum.sort(times)
+    max = List.last(sorted)
+    p99 = Enum.at(sorted, ceil(@steps * 0.99) - 1)
+    mean = div(Enum.sum(sorted), @steps)
+    at_floor = Enum.count(pops, &(&1 >= @floor))
+
+    IO.puts(
+      "
+[sim perf S1] #{@steps} ticks, 50 criadas + teste, boost #{@boost}: " <>
+        "média #{mean} us, p99 #{p99} us, máx #{max} us; nascimentos #{births}, caças #{hunts}, " <>
+        "escapes #{escaped}; população mín #{Enum.min(pops)}, final #{length(final.organisms)}, " <>
+        ">= #{@floor} em #{at_floor}/#{@steps} ticks; criadas vivas no fim #{length(alive)}/50"
+    )
+
+    assert births > 0
+    assert Enum.max(pops) <= @population
     assert at_floor >= @steps * 0.9
     assert max <= @max_step_us
   end

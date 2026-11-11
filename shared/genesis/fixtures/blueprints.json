@@ -1,0 +1,493 @@
+[
+  {
+    "name": "nucleo inicial sem boca",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "precisa de exatamente uma boca"
+  },
+  {
+    "name": "raspador",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": true,
+    "cost": 5,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "filtro",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "filtro", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": true,
+    "cost": 5,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "particles"}
+  },
+  {
+    "name": "mandibula",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "mandibula", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": true,
+    "cost": 7,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "predator"}
+  },
+  {
+    "name": "quatro flagelos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false},
+        {"kind": "flagelo", "at": 0.05, "around": 1.57, "size": 1, "angle": 0.2, "mirror": true},
+        {"kind": "flagelo", "at": 0.2, "around": 1, "size": 1, "angle": 0.2, "mirror": true}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": true,
+    "cost": 23,
+    "traits": {"max_speed": 0.4539599999999999, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.15535, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "misto",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false},
+        {"kind": "cilios", "at": 0.3, "around": 1, "size": 1, "angle": 0.2, "mirror": true},
+        {"kind": "ocelo", "at": 0.9, "around": 0.5, "size": 1, "angle": 0.2, "mirror": false},
+        {"kind": "gancho", "at": 0.5, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": true,
+    "cost": 14,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.51, "perception": 5.5, "escape": 0.0, "metabolism": 0.12034999999999998, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": true, "diet": "flora"}
+  },
+  {
+    "name": "espelho em cardume",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false},
+        {"kind": "cardume", "at": 0.5, "around": 0, "size": 1, "angle": 0.2, "mirror": true}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "peça não pode ser espelhada"
+  },
+  {
+    "name": "estouro de orcamento",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "mandibula", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false},
+        {"kind": "flagelo", "at": 0.05, "around": 1.57, "size": 1, "angle": 0.2, "mirror": true},
+        {"kind": "placa", "at": 0.2, "around": 1, "size": 1, "angle": 0.2, "mirror": true},
+        {"kind": "aleta", "at": 0.4, "around": 1, "size": 1, "angle": 0.2, "mirror": true}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "estoura o orçamento"
+  },
+  {
+    "name": "x fora de ordem",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0.3, 0, 0.45],
+          [0, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de x crescente"
+  },
+  {
+    "name": "chave a mais",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.45],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "manchas",
+      "extra": 1
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "formato da planta inválido"
+  },
+  {
+    "name": "corpo grande limitado em 1.6",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-2.0, 0.0, 0.9],
+          [0.0, 0.0, 0.9],
+          [2.0, 0.0, 0.9]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": true,
+    "cost": 9,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.20360000000000003, "body_radius": 1.6, "mature_s": 156.0, "adult_life_s": 1140.0, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "corpo minusculo limitado em 0.4",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.05, 0.0, 0.12],
+          [0.0, 0.0, 0.12],
+          [0.05, 0.0, 0.12]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": true,
+    "cost": 4,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.05960000000000001, "body_radius": 0.4, "mature_s": 84.0, "adult_life_s": 660.0, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "espinha assimetrica",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [0.0, 0.0, 0.2],
+          [0.4, 0.8, 0.3],
+          [1.0, -0.5, 0.5],
+          [1.2, 0.2, 0.3]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": true,
+    "cost": 7,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.13876714634568324, "body_radius": 1.2163274390947203, "mature_s": 132.97964634568322, "adult_life_s": 986.5309756378881, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "espinha de 6 pontos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-1.0, 0.1, 0.2],
+          [-0.6, 0.3, 0.3],
+          [-0.2, 0.0, 0.4],
+          [0.2, -0.2, 0.4],
+          [0.6, -0.4, 0.3],
+          [1.0, 0.0, 0.2]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false},
+        {"kind": "ocelo", "at": 0.9, "around": 1.2, "size": 0.8, "angle": 0.0, "mirror": true}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": true,
+    "cost": 12,
+    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 6.55, "escape": 0.0, "metabolism": 0.15767906018734112, "body_radius": 1.2088497300281036, "mature_s": 132.5309838016862, "adult_life_s": 983.5398920112414, "school": false, "shelter": false, "diet": "flora"}
+  },
+  {
+    "name": "x repetido",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0.0, 0.35],
+          [-0.3, 0.0, 0.45],
+          [0.3, 0.0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de x crescente"
+  },
+  {
+    "name": "comprimento acima do maximo",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [0.0, 0.0, 0.35],
+          [2.0, 0.0, 0.45],
+          [4.5, 0.0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "corpo comprido demais"
+  },
+  {
+    "name": "curva acima do maximo",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0.0, 0.35],
+          [0.0, 1.3, 0.45],
+          [0.3, 0.0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha curva demais"
+  },
+  {
+    "name": "raio da espinha fora da faixa",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0.0, 0.35],
+          [0.0, 0.0, 0.95],
+          [0.3, 0.0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1.0, "around": 0.0, "size": 1.0, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "raio da espinha fora da faixa"
+  },
+  {
+    "name": "espinha de 2 pontos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de 3 a 6 pontos"
+  },
+  {
+    "name": "espinha de 7 pontos",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-1.5, 0, 0.3],
+          [-1.0, 0, 0.3],
+          [-0.5, 0, 0.3],
+          [0.0, 0, 0.3],
+          [0.5, 0, 0.3],
+          [1.0, 0, 0.3],
+          [1.5, 0, 0.3]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "espinha precisa de 3 a 6 pontos"
+  },
+  {
+    "name": "raio da espinha abaixo do minimo",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0, 0, 0.11],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "raio da espinha fora da faixa"
+  },
+  {
+    "name": "ponto da espinha malformado",
+    "blueprint": {
+      "v": 1,
+      "body": {
+        "spine": [
+          [-0.3, 0, 0.35],
+          [0.0, 0.0],
+          [0.3, 0, 0.35]
+        ]
+      },
+      "parts": [
+        {"kind": "raspador", "at": 1, "around": 0, "size": 1, "angle": 0.2, "mirror": false}
+      ],
+      "colors": {"body": "#3f5a4a", "glow": "#7fe9dd"},
+      "pattern": "liso"
+    },
+    "valid": false,
+    "cost": null,
+    "traits": null,
+    "error": "ponto da espinha inválido"
+  }
+]

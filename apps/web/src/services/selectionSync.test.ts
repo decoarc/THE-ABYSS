@@ -48,7 +48,7 @@ it('nothing to do without selection', () => {
 });
 
 function tick(n: number, o: TickRow[], d: [string, DeathCause][]): TickMessage {
-  return { world_id: 'w1', tick: n, server_ms: 1000 + (n - 1) * 100, o, b: [], d, x: [], f: [], ps: [], pr: [] };
+  return { world_id: 'w1', tick: n, server_ms: 1000 + (n - 1) * 100, o, b: [], d, x: [], f: [], sp: [], ps: [], pr: [] };
 }
 const ROW: TickRow = [0, 0, 0, 0, 0, 0, 0.1, 0];
 

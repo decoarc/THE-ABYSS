@@ -1,4 +1,4 @@
-import { Component, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { detectWebGL } from './lib/webgl';
 import { PALETTE } from './lib/palette';
@@ -15,6 +15,12 @@ import { isClick, type Point } from './lib/pointer';
 import { debugEnabled, installDebugBridge, registerProgramCounter, type AbyssDebug } from './services/debugBridge';
 import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
+import { CreateButton } from './ui/CreateButton';
+import { GenesisNotice } from './ui/GenesisNotice';
+import { CreationScreen, initialDraft, type Draft, type PreviewProps } from './genesis/CreationScreen';
+import { EditorPreview } from './genesis/EditorPreview';
+import { confirmSpecies, type ConfirmResult } from './genesis/genesisApi';
+import { navigate, useRoute, type Route } from './genesis/route';
 
 class CanvasErrorBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -108,31 +114,107 @@ function Scene({ onFail }: { onFail: () => void }) {
 
 const WORLD_URL: string = import.meta.env.VITE_WORLD_URL ?? 'ws://localhost:4000/socket';
 
+const MONO = 'ui-monospace, SFMono-Regular, Consolas, monospace';
+
+/** Sem WebGL a prévia não aparece, mas o formulário continua funcionando. */
+function NoPreview() {
+  return (
+    <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: 24, font: `12px/1.6 ${MONO}`, color: PALETTE.fg, opacity: 0.6, textAlign: 'center' }}>
+      Sem WebGL a criatura não aparece aqui, mas dá para montar e liberar.
+    </div>
+  );
+}
+
+function SafePreview(props: PreviewProps) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <NoPreview />;
+  return (
+    <CanvasErrorBoundary onError={() => setFailed(true)}>
+      <EditorPreview {...props} />
+    </CanvasErrorBoundary>
+  );
+}
+
+function confirmMessage(result: ConfirmResult): string {
+  if (result === 'taken') return 'Este e-mail já criou uma espécie.';
+  if (result === 'invalid') return 'Este link não vale mais. Monte de novo e peça outro link.';
+  if (result === 'slow_down') return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
+  return `${result.published.name} foi liberada no abismo. Procure por ela no índice.`;
+}
+
+/**
+ * Rota `#confirmar=<token>`: confirma uma vez só por token (o Set sobrevive ao efeito duplo do
+ * StrictMode), tira o token do endereço (recarregar não confirma de novo) e devolve o aviso.
+ */
+function useConfirmation(route: Route, onPublished: () => void): [string | null, () => void] {
+  const [notice, setNotice] = useState<string | null>(null);
+  const seen = useRef(new Set<string>());
+  const onPublishedRef = useRef(onPublished);
+  onPublishedRef.current = onPublished;
+  useEffect(() => {
+    if (route.kind !== 'confirm') return;
+    const { token } = route;
+    navigate('', { replace: true });
+    if (seen.current.has(token)) return;
+    seen.current.add(token);
+    confirmSpecies(token).then(
+      (result) => {
+        // Publicou: o rascunho desta página já virou espécie; a próxima criação começa do zero.
+        if (typeof result === 'object') onPublishedRef.current();
+        setNotice(confirmMessage(result));
+      },
+      () => setNotice('Não foi possível falar com o abismo. Abra o link do e-mail de novo.'),
+    );
+  }, [route]);
+  const clear = useCallback(() => setNotice(null), []);
+  return [notice, clear];
+}
+
 export function App({
-  webglAvailable = detectWebGL(),
+  webglAvailable: webglProp,
   socketFactory,
 }: {
   webglAvailable?: boolean;
   socketFactory?: (url: string) => SocketLike;
 }) {
+  // Uma vez só: cada teste cria um contexto WebGL, e o App rerenderiza a cada mudança do rascunho.
+  const [webglAvailable] = useState(() => webglProp ?? detectWebGL());
   const [failed, setFailed] = useState(false);
+  const route = useRoute();
+  // O rascunho mora aqui: sair da criação e voltar mantém a criatura enquanto a página estiver aberta.
+  const [draft, setDraft] = useState<Draft>(initialDraft);
+  const [notice, clearNotice] = useConfirmation(route, () => setDraft(initialDraft));
+  const creating = route.kind === 'create';
 
   return (
     <WorldProvider url={WORLD_URL} socketFactory={socketFactory}>
     <SceneSettingsProvider>
       <EscapeClears />
       <DebugBridge />
-      {!webglAvailable ? (
-        <Fallback reason="no-webgl" />
-      ) : failed ? (
-        <Fallback reason="error" />
+      {creating ? (
+        <CreationScreen
+          draft={draft}
+          onDraftChange={setDraft}
+          onBack={() => navigate('')}
+          Preview={webglAvailable ? SafePreview : NoPreview}
+        />
       ) : (
-        <Scene onFail={() => setFailed(true)} />
+        <>
+          {!webglAvailable ? (
+            <Fallback reason="no-webgl" />
+          ) : failed ? (
+            <Fallback reason="error" />
+          ) : (
+            <Scene onFail={() => setFailed(true)} />
+          )}
+          <DemoBadge />
+          <SpeciesIndex />
+          <InspectPanel />
+          <ConnectionNotice />
+          <CreateButton onClick={() => navigate('#criar')} />
+          {notice && <GenesisNotice message={notice} onDone={clearNotice} />}
+        </>
       )}
-      <DemoBadge />
-      <SpeciesIndex />
-      <InspectPanel />
-      <ConnectionNotice />
     </SceneSettingsProvider>
     </WorldProvider>
   );

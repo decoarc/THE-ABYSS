@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { INITIAL_BLUEPRINT, bodyRadius } from './blueprint';
 import type { Blueprint } from '../services/wire';
-import { compassLayout, fitDistance } from './compassMath';
+import { compassLayout, compassOffset, fitDistance } from './compassMath';
 
 const longo: Blueprint = {
   ...INITIAL_BLUEPRINT,
@@ -17,13 +17,21 @@ test('o chão fica abaixo do ponto mais baixo do corpo, já no espaço centrado'
   }
 });
 
-test('o anel envolve o corpo e a frente aponta para +Y', () => {
+test('o anel envolve o corpo', () => {
   const c = compassLayout(longo);
   expect(c.radius).toBeGreaterThan(bodyRadius(longo));
-  expect(c.forward).toBe(Math.PI / 2);
 });
 
 test('corpo maior pede câmera mais longe', () => {
   expect(fitDistance(longo, 38)).toBeGreaterThan(fitDistance(INITIAL_BLUEPRINT, 38));
   expect(fitDistance(INITIAL_BLUEPRINT, 38)).toBeGreaterThan(bodyRadius(INITIAL_BLUEPRINT));
+});
+
+test('a bússola acompanha o corpo: zero sem arrasto, e o deslocamento da espinha durante ele', () => {
+  const cy = (-1.6 - 0.5 + 0.6 + 1.8) / 4;
+  const cz = (-0.4 + 0.2 + 0.5 + 0) / 4;
+  expect(compassOffset(longo, { y: cy, z: cz })).toEqual([0, 0, 0]);
+  const o = compassOffset(longo, { y: cy - 0.5, z: cz + 0.25 });
+  expect(o[1]).toBeCloseTo(0.5);
+  expect(o[2]).toBeCloseTo(-0.25);
 });

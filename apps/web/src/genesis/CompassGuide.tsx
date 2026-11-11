@@ -48,11 +48,11 @@ const chevron = (() => {
 })();
 
 /** Bússola sob a criatura (espaço centrado da prévia); a altura e o raio seguem o corpo. */
-export function Compass({ bp }: { bp: Blueprint }) {
+export function Compass({ bp, offset = [0, 0, 0] }: { bp: Blueprint; offset?: [number, number, number] }) {
   const { radius, z } = useMemo(() => compassLayout(bp), [bp]);
   const k = 1 / radius; // tamanhos fixos em unidades do mundo, dentro do grupo escalado pelo raio
   return (
-    <group position={[0, 0, z]} scale={radius}>
+    <group position={[offset[0], offset[1], offset[2] + z]} scale={radius}>
       <mesh geometry={ring} material={material} raycast={noRaycast} />
       <mesh geometry={ticks} material={material} raycast={noRaycast} />
       <mesh geometry={chevron} material={material} position={[0, 1, 0]} scale={[0.9 * k, 0.9 * k, 1]} raycast={noRaycast} />

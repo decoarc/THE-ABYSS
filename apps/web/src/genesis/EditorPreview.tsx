@@ -17,7 +17,7 @@ import { CRIADA_PULSE, criadaNucleus, useCriadaResources } from '../organisms/Cr
 import { Nucleus } from '../organisms/Nucleus';
 import type { Blueprint } from '../services/wire';
 import { Compass } from './CompassGuide';
-import { fitDistance } from './compassMath';
+import { compassOffset, fitDistance } from './compassMath';
 import { centroidOffset, surfaceCoords, surfaceFrame } from './geometry';
 import type { PreviewProps } from './CreationScreen';
 import type { EditorAction } from './editor';
@@ -183,7 +183,7 @@ function Editable({ state, dispatch }: PreviewProps) {
   return (
     <>
       <Creature bp={bp} view={view} bodyRef={bodyRef} />
-      <Compass bp={bp} />
+      <Compass bp={bp} offset={compassOffset(bp, view)} />
       {points.map((pos, i) => {
         const isSel = selected?.kind === 'point' && selected.index === i;
         return (

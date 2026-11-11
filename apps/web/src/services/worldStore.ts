@@ -62,6 +62,8 @@ export interface WorldStore {
 
 /** Quantos ticks recentes ficam guardados para `positionsAt` (~3 s a 10 Hz). */
 const HISTORY_TICKS = 32;
+/** Índice de espécies: as vivas e só as extintas mais recentes (spec §5.7). */
+const MAX_EXTINCT = 100;
 
 interface HistoryEntry {
   tick: number;
@@ -123,6 +125,16 @@ export function createWorldStore(): WorldStore {
   let species: readonly SpeciesInfo[] = [];
   let extinct: ReadonlyMap<string, number> = new Map();
   let lives: Live[] = [];
+
+  /** Mantém só as MAX_EXTINCT extintas mais recentes; identidade estável se nada sai. */
+  function capExtinct(): boolean {
+    if (extinct.size <= MAX_EXTINCT) return false;
+    const keep = [...extinct].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1)).slice(0, MAX_EXTINCT);
+    const kept = new Map(keep);
+    species = species.filter((sp) => !extinct.has(sp.id) || kept.has(sp.id));
+    extinct = kept;
+    return true;
+  }
   const ghosts: Ghost[] = [];
   let index = new Map<string, number>();
   let history: HistoryEntry[] = [];
@@ -321,6 +333,7 @@ export function createWorldStore(): WorldStore {
         extinct = m;
         changed = true;
       }
+      if (capExtinct()) changed = true;
 
       if (rosterChanged) rebuildRoster();
       remember(t.tick, rosterIds, t.o);

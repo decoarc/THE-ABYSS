@@ -69,6 +69,18 @@ defmodule Abyss.Genesis.BootTest do
     assert Server.stats(world).extinct["sp#{c.id}"] == 1_700_000_000_123
   end
 
+  test "um registro com planta não processável é pulado, não apaga as outras" do
+    a = insert(1, nil)
+    b = insert(2, nil)
+    bad = insert(3, nil)
+
+    broken = put_in(bad.blueprint, ["parts"], [%{"kind" => "inexistente", "at" => 0.5, "around" => 0.0}])
+    Repo.update_all(from(s in SpeciesRecord, where: s.id == ^bad.id), [set: [blueprint: broken]], log: false)
+
+    %{live: live} = Genesis.boot_species()
+    assert Enum.map(live, & &1.id) == ["sp#{a.id}", "sp#{b.id}"]
+  end
+
   test "só 100 extintas no boot" do
     for i <- 1..102, do: insert(i, 1_700_000_000_000 + i)
     assert length(Genesis.boot_species().extinct) == 100

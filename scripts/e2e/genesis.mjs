@@ -6,10 +6,12 @@ import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
 import assert from 'node:assert/strict';
-import { API, BASE, COMPOSE, NEGATE, exec, expectOk, live, openWorld, restartApi, scenario, withPreview } from './harness.mjs';
+import { API, BASE, COMPOSE, exec, expectOk, live, openWorld, restartApi, scenario, withPreview } from './harness.mjs';
 
 const EMAIL = 'mesmo@email.com';
 const EMAIL_AGAIN = '  Mesmo@Email.com';
+/** Todo endereço que a execução usa: nenhum pode aparecer no fio. */
+const EMAILS = new Set([EMAIL, EMAIL_AGAIN]);
 const NAME = 'Gênese E2E';
 const PLANTAS = JSON.parse(await readFile(new URL('../capture-s1-plantas.json', import.meta.url), 'utf8'));
 // Outras duas espécies para os cenários de programas e reinício: plantas bem diferentes da primeira
@@ -86,7 +88,6 @@ async function waitTrue(page, fn, arg, timeout) {
 /** Escuta os frames de cada aba do contexto: procura o e-mail e anota as espécies que chegaram por `sp`. */
 function watchWire(context) {
   const wire = { frames: 0, emailHits: [], spByPage: new Map() };
-  const needle = EMAIL.toLowerCase();
   context.on('page', (page) => {
     const sp = new Set();
     wire.spByPage.set(page, sp);
@@ -94,7 +95,8 @@ function watchWire(context) {
       const check = (dir) => ({ payload }) => {
         const text = typeof payload === 'string' ? payload : Buffer.from(payload).toString('utf8');
         wire.frames++;
-        if (text.toLowerCase().includes(needle)) wire.emailHits.push(`${dir}: ${text.slice(0, 160)}`);
+        const lower = text.toLowerCase();
+        if ([...EMAILS].some((e) => lower.includes(e.trim().toLowerCase()))) wire.emailHits.push(`${dir}: ${text.slice(0, 160)}`);
         if (dir === 'recebido' && text.includes('"sp":[{')) {
           try {
             const [, , , event, body] = JSON.parse(text);
@@ -261,7 +263,9 @@ await withPreview(async (browser) => {
     await delay(5000);
     const first = await page.evaluate(() => [window.__abyss.programs(), performance.now()]);
     for (const p of OTHERS) {
-      const sp = await publishViaApi(`e2e-${p.name.toLowerCase().replace(/\W+/g, '-')}@example.com`, p.name, p.blueprint);
+      const email = `e2e-${p.name.toLowerCase().replace(/\W+/g, '-')}@example.com`;
+      EMAILS.add(email);
+      const sp = await publishViaApi(email, p.name, p.blueprint);
       S.others.push(sp);
       await follow(sp.id);
       await delay(5000);
@@ -271,6 +275,7 @@ await withPreview(async (browser) => {
     const ids = await page.evaluate(() => window.__abyss.species().filter((s) => s.blueprint).map((s) => s.id));
     console.log(`  programas com a 1ª: ${first[0]}; com a 2ª e a 3ª: ${after}; espécies criadas no mundo ${ids.join(', ')}; ligados depois: ${newLinks.join(' | ') || 'nenhum'}`);
     assert.equal(ids.length, 3, 'três espécies criadas no mundo');
+    assert.ok(typeof first[0] === 'number' && first[0] > 0 && typeof after === 'number' && after > 0, `contagem de programas inválida: ${first[0]} -> ${after}`);
     expectOk(after <= first[0], `programas ${first[0]} -> ${after}`);
     await page.close();
   });

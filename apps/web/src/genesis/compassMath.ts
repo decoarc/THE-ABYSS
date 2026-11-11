@@ -11,8 +11,6 @@ export interface CompassLayout {
   radius: number;
   /** Altura (z) do chão, abaixo do ponto mais baixo do corpo desenhado. */
   z: number;
-  /** Ângulo da frente no plano do chão, a partir de +x, em radianos (+y → π/2). */
-  forward: number;
 }
 
 export function compassLayout(bp: Blueprint): CompassLayout {
@@ -25,7 +23,19 @@ export function compassLayout(bp: Blueprint): CompassLayout {
     reach = Math.max(reach, Math.abs(x - cx) + r);
     low = Math.min(low, y - cy - r);
   }
-  return { radius: Math.max(reach, 0.6) + RING_GAP, z: low - FLOOR_GAP, forward: Math.PI / 2 };
+  return { radius: Math.max(reach, 0.6) + RING_GAP, z: low - FLOOR_GAP };
+}
+
+/**
+ * Deslocamento da bússola no espaço da prévia: o corpo é desenhado em centróide(bp) − vista; sem arrasto
+ * a vista é o próprio centróide (deslocamento zero), no arrasto ela fica congelada e o corpo anda.
+ * Eixos da cena: x fica, y = x da espinha, z = y da espinha.
+ */
+export function compassOffset(bp: Blueprint, view: { y: number; z: number }): [number, number, number] {
+  const s = bp.body.spine;
+  const cy = s.reduce((m, p) => m + p[0], 0) / s.length;
+  const cz = s.reduce((m, p) => m + p[1], 0) / s.length;
+  return [0, cy - view.y, cz - view.z];
 }
 
 /** Distância inicial da câmera para a esfera do corpo (e do anel) caber no campo de visão, com folga. */

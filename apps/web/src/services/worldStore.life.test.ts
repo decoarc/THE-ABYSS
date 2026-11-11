@@ -246,3 +246,28 @@ it('nascido de espécie desconhecida não quebra', () => {
   delete old.sp;
   expect(s.applyTick(old as TickMessage, L(3))).toBe('ok');
 });
+
+it('índice de espécies: vivas sempre; só as 100 extintas mais recentes', () => {
+  const s = ready();
+  const mk = (i: number): SpeciesInfo => ({
+    id: `x${i}`, code: `X${i}`, name: `X${i}`, body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null,
+  });
+  const extra = Array.from({ length: 120 }, (_, i) => mk(i));
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: extra }), L(2));
+  expect(s.extinct().size).toBe(1); // só a 'fil' do snapshot
+  for (let k = 0; k < 120; k += 40) {
+    const x = extra.slice(k, k + 40).map((e, j) => [e.id, 10_000 + k + j] as [string, number]);
+    s.applyTick(tick(3 + k / 40, [row(0), row(1), row(2)], { x }), L(3 + k / 40));
+  }
+  expect(s.extinct().size).toBe(100);
+  const all = s.species().map((x) => x.id);
+  // a 'fil' (777) e as 19 mais antigas extintas saem; as 100 mais recentes ficam
+  expect(s.extinct().has('fil')).toBe(false);
+  for (let i = 0; i < 20; i++) expect(all).not.toContain(`x${i}`);
+  expect(all).toContain('x20');
+  expect(all).toContain('x119');
+  expect(all).toContain('casco');
+  const before = s.species();
+  s.applyTick(tick(6, [row(0), row(1), row(2)]), L(6));
+  expect(s.species()).toBe(before);
+});

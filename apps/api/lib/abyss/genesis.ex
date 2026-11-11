@@ -87,17 +87,27 @@ defmodule Abyss.Genesis do
       true ->
         case publish(token) do
           {:ok, record, email} ->
-            Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email),
-              log: false
-            )
-
             spawn_in_world(world, record)
+            cleanup_tokens(email)
             {:ok, %{id: "sp#{record.id}", name: record.name, code: record.code}}
 
           {:error, reason} ->
             {:error, reason}
         end
     end
+  end
+
+  # A espécie já está publicada: falha na limpeza dos outros tokens não pode virar erro. Sem e-mail no log.
+  defp cleanup_tokens(email) do
+    Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email), log: false)
+    :ok
+  rescue
+    e -> Logger.error("limpeza de tokens falhou (#{inspect(e.__struct__)})")
+    :ok
+  catch
+    :exit, _ ->
+      Logger.error("limpeza de tokens falhou (exit)")
+      :ok
   end
 
   @spec species_from_record(SpeciesRecord.t()) :: Abyss.World.Species.t()
@@ -125,7 +135,7 @@ defmodule Abyss.Genesis do
     live =
       from(s in SpeciesRecord, where: is_nil(s.extinct_at), order_by: [asc: s.id])
       |> Repo.all(log: false)
-      |> Enum.map(&species_from_record/1)
+      |> Enum.flat_map(&safe_species/1)
 
     extinct =
       from(s in SpeciesRecord,
@@ -134,13 +144,24 @@ defmodule Abyss.Genesis do
         limit: 100
       )
       |> Repo.all(log: false)
-      |> Enum.map(&{species_from_record(&1), DateTime.to_unix(&1.extinct_at, :millisecond)})
+      |> Enum.flat_map(fn r ->
+        for sp <- safe_species(r), do: {sp, DateTime.to_unix(r.extinct_at, :millisecond)}
+      end)
 
     %{live: live, extinct: extinct}
   rescue
     e ->
       Logger.error("boot_species falhou (#{inspect(e.__struct__)}); mundo sem espécies criadas")
       %{live: [], extinct: []}
+  end
+
+  # Um registro ilegível é pulado (só o id no log), sem derrubar as outras espécies.
+  defp safe_species(record) do
+    [species_from_record(record)]
+  rescue
+    _ ->
+      Logger.error("boot_species: espécie sp#{record.id} ignorada (planta não processável)")
+      []
   end
 
   @doc "Apaga criadores, espécies e tokens (reinicia os ids)."

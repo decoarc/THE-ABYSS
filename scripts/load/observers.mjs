@@ -82,6 +82,46 @@ function openClient() {
   clients.push({ socket, c });
 }
 
+/**
+ * Retrato do mundo por um join avulso (não conta durante a medição): espécies criadas (com planta), quantas
+ * têm organismos vivos e o tamanho do snapshot. Usado no começo e no fim (gate S1: 50 espécies criadas).
+ */
+function snapshotMix() {
+  return new Promise((resolve) => {
+    let bytes = null;
+    const socket = new Socket(args.url, {
+      decode: (raw, callback) =>
+        Serializer.decode(raw, (msg) => {
+          if (msg.event === 'phx_reply' && msg.topic === 'world:main' && typeof raw === 'string') bytes = Buffer.byteLength(raw);
+          callback(msg);
+        }),
+    });
+    socket.connect();
+    const done = (value) => {
+      socket.disconnect();
+      resolve(value);
+    };
+    const timer = setTimeout(() => done(null), 15_000);
+    socket
+      .channel('world:main')
+      .join()
+      .receive('ok', (snap) => {
+        clearTimeout(timer);
+        const created = new Set(snap.species.filter((sp) => sp.blueprint && sp.extinct_ms == null).map((sp) => sp.id));
+        const createdOrgs = snap.organisms.filter((o) => created.has(o.species));
+        done({
+          species: snap.species.length,
+          createdSpecies: created.size,
+          createdSpeciesAlive: new Set(createdOrgs.map((o) => o.species)).size,
+          organisms: snap.organisms.length,
+          createdOrganisms: createdOrgs.length,
+          snapshotBytes: bytes,
+        });
+      })
+      .receive('error', () => done(null));
+  });
+}
+
 async function statsSample() {
   const stats = await (await fetch(`${httpBase}/api/stats`)).json();
   let cpu = null;
@@ -120,6 +160,8 @@ for (;;) {
   await new Promise((resolve) => setTimeout(resolve, Math.min(30_000, warmupMs - s.uptime_ms + 500)));
 }
 started = Date.now();
+const mixStart = await snapshotMix();
+console.log(`mundo no início: ${JSON.stringify(mixStart)}`);
 
 // Abas reais (renderizando), como um visitante.
 let browser = null;
@@ -148,6 +190,9 @@ const finalSample = await statsSample().catch(() => null);
 if (finalSample) samples.push(finalSample);
 for (const { socket } of clients) socket.disconnect();
 if (browser) await browser.close();
+const mixEnd = await snapshotMix();
+const mixText = (m) =>
+  m ? `${m.createdSpeciesAlive}/${m.createdSpecies} com vivos (${m.createdOrganisms} de ${m.organisms} organismos; snapshot ${m.snapshotBytes} bytes)` : 'n/a';
 
 // Agregados
 const allIntervals = clients.flatMap(({ c }) => c.intervals).sort((a, b) => a - b);
@@ -192,6 +237,7 @@ const summary = [
   `# Carga do servidor — ${new Date(started).toISOString()}`,
   '',
   `- Clientes: ${clientCount} · abas reais: ${tabCount} · duração: ${args.seconds} s (depois de ${args.warmup} s de aquecimento) · população: ${finalSample?.stats?.population ?? 'n/a'}`,
+  `- Espécies criadas no snapshot: início ${mixText(mixStart)} · fim ${mixText(mixEnd)}`,
   `- População ao longo da medição (mín.–máx.): ${range('population')} (amostras a cada ${STATS_EVERY_MS / 1000} s)`,
   `- Comida no início: ${food(firstSample)} · no fim: ${food(finalSample)}`,
   `- Comida ao longo da medição: partículas ${range('particles')} · soma da flora ${range('flora_level_sum')}`,
@@ -215,6 +261,6 @@ const outDir = args.out;
 await mkdir(outDir, { recursive: true });
 const stamp = new Date(started).toISOString().replace(/[:.]/g, '-');
 await writeFile(join(outDir, `carga-${stamp}.md`), summary + '\n');
-await writeFile(join(outDir, `carga-${stamp}.json`), JSON.stringify({ criteria, tickBytes, samples }, null, 2));
+await writeFile(join(outDir, `carga-${stamp}.json`), JSON.stringify({ criteria, tickBytes, world: { start: mixStart, end: mixEnd }, samples }, null, 2));
 
 process.exitCode = ok ? 0 : 1;

@@ -1,0 +1,593 @@
+{
+  "meta": {
+    "date": "2026-11-10T23:14:28.220Z",
+    "base": "http://localhost:4174/",
+    "suite": "s1",
+    "seed": "7",
+    "viewport": "1920×1080"
+  },
+  "budget": [
+    {
+      "name": "Arc low: p95 ≤ 33 ms",
+      "value": 16.7,
+      "pass": true
+    },
+    {
+      "name": "RTX high: p50 ≤ 16,7 ms",
+      "value": null,
+      "pass": true
+    }
+  ],
+  "targets": [
+    {
+      "name": "depois do aquecimento: 0 programas ligados",
+      "value": 0,
+      "pass": true
+    },
+    {
+      "name": "depois do aquecimento: 0 quadros > 50 ms",
+      "value": 1,
+      "pass": false
+    },
+    {
+      "name": "S1: ≥ 50 espécies criadas vivas em cada cenário",
+      "value": 38,
+      "pass": false
+    }
+  ],
+  "programsRun": null,
+  "runs": [
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 96986,
+        "population": 250,
+        "births_total": 3,
+        "deaths_total": {
+          "starvation": 0,
+          "predation": 3,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 195.909,
+        "particles": 322,
+        "step_us_max": 12192
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 196.08000001311302,
+        "particles": 327
+      },
+      "programs": {
+        "start": 29,
+        "end": 29
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 44,
+        "organisms": 248,
+        "createdOrganisms": 122
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5183,
+          "p50": 16.7,
+          "p95": 16.8,
+          "p99": 16.8,
+          "max": 733.4,
+          "over33": 1,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 11,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.2,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0",
+              "frameMs": 733.4
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 733.4
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.6,
+              "ms": 733.4
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5212,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 66.6,
+          "over33": 1,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": [
+            {
+              "atS": 74.3,
+              "ms": 66.6
+            }
+          ]
+        }
+      ],
+      "population": {
+        "min": 239,
+        "max": 250,
+        "samples": 77
+      },
+      "apiEnd": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 274655,
+        "population": 248,
+        "births_total": 45,
+        "deaths_total": {
+          "starvation": 38,
+          "predation": 9,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.001,
+        "particles": 794,
+        "step_us_max": 12386
+      }
+    },
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low · sem vsync",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": false,
+      "api": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 275585,
+        "population": 248,
+        "births_total": 46,
+        "deaths_total": {
+          "starvation": 39,
+          "predation": 9,
+          "old_age": 0
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.246,
+        "particles": 799,
+        "step_us_max": 12386
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 191.63999999314547,
+        "particles": 797
+      },
+      "programs": {
+        "start": 29,
+        "end": 29
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 38,
+        "organisms": 247,
+        "createdOrganisms": 137
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 9327,
+          "p50": 8.8,
+          "p95": 13.9,
+          "p99": 20.5,
+          "max": 705.2,
+          "over33": 13,
+          "over50": 2,
+          "longTasks": 1,
+          "longTaskMaxMs": 70,
+          "programLinks": 11,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.2,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0",
+              "frameMs": 705.2
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 705.2
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 705.2
+            },
+            {
+              "atS": 2.4,
+              "ms": 65
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 8490,
+          "p50": 8.8,
+          "p95": 17.2,
+          "p99": 37.8,
+          "max": 381.9,
+          "over33": 124,
+          "over50": 59,
+          "longTasks": 77,
+          "longTaskMaxMs": 397,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": [
+            {
+              "atS": 25.2,
+              "ms": 62.8
+            },
+            {
+              "atS": 25.3,
+              "ms": 58
+            },
+            {
+              "atS": 25.4,
+              "ms": 88
+            },
+            {
+              "atS": 25.5,
+              "ms": 77.5
+            },
+            {
+              "atS": 25.7,
+              "ms": 129.4
+            },
+            {
+              "atS": 25.9,
+              "ms": 185.5
+            },
+            {
+              "atS": 26,
+              "ms": 94.4
+            },
+            {
+              "atS": 26.1,
+              "ms": 108.9
+            },
+            {
+              "atS": 26.2,
+              "ms": 57.8
+            },
+            {
+              "atS": 26.3,
+              "ms": 73.5
+            },
+            {
+              "atS": 26.3,
+              "ms": 68.5
+            },
+            {
+              "atS": 26.4,
+              "ms": 64.1
+            },
+            {
+              "atS": 26.5,
+              "ms": 64.3
+            },
+            {
+              "atS": 26.9,
+              "ms": 62.2
+            },
+            {
+              "atS": 27,
+              "ms": 55.5
+            },
+            {
+              "atS": 27,
+              "ms": 61
+            },
+            {
+              "atS": 27.1,
+              "ms": 62
+            },
+            {
+              "atS": 27.2,
+              "ms": 61.2
+            },
+            {
+              "atS": 27.3,
+              "ms": 75.5
+            },
+            {
+              "atS": 27.4,
+              "ms": 63.6
+            },
+            {
+              "atS": 27.5,
+              "ms": 63.5
+            },
+            {
+              "atS": 27.8,
+              "ms": 70.6
+            },
+            {
+              "atS": 29,
+              "ms": 55.2
+            },
+            {
+              "atS": 29.1,
+              "ms": 57
+            },
+            {
+              "atS": 29.2,
+              "ms": 64.1
+            },
+            {
+              "atS": 29.8,
+              "ms": 61.9
+            },
+            {
+              "atS": 30.5,
+              "ms": 92.1
+            },
+            {
+              "atS": 30.6,
+              "ms": 60.4
+            },
+            {
+              "atS": 30.7,
+              "ms": 59.2
+            },
+            {
+              "atS": 31.3,
+              "ms": 58.7
+            },
+            {
+              "atS": 31.4,
+              "ms": 65.9
+            },
+            {
+              "atS": 31.5,
+              "ms": 67.2
+            },
+            {
+              "atS": 47,
+              "ms": 71.6
+            },
+            {
+              "atS": 47.1,
+              "ms": 69.4
+            },
+            {
+              "atS": 47.2,
+              "ms": 63.7
+            },
+            {
+              "atS": 47.4,
+              "ms": 66.5
+            },
+            {
+              "atS": 47.5,
+              "ms": 59.6
+            },
+            {
+              "atS": 47.6,
+              "ms": 56.8
+            },
+            {
+              "atS": 47.8,
+              "ms": 61.4
+            },
+            {
+              "atS": 47.9,
+              "ms": 60.9
+            },
+            {
+              "atS": 48.2,
+              "ms": 66.1
+            },
+            {
+              "atS": 48.3,
+              "ms": 61.7
+            },
+            {
+              "atS": 48.4,
+              "ms": 65.2
+            },
+            {
+              "atS": 48.5,
+              "ms": 96.9
+            },
+            {
+              "atS": 48.7,
+              "ms": 58
+            },
+            {
+              "atS": 48.9,
+              "ms": 64
+            },
+            {
+              "atS": 49.1,
+              "ms": 55.5
+            },
+            {
+              "atS": 49.6,
+              "ms": 69.9
+            },
+            {
+              "atS": 49.9,
+              "ms": 67.7
+            },
+            {
+              "atS": 50.1,
+              "ms": 56.5
+            },
+            {
+              "atS": 54.5,
+              "ms": 58.6
+            },
+            {
+              "atS": 68.3,
+              "ms": 59.2
+            },
+            {
+              "atS": 68.5,
+              "ms": 63.1
+            },
+            {
+              "atS": 68.6,
+              "ms": 53.2
+            },
+            {
+              "atS": 71.9,
+              "ms": 161.2
+            },
+            {
+              "atS": 72.1,
+              "ms": 119.3
+            },
+            {
+              "atS": 86.1,
+              "ms": 381.9
+            },
+            {
+              "atS": 86.3,
+              "ms": 201.9
+            },
+            {
+              "atS": 86.7,
+              "ms": 76.7
+            }
+          ]
+        }
+      ],
+      "population": {
+        "min": 241,
+        "max": 250,
+        "samples": 73
+      },
+      "apiEnd": {
+        "world_id": "b3fc3434a0d61741988f596edb0c7af8",
+        "uptime_ms": 453470,
+        "population": 248,
+        "births_total": 132,
+        "deaths_total": {
+          "starvation": 105,
+          "predation": 18,
+          "old_age": 11
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 182.465,
+        "particles": 733,
+        "step_us_max": 27240
+      }
+    }
+  ]
+}

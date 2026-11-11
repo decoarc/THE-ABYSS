@@ -1,0 +1,1819 @@
+{
+  "meta": {
+    "date": "2026-11-10T23:06:17.628Z",
+    "base": "http://localhost:4174/",
+    "suite": "s1",
+    "seed": "7",
+    "viewport": "1920×1080"
+  },
+  "budget": [
+    {
+      "name": "Arc low: p95 ≤ 33 ms",
+      "value": 16.7,
+      "pass": true
+    },
+    {
+      "name": "RTX high: p50 ≤ 16,7 ms",
+      "value": 16.7,
+      "pass": true
+    }
+  ],
+  "targets": [
+    {
+      "name": "depois do aquecimento: 0 programas ligados",
+      "value": 2,
+      "pass": false
+    },
+    {
+      "name": "depois do aquecimento: 0 quadros > 50 ms",
+      "value": 2,
+      "pass": false
+    },
+    {
+      "name": "S1: ≥ 50 espécies criadas vivas em cada cenário",
+      "value": 25,
+      "pass": false
+    },
+    {
+      "name": "programas de shader não crescem em 2 min de nascimentos nem após ressincronização forçada",
+      "value": "23 -> 23 (nascimentos 23)",
+      "pass": true
+    }
+  ],
+  "programsRun": {
+    "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "world": {
+      "species": 55,
+      "createdSpecies": 50,
+      "createdSpeciesAlive": 25,
+      "organisms": 249,
+      "createdOrganisms": 138
+    },
+    "before": {
+      "programs": 23,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1653292,
+        "population": 248,
+        "births_total": 478,
+        "deaths_total": {
+          "starvation": 212,
+          "predation": 34,
+          "old_age": 234
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.468,
+        "particles": 786,
+        "step_us_max": 35158
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 249,
+        "createdOrganisms": 142
+      }
+    },
+    "after": {
+      "programs": 23,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1773551,
+        "population": 250,
+        "births_total": 501,
+        "deaths_total": {
+          "starvation": 221,
+          "predation": 34,
+          "old_age": 246
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 195.003,
+        "particles": 712,
+        "step_us_max": 35158
+      }
+    },
+    "populationDuringBirths": {
+      "min": 245,
+      "max": 250,
+      "samples": 53
+    },
+    "resync": {
+      "removed": 250,
+      "rosterAfterRemove": 250,
+      "before": {
+        "programs": 23,
+        "api": {
+          "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+          "uptime_ms": 1773953,
+          "population": 250,
+          "births_total": 501,
+          "deaths_total": {
+            "starvation": 221,
+            "predation": 34,
+            "old_age": 246
+          },
+          "flora_patches": 200,
+          "flora_level_sum": 194.859,
+          "particles": 712,
+          "step_us_max": 35158
+        }
+      },
+      "after": {
+        "programs": 23,
+        "api": {
+          "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+          "uptime_ms": 1794757,
+          "population": 249,
+          "births_total": 501,
+          "deaths_total": {
+            "starvation": 221,
+            "predation": 34,
+            "old_age": 247
+          },
+          "flora_patches": 200,
+          "flora_level_sum": 196.772,
+          "particles": 668,
+          "step_us_max": 35158
+        },
+        "roster": 249
+      },
+      "links": [
+        {
+          "t": 1309,
+          "sig": "ShaderMaterial [uTime,uPhase,uColor,uStrength] pl0"
+        },
+        {
+          "t": 1317,
+          "sig": "ShaderMaterial/LuminanceMaterial pl0"
+        },
+        {
+          "t": 1323,
+          "sig": "ShaderMaterial/DownsamplingMaterial pl0"
+        },
+        {
+          "t": 1344,
+          "sig": "ShaderMaterial/UpsamplingMaterial pl0"
+        },
+        {
+          "t": 1355,
+          "sig": "ShaderMaterial/EffectMaterial pl0"
+        },
+        {
+          "t": 1520,
+          "sig": "MeshBasicMaterial pl0"
+        },
+        {
+          "t": 1537,
+          "sig": "MeshStandardMaterial pl5"
+        },
+        {
+          "t": 1622,
+          "sig": "MeshBasicMaterial pl0 inst"
+        },
+        {
+          "t": 1643,
+          "sig": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0"
+        },
+        {
+          "t": 1661,
+          "sig": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0"
+        },
+        {
+          "t": 1726,
+          "sig": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0"
+        },
+        {
+          "t": 1734,
+          "sig": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0"
+        },
+        {
+          "t": 1787,
+          "sig": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0"
+        },
+        {
+          "t": 54431,
+          "sig": "MeshPhysicalMaterial pl5"
+        },
+        {
+          "t": 54722,
+          "sig": "LineBasicMaterial pl0"
+        },
+        {
+          "t": 210363,
+          "sig": "MeshBasicMaterial pl0"
+        },
+        {
+          "t": 210369,
+          "sig": "MeshStandardMaterial pl5"
+        },
+        {
+          "t": 210380,
+          "sig": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0"
+        },
+        {
+          "t": 210386,
+          "sig": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0"
+        },
+        {
+          "t": 210394,
+          "sig": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0"
+        }
+      ]
+    },
+    "birthsDuring": 23,
+    "birthsTotal": 501,
+    "deathsTotal": {
+      "starvation": 221,
+      "predation": 34,
+      "old_age": 247
+    }
+  },
+  "runs": [
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 367587,
+        "population": 244,
+        "births_total": 93,
+        "deaths_total": {
+          "starvation": 78,
+          "predation": 18,
+          "old_age": 3
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 185.439,
+        "particles": 743,
+        "step_us_max": 14880
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 185.49999991059303,
+        "particles": 749
+      },
+      "programs": {
+        "start": 29,
+        "end": 29
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 39,
+        "organisms": 248,
+        "createdOrganisms": 138
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5166,
+          "p50": 16.7,
+          "p95": 16.8,
+          "p99": 16.8,
+          "max": 600,
+          "over33": 21,
+          "over50": 2,
+          "longTasks": 1,
+          "longTaskMaxMs": 54,
+          "programLinks": 11,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0",
+              "frameMs": 600
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 600
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 600
+            },
+            {
+              "atS": 38.1,
+              "ms": 50.1
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5203,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 66.7,
+          "over33": 9,
+          "over50": 1,
+          "longTasks": 1,
+          "longTaskMaxMs": 83,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": [
+            {
+              "atS": 24.1,
+              "ms": 66.7
+            }
+          ]
+        }
+      ],
+      "population": {
+        "min": 243,
+        "max": 250,
+        "samples": 76
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 543977,
+        "population": 247,
+        "births_total": 151,
+        "deaths_total": {
+          "starvation": 106,
+          "predation": 27,
+          "old_age": 21
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 182.951,
+        "particles": 732,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · high",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "high",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 544433,
+        "population": 247,
+        "births_total": 151,
+        "deaths_total": {
+          "starvation": 106,
+          "predation": 27,
+          "old_age": 21
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 182.88,
+        "particles": 730,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 182.97999992594123,
+        "particles": 740
+      },
+      "programs": {
+        "start": 29,
+        "end": 28
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 35,
+        "organisms": 249,
+        "createdOrganisms": 148
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5182,
+          "p50": 16.7,
+          "p95": 16.8,
+          "p99": 16.8,
+          "max": 683.3,
+          "over33": 3,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 11,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uGlow,uBody,uPulse,uFade,uTime] pl0",
+              "frameMs": 683.3
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 683.3
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 683.3
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5213,
+          "p50": 16.7,
+          "p95": 16.8,
+          "p99": 16.8,
+          "max": 33.4,
+          "over33": 3,
+          "over50": 0,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": []
+        }
+      ],
+      "population": {
+        "min": 244,
+        "max": 250,
+        "samples": 77
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 721083,
+        "population": 249,
+        "births_total": 205,
+        "deaths_total": {
+          "starvation": 130,
+          "predation": 33,
+          "old_age": 43
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 187.963,
+        "particles": 792,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low · sem vsync",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": false,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 721777,
+        "population": 248,
+        "births_total": 205,
+        "deaths_total": {
+          "starvation": 131,
+          "predation": 33,
+          "old_age": 43
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 188.147,
+        "particles": 790,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 188.12000001966953,
+        "particles": 791
+      },
+      "programs": {
+        "start": 28,
+        "end": 28
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 32,
+        "organisms": 247,
+        "createdOrganisms": 142
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 12980,
+          "p50": 5.3,
+          "p95": 15.7,
+          "p99": 26.3,
+          "max": 669.1,
+          "over33": 51,
+          "over50": 30,
+          "longTasks": 35,
+          "longTaskMaxMs": 384,
+          "programLinks": 10,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 669.1
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 669.1
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 669.1
+            },
+            {
+              "atS": 7.3,
+              "ms": 103.6
+            },
+            {
+              "atS": 7.7,
+              "ms": 164.6
+            },
+            {
+              "atS": 7.8,
+              "ms": 70.4
+            },
+            {
+              "atS": 8,
+              "ms": 96.9
+            },
+            {
+              "atS": 8.3,
+              "ms": 149.3
+            },
+            {
+              "atS": 12.2,
+              "ms": 212.2
+            },
+            {
+              "atS": 14.5,
+              "ms": 366
+            },
+            {
+              "atS": 31.5,
+              "ms": 58.1
+            },
+            {
+              "atS": 31.7,
+              "ms": 58
+            },
+            {
+              "atS": 36.6,
+              "ms": 158.8
+            },
+            {
+              "atS": 37.1,
+              "ms": 94.3
+            },
+            {
+              "atS": 47.1,
+              "ms": 222.5
+            },
+            {
+              "atS": 47.3,
+              "ms": 89.6
+            },
+            {
+              "atS": 47.5,
+              "ms": 131.5
+            },
+            {
+              "atS": 48.1,
+              "ms": 58.3
+            },
+            {
+              "atS": 48.6,
+              "ms": 62.1
+            },
+            {
+              "atS": 48.8,
+              "ms": 55.5
+            },
+            {
+              "atS": 49.1,
+              "ms": 116.4
+            },
+            {
+              "atS": 49.8,
+              "ms": 84.1
+            },
+            {
+              "atS": 50.2,
+              "ms": 145.9
+            },
+            {
+              "atS": 51.2,
+              "ms": 74.7
+            },
+            {
+              "atS": 51.5,
+              "ms": 119.8
+            },
+            {
+              "atS": 51.6,
+              "ms": 114.2
+            },
+            {
+              "atS": 52,
+              "ms": 53.9
+            },
+            {
+              "atS": 60.4,
+              "ms": 187.7
+            },
+            {
+              "atS": 61.1,
+              "ms": 253.7
+            },
+            {
+              "atS": 70.2,
+              "ms": 183.4
+            },
+            {
+              "atS": 71.6,
+              "ms": 243.1
+            },
+            {
+              "atS": 79.2,
+              "ms": 60.2
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 10882,
+          "p50": 7.1,
+          "p95": 13.2,
+          "p99": 21.4,
+          "max": 559.7,
+          "over33": 14,
+          "over50": 9,
+          "longTasks": 8,
+          "longTaskMaxMs": 556,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": [
+            {
+              "atS": 1.5,
+              "ms": 58.1
+            },
+            {
+              "atS": 1.6,
+              "ms": 113.7
+            },
+            {
+              "atS": 15.2,
+              "ms": 496.1
+            },
+            {
+              "atS": 18.1,
+              "ms": 369.3
+            },
+            {
+              "atS": 22.6,
+              "ms": 559.7
+            },
+            {
+              "atS": 32.4,
+              "ms": 62.3
+            },
+            {
+              "atS": 35.6,
+              "ms": 150.8
+            },
+            {
+              "atS": 35.9,
+              "ms": 194.7
+            },
+            {
+              "atS": 38.5,
+              "ms": 354.4
+            }
+          ]
+        }
+      ],
+      "population": {
+        "min": 241,
+        "max": 250,
+        "samples": 74
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 899077,
+        "population": 247,
+        "births_total": 255,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 34,
+          "old_age": 73
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.473,
+        "particles": 771,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "percurso · GPU alto desempenho (RTX) · low",
+      "scenario": "percurso",
+      "gpu": "rtx",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 899646,
+        "population": 247,
+        "births_total": 255,
+        "deaths_total": {
+          "starvation": 151,
+          "predation": 34,
+          "old_age": 73
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.675,
+        "particles": 768,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 191.4999999180436,
+        "particles": 763
+      },
+      "programs": {
+        "start": 28,
+        "end": 28
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 30,
+        "organisms": 248,
+        "createdOrganisms": 141
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5189,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 566.7,
+          "over33": 2,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 10,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 566.7
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 566.7
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.4,
+              "ms": 566.7
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5215,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "over50": 0,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": []
+        }
+      ],
+      "population": {
+        "min": 243,
+        "max": 250,
+        "samples": 78
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1078236,
+        "population": 246,
+        "births_total": 298,
+        "deaths_total": {
+          "starvation": 163,
+          "predation": 34,
+          "old_age": 105
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 192.606,
+        "particles": 713,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "percurso · GPU alto desempenho (RTX) · high",
+      "scenario": "percurso",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1078831,
+        "population": 245,
+        "births_total": 298,
+        "deaths_total": {
+          "starvation": 164,
+          "predation": 34,
+          "old_age": 105
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 192.826,
+        "particles": 719,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 191.63999997451901,
+        "particles": 729
+      },
+      "programs": {
+        "start": 28,
+        "end": 28
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 29,
+        "organisms": 249,
+        "createdOrganisms": 134
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5185,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 666.6,
+          "over33": 1,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 10,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 666.6
+            },
+            {
+              "atS": 0.5,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 666.6
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 666.6
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5216,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "over50": 0,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": []
+        }
+      ],
+      "population": {
+        "min": 232,
+        "max": 250,
+        "samples": 78
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1255801,
+        "population": 248,
+        "births_total": 355,
+        "deaths_total": {
+          "starvation": 177,
+          "predation": 34,
+          "old_age": 146
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.717,
+        "particles": 774,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "percurso · GPU alto desempenho (RTX) · high · sem vsync",
+      "scenario": "percurso",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": false,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1256352,
+        "population": 248,
+        "births_total": 355,
+        "deaths_total": {
+          "starvation": 177,
+          "predation": 34,
+          "old_age": 146
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.705,
+        "particles": 771,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 193.53999987244606,
+        "particles": 750
+      },
+      "programs": {
+        "start": 28,
+        "end": 28
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 26,
+        "organisms": 247,
+        "createdOrganisms": 143
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 15800,
+          "p50": 5.3,
+          "p95": 7.9,
+          "p99": 9.8,
+          "max": 608.6,
+          "over33": 1,
+          "over50": 1,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 10,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0,
+              "shader": "MeshStandardMaterial pl5",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshBasicMaterial pl0 inst",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.1,
+              "shader": "MeshPhysicalMaterial pl5",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "LineBasicMaterial pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.3,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uPhase,uLength,uColor,uFade] pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+              "frameMs": 608.6
+            },
+            {
+              "atS": 0.4,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 608.6
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.5,
+              "ms": 608.6
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 15554,
+          "p50": 5.5,
+          "p95": 7.5,
+          "p99": 9,
+          "max": 24.7,
+          "over33": 0,
+          "over50": 0,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": []
+        }
+      ],
+      "population": {
+        "min": 242,
+        "max": 250,
+        "samples": 76
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1433358,
+        "population": 248,
+        "births_total": 416,
+        "deaths_total": {
+          "starvation": 192,
+          "predation": 34,
+          "old_age": 192
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.514,
+        "particles": 790,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU padrão (Intel Arc) · low",
+      "scenario": "floresta",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1434329,
+        "population": 250,
+        "births_total": 418,
+        "deaths_total": {
+          "starvation": 192,
+          "predation": 34,
+          "old_age": 192
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.456,
+        "particles": 784,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 190.49999995529652,
+        "particles": 775
+      },
+      "programs": {
+        "start": 26,
+        "end": 26
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 249,
+        "createdOrganisms": 144
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 601,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "max": 16.8,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 248,
+        "max": 250,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1455729,
+        "population": 249,
+        "births_total": 421,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 194
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.059,
+        "particles": 771,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU padrão (Intel Arc) · high",
+      "scenario": "floresta",
+      "gpu": "arc",
+      "quality": "high",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1456506,
+        "population": 249,
+        "births_total": 421,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 194
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.367,
+        "particles": 779,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 193.4399999678135,
+        "particles": 790
+      },
+      "programs": {
+        "start": 24,
+        "end": 24
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 248,
+        "createdOrganisms": 144
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 600,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "max": 16.8,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 247,
+        "max": 250,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1477593,
+        "population": 248,
+        "births_total": 424,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 198
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.286,
+        "particles": 784,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU padrão (Intel Arc) · low · sem vsync",
+      "scenario": "floresta",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": false,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1478313,
+        "population": 248,
+        "births_total": 424,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 198
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.336,
+        "particles": 784,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 193.39999996125698,
+        "particles": 763
+      },
+      "programs": {
+        "start": 26,
+        "end": 26
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 250,
+        "createdOrganisms": 146
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 1724,
+        "p50": 5.7,
+        "p95": 7.4,
+        "p99": 8.7,
+        "max": 28.8,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 247,
+        "max": 249,
+        "samples": 8
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1497955,
+        "population": 250,
+        "births_total": 429,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 201
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.554,
+        "particles": 763,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU alto desempenho (RTX) · low",
+      "scenario": "floresta",
+      "gpu": "rtx",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1498522,
+        "population": 249,
+        "births_total": 429,
+        "deaths_total": {
+          "starvation": 194,
+          "predation": 34,
+          "old_age": 202
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 193.718,
+        "particles": 772,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 192.59999983012676,
+        "particles": 768
+      },
+      "programs": {
+        "start": 21,
+        "end": 23
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 247,
+        "createdOrganisms": 143
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 598,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "max": 66.7,
+        "over33": 1,
+        "over50": 1,
+        "longTasks": 1,
+        "longTaskMaxMs": 81,
+        "programLinks": 2,
+        "links": [
+          {
+            "atS": 7.1,
+            "shader": "ShaderMaterial [uLength,uSkin,uSheen,uNucleus,uPulse] pl0",
+            "frameMs": 66.7
+          },
+          {
+            "atS": 8.4,
+            "shader": "MeshBasicMaterial pl0 inst",
+            "frameMs": 16.7
+          }
+        ],
+        "slowFrames": [
+          {
+            "atS": 7.2,
+            "ms": 66.7
+          }
+        ]
+      },
+      "population": {
+        "min": 245,
+        "max": 249,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1519598,
+        "population": 246,
+        "births_total": 433,
+        "deaths_total": {
+          "starvation": 197,
+          "predation": 34,
+          "old_age": 206
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 192.357,
+        "particles": 766,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU alto desempenho (RTX) · high",
+      "scenario": "floresta",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": true,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1520137,
+        "population": 246,
+        "births_total": 433,
+        "deaths_total": {
+          "starvation": 197,
+          "predation": 34,
+          "old_age": 206
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 192.066,
+        "particles": 771,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 191.89999994263053,
+        "particles": 796
+      },
+      "programs": {
+        "start": 26,
+        "end": 26
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 249,
+        "createdOrganisms": 148
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 600,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "max": 16.8,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 245,
+        "max": 249,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1541348,
+        "population": 249,
+        "births_total": 441,
+        "deaths_total": {
+          "starvation": 199,
+          "predation": 34,
+          "old_age": 209
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.527,
+        "particles": 789,
+        "step_us_max": 35158
+      }
+    },
+    {
+      "label": "floresta · GPU alto desempenho (RTX) · high · sem vsync",
+      "scenario": "floresta",
+      "gpu": "rtx",
+      "quality": "high",
+      "vsync": false,
+      "api": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1541941,
+        "population": 249,
+        "births_total": 441,
+        "deaths_total": {
+          "starvation": 199,
+          "predation": 34,
+          "old_age": 209
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 191.699,
+        "particles": 785,
+        "step_us_max": 35158
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "pose": [
+        [
+          -46,
+          2,
+          -16
+        ],
+        [
+          -61.3,
+          1.5,
+          -28.9
+        ]
+      ],
+      "food": {
+        "floraSum": 191.73999992758036,
+        "particles": 798
+      },
+      "programs": {
+        "start": 26,
+        "end": 26
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 25,
+        "organisms": 246,
+        "createdOrganisms": 144
+      },
+      "window": {
+        "seconds": 10,
+        "frames": 2381,
+        "p50": 4.3,
+        "p95": 5.2,
+        "p99": 5.9,
+        "max": 21,
+        "over33": 0,
+        "over50": 0,
+        "longTasks": 0,
+        "longTaskMaxMs": 0,
+        "programLinks": 0,
+        "links": [],
+        "slowFrames": []
+      },
+      "population": {
+        "min": 246,
+        "max": 250,
+        "samples": 9
+      },
+      "apiEnd": {
+        "world_id": "1ced1b211ff2b60d15c46a33bb1bf277",
+        "uptime_ms": 1563586,
+        "population": 247,
+        "births_total": 445,
+        "deaths_total": {
+          "starvation": 201,
+          "predation": 34,
+          "old_age": 213
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 192.022,
+        "particles": 794,
+        "step_us_max": 35158
+      }
+    }
+  ]
+}

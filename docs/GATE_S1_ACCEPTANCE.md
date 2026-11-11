@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-11 · **Branch:** `gate-s` (a partir de `main` em `e3eb09a`; design em `ff678ad`, plano em `99e3c1f`)
 **Spec:** `docs/superpowers/specs/2026-11-08-gate-s1-genese-design.md` · **Plano:** `docs/superpowers/plans/2026-11-10-gate-s1-genese.md`
-**Status:** aguardando a Parada 2. Parada 1 (visual) aprovada pelo autor em 2026-11-10. Critérios 1–7 com evidência abaixo. **Critério 8: respondido "sim" na Parada 1; fecha de vez só com a aprovação explícita do autor na Parada 2.**
+**Status:** **aprovado pelo autor em 2026-11-11 (Parada 2) — gate S1 fechado.** Parada 1 (visual) aprovada em 2026-11-10. Critérios 1–8 com evidência abaixo.
 
 ## Como ver
 
@@ -36,11 +36,13 @@
 | 5 | O e-mail não aparece nos clientes nem nos logs | PASS. `redact: true` em `email_normalized`; `filter_parameters` com `email` e `token`; `log: false` nas queries com e-mail; teste "o e-mail não aparece nos logs" rodando com Ecto em `:debug` (visto falhar sem o `log: false`); token guardado só como hash SHA-256. e2e "e-mail no fio" varre os quadros do WebSocket. Ressalva: o e2e procura só um dos três endereços usados |
 | 6 | Reinício: vivas voltam com 3, extintas continuam extintas com data | PASS. `boot_test` (vivas por id; 100 extintas mais recentes; extinta com data); `Genesis.Recorder` grava a extinção; e2e "reinício"; manual: seed de 3 espécies e reinício deu `sp1..sp3` com 3 cada. `pnpm api:reset` visto apagando tudo e liberando os e-mails (`abyss_reset_test`) |
 | 7 | 50 espécies criadas juntas dentro do orçamento do E2; programas de shader não crescem | PASS. Cliente com vsync, Arc `low` p95 16,7 ms (parado e voando) e RTX `high` p50 16,7 ms, as 4 janelas PASS (`captures/s1/perf/README.md`). Programas: 23 → 23 com 50 criadas, 27 → 27 sem criadas, e2e "programas não crescem por espécie". Servidor: `sim_perf_test` com 50 criadas a 250, máx 12,66 ms (≤ 20), população nunca acima de 250. Carga 50+2: jitter p99 1,8 ms, 0 quedas, 902 450 ticks sem lacuna. Ressalva: `step_us_max` ao vivo 24,7 e 35,2 ms (ver desvios) |
-| 8 | O autor monta criaturas e confirma que dá para fazer espécies bem diferentes | Respondido "sim" na Parada 1 ("sim é possível fazer espécies bem diferenciadas"), com as 8 plantas de `editor-folha.png` como base. **Pendente da Parada 2**: fecha com a aprovação explícita |
+| 8 | O autor monta criaturas e confirma que dá para fazer espécies bem diferentes | Respondido "sim" na Parada 1 ("sim é possível fazer espécies bem diferenciadas"), com as 8 plantas de `editor-folha.png` como base. PASS: aprovado explicitamente pelo autor na Parada 2 (2026-11-11) |
 
-**Resumo:** 6 PASS (1, 2, 4, 5, 6, 7; o 7 com ressalva de medição ao vivo, ver desvios), 1 PASS com ressalva (3), 1 pendente da Parada 2 (8).
+**Resumo:** 7 PASS (1, 2, 4, 5, 6, 7, 8; o 7 com ressalva de medição ao vivo, ver desvios), 1 PASS com ressalva (3).
 
-Testes (rodados pelo agente da Task 15 em 2026-11-11, sobre `1458100`): `pnpm api:test` exit 0, 211 testes; `pnpm test` exit 0, 295 testes; `pnpm typecheck` exit 0; `pnpm e2e` 7/7; `pnpm e2e:genesis` 7/7, e `E2E_NEGATE=1` dá 0/7 com exit 1. O controlador repete a bateria antes da Parada 2.
+Testes: na Task 15 (sobre `1458100`) `pnpm e2e` 7/7 e `pnpm e2e:genesis` 7/7, com `E2E_NEGATE=1` dando 0/7 e exit 1. Depois das correções da revisão final (`2c751dc`): `pnpm api:test` exit 0, 212 testes; `pnpm test` exit 0, 297 testes; `pnpm typecheck` exit 0; `pnpm e2e:genesis` 7/7, exit 0 (2026-11-11).
+
+**Revisão final da branch** (2026-11-11): pronta para merge, 0 Critical/Important; 5 minors corrigidos em `2c751dc` (índice do cliente limitado a 100 extintas, bússola acompanha o corpo no arrasto, nascimento antes da limpeza de tokens, boot pula só o registro ilegível, e2e de programas mais rígido); 2 ficam para depois (erros do Mailer real em logs → gate O; primeiro tick grande após o boot).
 
 ## O que foi construído
 
@@ -95,4 +97,4 @@ Itens menores diferidos (ledger em `progress.md`, linhas "minor (deferred)"), ag
 ## Aceite do autor
 
 - **Parada 1** (visual, 2026-11-10): aprovada. Variedade ("sim é possível fazer espécies bem diferenciadas"), reconhecimento no mundo, peças no comportamento; ajuste leve do catálogo; bússola sem texto.
-- **Parada 2** (mundo ao vivo, fluxo completo com e-mail real na caixa local, e este pacote): **aguardando.** Critério 8 fecha com a aprovação explícita do autor.
+- **Parada 2** (mundo ao vivo, fluxo completo com e-mail na caixa local, e este pacote, 2026-11-11): **aprovada** — "aprovo o gate S1".

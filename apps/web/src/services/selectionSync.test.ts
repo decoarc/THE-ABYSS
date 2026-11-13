@@ -8,9 +8,9 @@ function snap(ids: string[]): WorldSnapshot {
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: 1000,
     map_id: 'e1', creature_scale: 0.5, juvenile_scale: 0.45, divide_s: 2,
     bounds: { y_min: 1.5, y_max: 8 },
-    species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null }],
-    organisms: ids.map((id) => ({ id, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null })),
-    flora: [], particles: [],
+    species: [{ id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null, parent: null, root: 'membrana', region: null, born_ms: null }],
+    organisms: ids.map((id) => ({ id, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null, g: null })),
+    flora: [], particles: [], genomes: [],
   };
 }
 
@@ -48,7 +48,7 @@ it('nothing to do without selection', () => {
 });
 
 function tick(n: number, o: TickRow[], d: [string, DeathCause][]): TickMessage {
-  return { world_id: 'w1', tick: n, server_ms: 1000 + (n - 1) * 100, o, b: [], d, x: [], f: [], sp: [], ps: [], pr: [] };
+  return { world_id: 'w1', tick: n, server_ms: 1000 + (n - 1) * 100, o, b: [], d, x: [], f: [], sp: [], g: [], rb: [], ps: [], pr: [] };
 }
 const ROW: TickRow = [0, 0, 0, 0, 0, 0, 0.1, 0];
 

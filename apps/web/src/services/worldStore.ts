@@ -1,6 +1,6 @@
 import { createFoodStore, type FoodStore } from './foodStore';
 import { hermite } from './interpolate';
-import type { OrganismInfo, SpeciesInfo, TickMessage, Vec3, WorldSnapshot } from './wire';
+import type { Blueprint, OrganismInfo, SpeciesInfo, TickMessage, Vec3, WorldSnapshot } from './wire';
 
 export type ConnectionStatus = 'connecting' | 'live';
 
@@ -34,6 +34,10 @@ export interface WorldStore {
   /** Só os vivos: os fantasmas não contam. */
   livingCount(): number;
   species(): readonly SpeciesInfo[];
+  /** Planta de um genoma conhecido; undefined se ainda não chegou. */
+  genome(gid: number): Blueprint | undefined;
+  /** Quantos genomas o cliente conhece (para teste). */
+  genomeCount(): number;
   /** Espécies extintas: id -> ms do servidor. Nova identidade a cada mudança. */
   extinct(): ReadonlyMap<string, number>;
   worldId(): string | null;
@@ -125,6 +129,7 @@ export function createWorldStore(): WorldStore {
   let species: readonly SpeciesInfo[] = [];
   let extinct: ReadonlyMap<string, number> = new Map();
   let lives: Live[] = [];
+  let genomes = new Map<number, Blueprint>();
 
   /** Mantém só as MAX_EXTINCT extintas mais recentes; identidade estável se nada sai. */
   function capExtinct(): boolean {
@@ -212,6 +217,7 @@ export function createWorldStore(): WorldStore {
       tickHz = s.tick_hz;
       lastTick = s.tick;
       species = s.species;
+      genomes = new Map(s.genomes ?? []);
       const ex = new Map<string, number>();
       for (const sp of s.species) if (sp.extinct_ms !== null) ex.set(sp.id, sp.extinct_ms);
       extinct = ex;
@@ -305,6 +311,9 @@ export function createWorldStore(): WorldStore {
         lives = lives.filter((l) => !dead.has(l.info.id));
       }
 
+      // Genomas antes dos nascidos: quem nasce já acha a própria planta.
+      for (const [gid, bp] of t.g ?? []) genomes.set(gid, bp);
+
       if (t.b.length > 0) {
         for (const org of t.b) lives.push(makeLive(org, localMs));
         rosterChanged = true;
@@ -312,6 +321,18 @@ export function createWorldStore(): WorldStore {
       }
 
       if (t.d.length > 0 || t.b.length > 0) rebuildLives();
+
+      // Ramos depois dos nascidos: o filho do mesmo tick chega em `b` com a espécie da mãe.
+      const rb = t.rb ?? [];
+      if (rb.length > 0) {
+        for (const [oid, sid] of rb) {
+          const i = index.get(oid);
+          if (i === undefined || lives[i].info.species === sid) continue;
+          lives[i].info = { ...lives[i].info, species: sid };
+          rosterChanged = true;
+          changed = true;
+        }
+      }
 
       for (let i = 0; i < lives.length; i++) {
         const l = lives[i];
@@ -344,6 +365,8 @@ export function createWorldStore(): WorldStore {
     roster: () => roster,
     livingCount: () => lives.length,
     species: () => species,
+    genome: (gid) => genomes.get(gid),
+    genomeCount: () => genomes.size,
     extinct: () => extinct,
     worldId: () => worldId,
     food: () => food,

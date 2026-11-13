@@ -6,8 +6,8 @@ import { createWorldStore, type WorldStore } from '../services/worldStore';
 import type { OrganismInfo, SpeciesInfo, WorldSnapshot } from '../services/wire';
 
 export const SPECIES: SpeciesInfo[] = [
-  { id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null },
-  { id: 'celula', code: 'CEL', name: 'Célula', body_radius: 0.8, diet: { kind: 'particles', prey: [] }, extinct_ms: null },
+  { id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null, parent: null, root: 'membrana', region: null, born_ms: null },
+  { id: 'celula', code: 'CEL', name: 'Célula', body_radius: 0.8, diet: { kind: 'particles', prey: [] }, extinct_ms: null, parent: null, root: 'celula', region: null, born_ms: null },
 ];
 
 /** Renderiza `ui` dentro de um mundo de teste: store alimentada por snapshot, sem socket. */
@@ -23,7 +23,7 @@ export function renderWithWorld(
     bounds: { y_min: 1.5, y_max: 8 },
     species: SPECIES,
     organisms: options.organisms ?? [],
-    flora: [], particles: [],
+    flora: [], particles: [], genomes: [],
   };
   store.applySnapshot(snapshot, 1_000_000);
   if (options.live) store.setStatus('live');
@@ -38,6 +38,6 @@ export function renderWithWorld(
 /** `n` membranas com ids MBR-0001… */
 export function membranas(n: number): OrganismInfo[] {
   return Array.from({ length: n }, (_, i) => ({
-    id: `MBR-${String(i + 1).padStart(4, '0')}`, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null,
+    id: `MBR-${String(i + 1).padStart(4, '0')}`, species: 'membrana', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null, g: null,
   }));
 }

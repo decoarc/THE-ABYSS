@@ -11,6 +11,10 @@ const info = (id: string, blueprint?: SpeciesInfo['blueprint']): SpeciesInfo => 
   body_radius: 1,
   diet: { kind: 'flora', prey: [] },
   extinct_ms: null,
+  parent: null,
+  root: id,
+  region: null,
+  born_ms: null,
   blueprint,
 });
 

@@ -1,10 +1,11 @@
 import { createWorldStore, DISSOLVE_MS, type Vitals } from './worldStore';
-import type { DeathCause, OrganismInfo, SpeciesInfo, TickMessage, TickRow, Vec3, WorldSnapshot } from './wire';
+import { pickBlueprint } from '../organisms/pickBlueprint';
+import type { Blueprint, DeathCause, OrganismInfo, SpeciesInfo, TickMessage, TickRow, Vec3, WorldSnapshot } from './wire';
 
 const SERVER0 = 1_000_000;
 const org = (id: string, over: Partial<OrganismInfo> = {}): OrganismInfo => ({
   id, species: 'casco', born_ms: 0, p: [0, 0, 0], v: [0, 0, 0],
-  e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null, ...over,
+  e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null, g: null, ...over,
 });
 function snap(ids: string[] = ['a', 'b', 'c'], over: Partial<WorldSnapshot> = {}): WorldSnapshot {
   return {
@@ -12,15 +13,15 @@ function snap(ids: string[] = ['a', 'b', 'c'], over: Partial<WorldSnapshot> = {}
     juvenile_scale: 0.4, divide_s: 3,
     bounds: { y_min: 1.5, y_max: 8 },
     species: [
-      { id: 'casco', code: 'CAS', name: 'Casco', body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null },
-      { id: 'fil', code: 'FIL', name: 'Filamento', body_radius: 1, diet: { kind: 'prey', prey: ['casco'] }, extinct_ms: 777 },
+      { id: 'casco', code: 'CAS', name: 'Casco', body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null, parent: null, root: 'casco', region: null, born_ms: null },
+      { id: 'fil', code: 'FIL', name: 'Filamento', body_radius: 1, diet: { kind: 'prey', prey: ['casco'] }, extinct_ms: 777, parent: null, root: 'fil', region: null, born_ms: null },
     ],
-    organisms: ids.map((id, i) => org(id, { p: [i, 0, 0] })), flora: [], particles: [], ...over,
+    organisms: ids.map((id, i) => org(id, { p: [i, 0, 0] })), flora: [], particles: [], genomes: [], ...over,
   };
 }
 const row = (x: number, e = 0.8, flags = 0): TickRow => [x, 0, 0, 0, 0, 0, e, flags];
 const tick = (n: number, o: TickRow[], over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o, b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [], ...over,
+  world_id: 'w1', tick: n, server_ms: SERVER0 + (n - 1) * 100, o, b: [], d: [], x: [], f: [], sp: [], g: [], rb: [], ps: [], pr: [], ...over,
 });
 const L = (n: number) => SERVER0 + (n - 1) * 100 + 5;
 type Store = ReturnType<typeof createWorldStore>;
@@ -141,7 +142,7 @@ it('extinção: x grava o ms e o snapshot mantém extinct_ms', () => {
   expect(s.extinct().get('casco')).toBe(4200);
   expect(s.extinct()).not.toBe(before);
   s.applySnapshot(snap(['a'], { tick: 9, species: [
-    { id: 'casco', code: 'CAS', name: 'Casco', body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: 4200 },
+    { id: 'casco', code: 'CAS', name: 'Casco', body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: 4200, parent: null, root: 'casco', region: null, born_ms: null },
   ] }), L(9));
   expect(s.extinct().get('casco')).toBe(4200);
   expect(s.extinct().has('fil')).toBe(false);
@@ -205,7 +206,7 @@ it('fantasma guarda juvenil/divisão do momento da morte', () => {
 });
 
 const criada = (over: Partial<SpeciesInfo> = {}): SpeciesInfo => ({
-  id: 'sp1', code: 'S01', name: 'Nova', body_radius: 0.65, diet: { kind: 'predator', prey: [] }, extinct_ms: null, blueprint: null, ...over,
+  id: 'sp1', code: 'S01', name: 'Nova', body_radius: 0.65, diet: { kind: 'predator', prey: [] }, extinct_ms: null, blueprint: null, parent: null, root: 'sp1', region: null, born_ms: null, ...over,
 });
 
 it('sp acrescenta espécie antes dos nascidos', () => {
@@ -250,7 +251,7 @@ it('nascido de espécie desconhecida não quebra', () => {
 it('índice de espécies: vivas sempre; só as 100 extintas mais recentes', () => {
   const s = ready();
   const mk = (i: number): SpeciesInfo => ({
-    id: `x${i}`, code: `X${i}`, name: `X${i}`, body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null,
+    id: `x${i}`, code: `X${i}`, name: `X${i}`, body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null, parent: null, root: `x${i}`, region: null, born_ms: null,
   });
   const extra = Array.from({ length: 120 }, (_, i) => mk(i));
   s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: extra }), L(2));
@@ -270,4 +271,82 @@ it('índice de espécies: vivas sempre; só as 100 extintas mais recentes', () =
   const before = s.species();
   s.applyTick(tick(6, [row(0), row(1), row(2)]), L(6));
   expect(s.species()).toBe(before);
+});
+
+const bpOf = (glow: string): Blueprint => ({
+  v: 1, body: { spine: [[0, 0, 0], [0, 1, 0]] }, parts: [], colors: { glow, body: '#112233' }, pattern: 'liso',
+});
+const mkSp = (id: string, over: Partial<SpeciesInfo> = {}): SpeciesInfo => ({
+  id, code: id.toUpperCase(), name: id, body_radius: 1, diet: { kind: 'flora', prey: [] },
+  extinct_ms: null, parent: null, root: id, region: null, born_ms: 5, ...over,
+});
+
+it('g antes de b: o nascido acha o genoma', () => {
+  const s = ready();
+  const bp = bpOf('#ff0000');
+  const filho = org('d', { parent: 'a', gen: 2, g: 7 });
+  s.applyTick(tick(2, [row(0), row(1), row(2), row(9)], { g: [[7, bp]], b: [filho] }), L(2));
+  expect(s.genome(7)).toEqual(bp);
+  expect(pickBlueprint(s, 'd')).toEqual(bp);
+});
+
+it('genoma desconhecido desenha a planta da espécie', () => {
+  const s = createWorldStore();
+  const spBp = bpOf('#00ff00');
+  s.applySnapshot(snap(['a', 'b'], {
+    species: [mkSp('casco', { blueprint: spBp })],
+    organisms: [org('a', { g: 99 }), org('b', { g: null })],
+  }), L(1));
+  expect(s.genome(99)).toBeUndefined();
+  expect(pickBlueprint(s, 'a')).toEqual(spBp);
+  expect(pickBlueprint(s, 'b')).toEqual(spBp);
+  expect(pickBlueprint(s, 'nao-existe')).toBeNull();
+});
+
+it('rb muda a espécie no roster', () => {
+  const s = ready();
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: [mkSp('casco.1', { parent: 'casco', root: 'casco' })] }), L(2));
+  const r0 = s.roster();
+  let n = 0;
+  s.subscribe(() => n++);
+  expect(s.applyTick(tick(3, [row(0), row(1), row(2)], { rb: [['b', 'casco.1']] }), L(3))).toBe('ok');
+  expect(s.roster().find((o) => o.id === 'b')!.species).toBe('casco.1');
+  expect(s.roster().find((o) => o.id === 'a')!.species).toBe('casco');
+  expect(s.roster()).not.toBe(r0);
+  expect(n).toBe(1);
+});
+
+it('rb de um nascido no mesmo tick vale (b, depois rb)', () => {
+  const s = ready();
+  const filho = org('d', { parent: 'a', gen: 2 });
+  s.applyTick(tick(2, [row(0), row(1), row(2), row(9)], {
+    sp: [mkSp('casco.1', { parent: 'casco' })], b: [filho], rb: [['d', 'casco.1']],
+  }), L(2));
+  expect(s.roster().find((o) => o.id === 'd')!.species).toBe('casco.1');
+});
+
+it('rb desconhecido é ignorado', () => {
+  const s = ready();
+  const r0 = s.roster();
+  expect(s.applyTick(tick(2, [row(0), row(1), row(2)], { rb: [['zzz', 'casco']] }), L(2))).toBe('ok');
+  expect(s.roster()).toBe(r0);
+});
+
+it('g repetido não duplica', () => {
+  const s = ready();
+  const bp = bpOf('#ff0000');
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { g: [[7, bp], [7, bp]] }), L(2));
+  s.applyTick(tick(3, [row(0), row(1), row(2)], { g: [[7, bp]] }), L(3));
+  expect(s.genome(7)).toEqual(bp);
+  expect(s.genomeCount()).toBe(1);
+});
+
+it('snapshot troca os genomas', () => {
+  const s = ready();
+  s.applySnapshot(snap(['a'], { genomes: [[1, bpOf('#111111')], [2, bpOf('#222222')]] }), L(1));
+  expect(s.genomeCount()).toBe(2);
+  s.applySnapshot(snap(['a'], { tick: 5, genomes: [[3, bpOf('#333333')]] }), L(5));
+  expect(s.genome(1)).toBeUndefined();
+  expect(s.genome(3)).toEqual(bpOf('#333333'));
+  expect(s.genomeCount()).toBe(1);
 });

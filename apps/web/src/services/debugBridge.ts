@@ -97,6 +97,8 @@ export function installDebugBridge(
           tick: store.lastTick() + 1,
           server_ms: store.serverNow(now),
           sp: [],
+          g: [],
+          rb: [],
           o: [],
           b: [],
           d: ids.map((id) => [id, 'predation'] as [string, 'predation']),

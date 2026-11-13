@@ -111,4 +111,31 @@ defmodule Abyss.Genesis.BlueprintTest do
       9 -> Map.new(1..:rand.uniform(30), fn i -> {"k#{i}", :rand.bytes(4)} end)
     end
   end
+
+  test "distância de peças", %{cat: _cat} do
+    mouth = part("raspador")
+    a = base([mouth, part("flagelo")])
+
+    troca = base([mouth, part("aleta")])
+    assert Blueprint.part_delta(a, troca) == %{"flagelo" => -1, "aleta" => 1}
+    assert Blueprint.part_distance(Blueprint.part_delta(a, troca)) == 1
+
+    dois = base([mouth, part("flagelo"), part("ocelo"), part("ocelo")])
+    assert Blueprint.part_distance(Blueprint.part_delta(a, dois)) == 2
+
+    troca_mais = base([mouth, part("aleta"), part("ocelo")])
+    assert Blueprint.part_distance(Blueprint.part_delta(a, troca_mais)) == 2
+
+    assert Blueprint.part_delta(a, a) == %{}
+    assert Blueprint.part_distance(%{}) == 0
+  end
+
+  test "budget: false aceita planta cara mas não planta quebrada", %{cat: cat} do
+    cara = base([part("mandibula"), part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+    assert {:error, ["estoura o orçamento"]} = Blueprint.validate(cara, cat)
+    assert {:ok, _} = Blueprint.validate(cara, cat, budget: false)
+
+    sem_boca = base([part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+    assert {:error, _} = Blueprint.validate(sem_boca, cat, budget: false)
+  end
 end

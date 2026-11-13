@@ -11,6 +11,13 @@
   "part_angle": [-0.8, 0.8],
   "patterns": ["liso", "manchas", "listras", "aneis"],
   "diminish": 0.7,
+  "mutation": {
+    "part_p": 0.06,
+    "mouth_share": 0.1,
+    "ops": { "add": 0.4, "remove": 0.3, "swap": 0.3 },
+    "drift_p": 0.5,
+    "drift": { "spine_xy": 0.04, "spine_r": 0.02, "hue": 0.02, "pattern_p": 0.03 }
+  },
   "base": { "max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0,
             "wander": 0.3, "sated_s": 12, "energy_max": 100.0, "escape": 0.0 },
   "caps": { "max_speed": 0.9, "turn_rate": 1.8, "burst": 2.5, "perception": 10.0, "escape": 0.6 },

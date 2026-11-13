@@ -10,16 +10,17 @@ defmodule Abyss.Genesis.Blueprint do
   @top_keys ~w(v body parts colors pattern)
   @part_keys ~w(kind at around size angle mirror)
 
-  @spec validate(term, Catalog.t()) :: {:ok, map} | {:error, [String.t()]}
-  def validate(term, cat) do
-    do_validate(term, cat)
+  @doc "Valida a planta. `opts[:budget] == false` pula só a checagem de orçamento."
+  @spec validate(term, Catalog.t(), keyword) :: {:ok, map} | {:error, [String.t()]}
+  def validate(term, cat, opts \\ []) do
+    do_validate(term, cat, opts)
   rescue
     _ -> {:error, ["planta inválida"]}
   catch
     _, _ -> {:error, ["planta inválida"]}
   end
 
-  defp do_validate(term, cat) do
+  defp do_validate(term, cat, opts) do
     cond do
       not is_map(term) ->
         {:error, ["planta inválida"]}
@@ -31,7 +32,7 @@ defmodule Abyss.Genesis.Blueprint do
         {:error, ["planta grande demais"]}
 
       true ->
-        check(term, cat)
+        check(term, cat, opts)
     end
   end
 
@@ -42,7 +43,7 @@ defmodule Abyss.Genesis.Blueprint do
     end
   end
 
-  defp check(term, cat) do
+  defp check(term, cat, opts) do
     extra = Map.keys(term) -- @top_keys
     missing = @top_keys -- Map.keys(term)
 
@@ -66,7 +67,7 @@ defmodule Abyss.Genesis.Blueprint do
             "pattern" => pattern
           }
 
-          check_totals(bp, cat)
+          check_totals(bp, cat, opts)
         end
     end
   end
@@ -194,7 +195,7 @@ defmodule Abyss.Genesis.Blueprint do
 
   # ---- totais (boca, máximos, orçamento) ----
 
-  defp check_totals(bp, cat) do
+  defp check_totals(bp, cat, opts) do
     inst = instances(bp)
 
     mouths =
@@ -213,7 +214,7 @@ defmodule Abyss.Genesis.Blueprint do
       |> add(total > cat.parts_max, "peças demais")
 
     errs =
-      if errs == [] and cost(bp, cat) > cat.budget,
+      if errs == [] and Keyword.get(opts, :budget, true) != false and cost(bp, cat) > cat.budget,
         do: ["estoura o orçamento"],
         else: Enum.reverse(errs)
 
@@ -231,6 +232,25 @@ defmodule Abyss.Genesis.Blueprint do
     Enum.reduce(parts, %{}, fn %{"kind" => k, "mirror" => m}, acc ->
       Map.update(acc, k, if(m, do: 2, else: 1), &(&1 + if(m, do: 2, else: 1)))
     end)
+  end
+
+  @doc "Diferença de instâncias por tipo (b − a), só os não-zero."
+  @spec part_delta(map, map) :: %{String.t() => integer}
+  def part_delta(a, b) do
+    ia = instances(a)
+    ib = instances(b)
+
+    (Map.keys(ia) ++ Map.keys(ib))
+    |> Enum.uniq()
+    |> Map.new(fn k -> {k, Map.get(ib, k, 0) - Map.get(ia, k, 0)} end)
+    |> Map.reject(fn {_, d} -> d == 0 end)
+  end
+
+  @doc "Distância entre conjuntos de peças: max(Σ positivos, Σ |negativos|)."
+  @spec part_distance(%{String.t() => integer}) :: non_neg_integer
+  def part_distance(delta) do
+    vals = Map.values(delta)
+    max(Enum.sum(for(v <- vals, v > 0, do: v)), Enum.sum(for(v <- vals, v < 0, do: -v)))
   end
 
   @doc "Custo total: peças mais corpo."

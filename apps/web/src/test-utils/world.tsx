@@ -13,7 +13,7 @@ export const SPECIES: SpeciesInfo[] = [
 /** Renderiza `ui` dentro de um mundo de teste: store alimentada por snapshot, sem socket. */
 export function renderWithWorld(
   ui: ReactElement,
-  options: { organisms?: OrganismInfo[]; live?: boolean; selectId?: string; following?: boolean } = {},
+  options: { organisms?: OrganismInfo[]; live?: boolean; selectId?: string; following?: boolean; species?: SpeciesInfo[] } = {},
 ) {
   const store: WorldStore = createWorldStore();
   const selection: Selection = createSelection();
@@ -21,7 +21,7 @@ export function renderWithWorld(
     world_id: 'w1', tick: 1, tick_hz: 10, server_ms: 1_000_000,
     map_id: 'e1', creature_scale: 0.5, juvenile_scale: 0.45, divide_s: 2,
     bounds: { y_min: 1.5, y_max: 8 },
-    species: SPECIES,
+    species: options.species ?? SPECIES,
     organisms: options.organisms ?? [],
     flora: [], particles: [], genomes: [],
   };

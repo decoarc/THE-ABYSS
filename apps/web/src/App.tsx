@@ -16,6 +16,7 @@ import { debugEnabled, installDebugBridge, registerProgramCounter, type AbyssDeb
 import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 import { CreateButton } from './ui/CreateButton';
+import { LineageButton } from './ui/LineageButton';
 import { GenesisNotice } from './ui/GenesisNotice';
 import { CreationScreen, initialDraft, type Draft, type PreviewProps } from './genesis/CreationScreen';
 import { EditorPreview } from './genesis/EditorPreview';
@@ -211,6 +212,7 @@ export function App({
           <SpeciesIndex />
           <InspectPanel />
           <ConnectionNotice />
+          <LineageButton />
           <CreateButton onClick={() => navigate('#criar')} />
           {notice && <GenesisNotice message={notice} onDone={clearNotice} />}
         </>

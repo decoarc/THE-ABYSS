@@ -1,8 +1,11 @@
-import { useMemo, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { formatExtinctDate } from '../lib/format';
 import { PALETTE } from '../lib/palette';
 import type { Vitals } from '../services/worldStore';
+import { buildLineage, type LineageNode } from '../lib/lineage';
+import type { SpeciesInfo } from '../services/wire';
 import { useRoster, useSelection, useWorld } from '../services/WorldProvider';
+import { useLiving } from './useLiving';
 
 const MONO = 'ui-monospace, SFMono-Regular, Consolas, monospace';
 const row: CSSProperties = {
@@ -26,26 +29,29 @@ export function SpeciesIndex() {
   const { id: selectedId } = useSelection();
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
-
-  // Um fantasma não muda a identidade do roster, mas muda a contagem de vivos.
-  const living = useSyncExternalStore(store.subscribe, store.livingCount);
-  const extinct = useSyncExternalStore(store.subscribe, store.extinct);
+  const { species, extinct, bySpecies, total: living } = useLiving();
 
   const groups = useMemo(() => {
     const vitals: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
     const liveIds = roster
       .filter((o) => store.vitals(o.id, vitals) && vitals.dyingSinceMs === null)
       .map((o) => ({ id: o.id, species: o.species }));
-    return store
-      .species()
-      .map((s) => ({
-        species: s,
-        extinctMs: extinct.get(s.id) ?? null,
-        ids: liveIds.filter((o) => o.species === s.id).map((o) => o.id),
-      }))
-      .filter((g) => g.extinctMs !== null || g.ids.length > 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `living` invalida quando um fantasma nasce
-  }, [roster, store, extinct, living]);
+    // Cada raiz seguida dos seus ramos em profundidade; só entra quem vive ou está extinto.
+    const known = new Set(species.map((s) => s.id));
+    const out: { species: SpeciesInfo; depth: number; extinctMs: number | null; ids: string[] }[] = [];
+    const walk = (n: LineageNode, depth: number) => {
+      if (n.extinctMs !== null || n.living > 0) {
+        out.push({ species: n.species, depth, extinctMs: n.extinctMs, ids: liveIds.filter((o) => o.species === n.species.id).map((o) => o.id) });
+      }
+      for (const c of n.children) walk(c, depth + 1);
+    };
+    for (const s of species) {
+      if (s.parent !== null && known.has(s.parent)) continue;
+      const tree = buildLineage(species, bySpecies, extinct, s.id);
+      if (tree) walk(tree, 0);
+    }
+    return out;
+  }, [roster, store, species, extinct, bySpecies]);
 
   const toggle = (speciesId: string) =>
     setExpanded((prev) => {
@@ -72,7 +78,7 @@ export function SpeciesIndex() {
               <button
                 type="button"
                 onClick={() => g.extinctMs === null && toggle(g.species.id)}
-                style={{ ...row, ...(g.extinctMs !== null ? { opacity: 0.5, cursor: 'default' } : {}) }}
+                style={{ ...row, paddingLeft: g.depth * 10, ...(g.extinctMs !== null ? { opacity: 0.5, cursor: 'default' } : {}) }}
               >
                 <span>{g.species.name}</span>
                 {' '}
@@ -86,7 +92,7 @@ export function SpeciesIndex() {
                     type="button"
                     aria-current={oid === selectedId ? 'true' : undefined}
                     onClick={() => selection.select(oid)}
-                    style={{ ...row, paddingLeft: 14, opacity: oid === selectedId ? 1 : 0.7 }}
+                    style={{ ...row, paddingLeft: g.depth * 10 + 14, opacity: oid === selectedId ? 1 : 0.7 }}
                   >
                     <span aria-hidden="true">{oid === selectedId ? '● ' : '  '}</span>
                     {oid}

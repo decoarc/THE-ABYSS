@@ -1,4 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react';
+import type { OrganismInfo, SpeciesInfo } from '../services/wire';
 import { SpeciesIndex } from './SpeciesIndex';
 import { membranas, renderWithWorld } from '../test-utils/world';
 
@@ -57,4 +58,23 @@ it('fantasma some do índice e não conta em NO TERRÁRIO', () => {
   fireEvent.click(screen.getByRole('button', { name: /Membrana\s+2/ }));
   expect(screen.queryByRole('button', { name: 'MBR-0002' })).toBeNull();
   expect(screen.getAllByRole('button', { name: /^MBR-/ })).toHaveLength(2);
+});
+
+it('ramos aparecem embaixo da mãe, recuados por nível', () => {
+  const sp = (id: string, name: string, parent: string | null, born_ms: number): SpeciesInfo => ({
+    id, code: id, name, body_radius: 1, diet: { kind: 'flora', prey: [] }, extinct_ms: null,
+    parent, root: id.split('.')[0], region: null, born_ms,
+  });
+  const org = (id: string, species: string): OrganismInfo => ({
+    id, species, born_ms: 0, p: [0, 0, 0], v: [0, 0, 0], e: 0.8, stage: 'adult', dividing: false, gen: 1, parent: null, g: null,
+  });
+  renderWithWorld(<SpeciesIndex />, {
+    species: [sp('a', 'Alfa', null, 1), sp('b', 'Beta', null, 1), sp('a.1', 'Alfa · Raso', 'a', 10), sp('a.1.1', 'Alfa · Raso · Fundo', 'a.1', 20)],
+    organisms: [org('A-1', 'a'), org('B-1', 'b'), org('R-1', 'a.1'), org('F-1', 'a.1.1')],
+  });
+  fireEvent.click(screen.getByRole('button', { name: /NO TERRÁRIO · 4/ }));
+  const names = screen.getAllByRole('button').slice(1).map((b) => b.textContent?.replace(/\s*\d+$/, '').trim());
+  expect(names).toEqual(['Alfa', 'Alfa · Raso', 'Alfa · Raso · Fundo', 'Beta']);
+  expect(screen.getByRole('button', { name: /^Alfa · Raso\s+1$/ })).toHaveStyle({ paddingLeft: '10px' });
+  expect(screen.getByRole('button', { name: /^Alfa · Raso · Fundo\s+1$/ })).toHaveStyle({ paddingLeft: '20px' });
 });

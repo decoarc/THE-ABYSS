@@ -69,6 +69,8 @@ defmodule Abyss.World.Sim do
             next_seq: %{},
             # Espécies povoadas sem passar por `next_seq` (ramos): contam para a extinção.
             populated: MapSet.new(),
+            # Último k de ramo por mãe ("<mãe>.<k>"); só cresce, a poda não o limpa.
+            branch_seq: %{},
             pending_species: [],
             pending_founders: [],
             catalog: nil,
@@ -109,6 +111,7 @@ defmodule Abyss.World.Sim do
           extinct: %{atom => integer},
           next_seq: %{atom => pos_integer},
           populated: MapSet.t(),
+          branch_seq: %{String.t() => pos_integer},
           pending_species: [Species.t()],
           pending_founders: [Organism.t()],
           catalog: map | nil,
@@ -416,12 +419,36 @@ defmodule Abyss.World.Sim do
         sim
         | bounds: bounds,
           next_seq: Map.put(sim.next_seq, sp.id, n + 1),
+          branch_seq: bump_branch_seq(sim.branch_seq, sp),
           pending_species: sim.pending_species ++ [sp],
           extinct: if(extinct_ms, do: Map.put(sim.extinct, sp.id, extinct_ms), else: sim.extinct)
       }
 
       sim |> add_founders(sp, n) |> prune_extinct()
     end
+  end
+
+  # Ramo registrado (pela varredura ou de novo no boot) avança o contador da mãe.
+  defp bump_branch_seq(seq, %{id: id, parent: parent}) when is_binary(id) and is_binary(parent) do
+    with "." <> k <- String.replace_prefix(id, parent, ""),
+         {k, ""} when k > 0 <- Integer.parse(k) do
+      Map.update(seq, parent, k, &max(&1, k))
+    else
+      _ -> seq
+    end
+  end
+
+  defp bump_branch_seq(seq, _sp), do: seq
+
+  @doc """
+  Reserva números de ramo: `seqs` é `%{id da mãe => último k usado}`, mesclado
+  pelo máximo em `branch_seq`. O próximo ramo da mãe será `"<mãe>.<k + 1>"`.
+  Serve para o boot restaurar contadores de ramos que não são carregados
+  (extintos podados ou antigos), para um id de ramo nunca ser reaproveitado.
+  """
+  @spec reserve_branch_seq(t, %{String.t() => non_neg_integer}) :: t
+  def reserve_branch_seq(%__MODULE__{branch_seq: seq} = sim, seqs) do
+    %{sim | branch_seq: Map.merge(seq, seqs, fn _, a, b -> max(a, b) end)}
   end
 
   defp add_founders(sim, _sp, 0), do: sim

@@ -101,7 +101,7 @@ defmodule Abyss.World.Branching do
   defp register(sim, sp, group) do
     root = Map.get(sp, :root, sp.id)
     region = region(sim.bounds.map, group)
-    {id, code} = next_id(sim.bounds, sp)
+    {id, code} = next_id(sim, sp)
 
     gid =
       group
@@ -124,14 +124,14 @@ defmodule Abyss.World.Branching do
     {%{sim | populated: sim.populated |> MapSet.put(id) |> MapSet.put(sp.id)}, branch}
   end
 
-  # k = 1 + nº de ramos registrados da mãe; se o id já existe (um irmão podado
-  # deixou buraco), o próximo livre.
-  defp next_id(bounds, sp) do
-    k = 1 + Enum.count(bounds.species_list, &(Map.get(&1, :parent) == sp.id))
+  # k = último k da mãe (`branch_seq`, monotônico: a poda não o zera) + 1; se o
+  # id já existe, o próximo livre (rede de segurança).
+  defp next_id(sim, sp) do
+    k = Map.get(sim.branch_seq, sp.id, 0) + 1
 
     k
     |> Stream.iterate(&(&1 + 1))
-    |> Enum.find(&(not Map.has_key?(bounds.species, "#{sp.id}.#{&1}")))
+    |> Enum.find(&(not Map.has_key?(sim.bounds.species, "#{sp.id}.#{&1}")))
     |> then(&{"#{sp.id}.#{&1}", "#{sp.code}.#{&1}"})
   end
 

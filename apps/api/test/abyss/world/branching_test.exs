@@ -250,4 +250,70 @@ defmodule Abyss.World.BranchingTest do
     plain = %{base | catalog: nil, organisms: group(1, 5, 2, @forest, 5)}
     assert {^plain, [], []} = Branching.scan(plain)
   end
+
+  # Genoma `gid` de `base` de volta (a varredura coleta genomas sem vivos).
+  defp regenome(sim, base, gid) do
+    %{bp: bp} = g = base.genomes[gid]
+
+    %{
+      sim
+      | genomes: Map.put(sim.genomes, gid, g),
+        genome_index: Map.put(sim.genome_index, bp, gid)
+    }
+  end
+
+  test "id de ramo não volta depois da poda" do
+    base = world([ref(), ocelo2(), placa2()])
+    keep = group(100, 2, 1, @garden, 2)
+    s = scan(%{base | organisms: group(1, 5, 2, @forest, 5) ++ keep})
+    assert [%{id: "sp1.1"}] = s.life_events.branches
+
+    # sp1.1 se extingue e sai na poda (120 extintas mais novas).
+    s =
+      Sim.step(
+        %{
+          s
+          | organisms: keep ++ Enum.map(group(1, 5, 2, @forest, 5, "sp1.1"), &%{&1 | energy: 0.0})
+        },
+        0.1
+      )
+
+    assert Map.has_key?(s.extinct, "sp1.1")
+
+    s =
+      Enum.reduce(1..120, s, fn i, sim ->
+        sp = %{root_sp(ref()) | id: "x#{i}", code: "X#{i}", root: "x#{i}"}
+        Sim.add_species(sim, sp, extinct_ms: s.now_ms + i, founders: 0)
+      end)
+
+    refute Map.has_key?(s.bounds.species, "sp1.1")
+
+    s = scan(%{regenome(s, base, 3) | organisms: keep ++ group(1, 5, 3, @forest, 5)})
+    assert [%{id: "sp1.2", code: "S01.2"}] = s.life_events.branches
+  end
+
+  test "ramo registrado de novo avança o contador da mãe" do
+    base = world([ref(), ocelo2()])
+
+    again = %{
+      root_sp(ocelo2())
+      | id: "sp1.3",
+        code: "S01.3",
+        name: "Raiz · Jardim",
+        parent: "sp1"
+    }
+
+    s = Sim.add_species(base, again, founders: 0)
+    assert s.branch_seq == %{"sp1" => 3}
+
+    s = scan(%{s | organisms: group(1, 5, 2, @forest, 5)})
+    assert [%{id: "sp1.4", code: "S01.4"}] = s.life_events.branches
+  end
+
+  test "reserve_branch_seq reserva números de ramo" do
+    base = world([ref(), ocelo2()]) |> Sim.reserve_branch_seq(%{"sp1" => 7})
+    assert Sim.reserve_branch_seq(base, %{"sp1" => 2}).branch_seq == %{"sp1" => 7}
+    s = scan(%{base | organisms: group(1, 5, 2, @forest, 5)})
+    assert [%{id: "sp1.8", code: "S01.8"}] = s.life_events.branches
+  end
 end

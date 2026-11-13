@@ -138,8 +138,8 @@ export function createWorldStore(): WorldStore {
     const spared = new Set<string>();
     for (const sp of species) {
       if (extinct.has(sp.id)) continue;
-      for (let p = sp.parent, n = 0; p !== null && n < 64; n++) {
-        if (spared.has(p)) break;
+      for (let p = sp.parent; p !== null; ) {
+        if (spared.has(p)) break; // também encerra ciclos
         spared.add(p);
         p = byId.get(p)?.parent ?? null;
       }

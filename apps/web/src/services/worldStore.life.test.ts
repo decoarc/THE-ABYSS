@@ -367,3 +367,19 @@ it('poda das extintas poupa o ancestral extinto de espécie viva', () => {
   expect(t!.extinctMs).toBe(1);
   expect(t!.children[0].living).toBe(2);
 });
+
+it('poda poupa toda a cadeia de ancestrais extintos e termina com ciclo de parent', () => {
+  const s = ready();
+  const root = mkSp('sp8', { extinct_ms: 1, born_ms: 0 });
+  const mid = mkSp('sp8.1', { parent: 'sp8', root: 'sp8', extinct_ms: 2, born_ms: 1 });
+  const leaf = mkSp('sp8.1.1', { parent: 'sp8.1', root: 'sp8', born_ms: 2 });
+  const ca = mkSp('ca', { parent: 'cb' });
+  const cb = mkSp('cb', { parent: 'ca' });
+  const extra = Array.from({ length: 120 }, (_, i) => mkSp(`x${i}`, { extinct_ms: 10_000 + i }));
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: [root, mid, leaf, ca, cb, ...extra] }), L(2));
+  expect(s.extinct().has('sp8')).toBe(true);
+  expect(s.extinct().has('sp8.1')).toBe(true);
+  expect(s.extinct().size).toBe(102);
+  const t = buildLineage(s.species(), new Map([['sp8.1.1', 1]]), s.extinct(), 'sp8')!;
+  expect(t.children[0].children[0].living).toBe(1);
+});

@@ -1519,6 +1519,75 @@ defmodule Abyss.World.SimTest do
       assert s.genomes == %{} and s.genome_index == %{}
     end
 
+    test "filho que vira predador pela boca é temido" do
+      # Só duas bocas e toda mutação troca a boca: raspador → mandíbula.
+      cat =
+        with_mutation(Catalog.get(), %{part_p: 1.0, mouth_share: 1.0, drift_p: 0.0})
+
+      cat = %{cat | parts: Map.take(cat.parts, ["raspador", "mandibula"])}
+      big = gspecies(cat, gbp(0.8, [gpart("raspador")]), "gf")
+      small = gspecies(cat, gbp(0.3, [gpart("raspador")]), "gs")
+      assert big.diet == :flora and small.diet == :flora
+
+      s = gworld(cat) |> Sim.add_species(small, founders: 0) |> founded(big)
+      assert %MapSet{} = s.bounds.hunted
+
+      final = first_birth(s, 200)
+      assert [child] = final.life_events.births
+      assert Sim.traits_of(final, child).diet == :predator
+      assert final.bounds.hunted == :all
+
+      # Um adulto com o genoma do filho perto de uma pequena: ela foge.
+      h = %Organism{
+        id: "GF-9001",
+        species: "gf",
+        genome: child.genome,
+        born_ms: 0,
+        pos: @open,
+        energy: 100.0,
+        stage_ms: final.now_ms
+      }
+
+      p = %Organism{
+        id: "GS-0001",
+        species: "gs",
+        born_ms: 0,
+        pos: shift(@open, -2.0),
+        stage_ms: final.now_ms
+      }
+
+      world = immortal(%{final | organisms: [h, p]})
+      gap = fn s -> dist(hd(s.organisms).pos, List.last(s.organisms).pos) end
+
+      fled = run(world, 30)
+      calm = run(%{world | bounds: %{world.bounds | hunted: MapSet.new()}}, 30)
+      IO.puts("\n[predador mutado] distância com fuga #{gap.(fled)}, sem fuga #{gap.(calm)}")
+      assert gap.(fled) > gap.(calm) + 0.2
+    end
+
+    test "espécies de planta igual dividem o genoma, mas cada filho leva o código da sua" do
+      cat = with_mutation(Catalog.get(), %{part_p: 0.0, drift_p: 0.0})
+      bp = gbp(0.5, [gpart("raspador")])
+      a = gspecies(cat, bp, "ga")
+      b = gspecies(cat, bp, "gb")
+
+      s =
+        gworld(cat)
+        |> Sim.add_species(a, founders: 1)
+        |> Sim.add_species(b, founders: 1)
+        |> Sim.step(0.1)
+
+      [fa, fb] = s.organisms
+      assert fa.id == "GA-0001" and fb.id == "GB-0001"
+      assert fa.genome == fb.genome
+      assert %{id: "gb", code: "GB", name: "gb"} = Sim.traits_of(s, fb)
+
+      s = %{s | organisms: [fa, %{fb | energy: b.energy_max}]}
+      final = first_birth(s, 200)
+      assert [child] = final.life_events.births
+      assert child.id == "GB-0002" and child.species == "gb"
+    end
+
     test "mutation_boost multiplica part_p, com teto 1" do
       cat = Catalog.get()
       opts = Map.merge(@opts, %{test_species: false, catalog: cat})

@@ -198,7 +198,7 @@ defmodule Abyss.World.SimPerfTest do
 
     {final, times, pops} = measure(sim)
     births = Sim.eco_stats(final).births_total
-    mutated = map_size(final.genomes)
+    genomes_end = map_size(final.genomes)
 
     sorted = Enum.sort(times)
     max = List.last(sorted)
@@ -208,7 +208,7 @@ defmodule Abyss.World.SimPerfTest do
     IO.puts(
       "\n[sim perf S2] #{@steps} ticks, 250 genomas, boost #{@boost}: " <>
         "média #{mean} us, p99 #{p99} us, máx #{max} us; nascimentos #{births}, " <>
-        "genomas no fim #{mutated}; população mín #{Enum.min(pops)}, final #{length(final.organisms)}"
+        "genomas no fim #{genomes_end}; população mín #{Enum.min(pops)}, final #{length(final.organisms)}"
     )
 
     assert births > 0

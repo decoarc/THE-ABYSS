@@ -267,7 +267,7 @@ defmodule Abyss.World.Sim do
   defp boost_mutation(cat, k) when k > 0,
     do: put_in(cat, [:mutation, :part_p], min(cat.mutation.part_p * k, 1.0))
 
-  defp scan_ms(ecology), do: round(ecology.branch_scan_s * 1000)
+  defp scan_ms(ecology), do: round(Map.get(ecology, :branch_scan_s, 10) * 1000)
 
   # Organismos iniciais de espécie com planta (com catálogo) recebem o genoma dela.
   defp assign_genomes(%{catalog: nil} = sim), do: sim
@@ -292,6 +292,8 @@ defmodule Abyss.World.Sim do
 
   # Acha o genoma da planta ou cria um (características de `traits_fun`); o novo
   # entra em `pending_genomes`, anunciado em `life_events.genomes` do passo.
+  # Genoma `:predator` (a boca pode mutar) liga `hunted: :all` para todos
+  # passarem a procurar ameaça; só cresce, como atalho conservador.
   defp ensure_genome(sim, bp, traits_fun) do
     case sim.genome_index do
       %{^bp => gid} ->
@@ -299,11 +301,18 @@ defmodule Abyss.World.Sim do
 
       _ ->
         gid = sim.next_genome
+        traits = traits_fun.()
+
+        bounds =
+          if traits.diet == :predator,
+            do: %{sim.bounds | hunted: :all},
+            else: sim.bounds
 
         {gid,
          %{
            sim
-           | genomes: Map.put(sim.genomes, gid, %{bp: bp, traits: traits_fun.()}),
+           | bounds: bounds,
+             genomes: Map.put(sim.genomes, gid, %{bp: bp, traits: traits}),
              genome_index: Map.put(sim.genome_index, bp, gid),
              next_genome: gid + 1,
              pending_genomes: [gid | sim.pending_genomes]
@@ -322,17 +331,22 @@ defmodule Abyss.World.Sim do
 
   @doc """
   Características do organismo: as do seu genoma ou, sem genoma, as da espécie;
-  sempre com `id == o.species`. Aceita o `Sim` ou o ambiente do passo (qualquer
+  sempre com `id`, `code` e `name` da espécie do organismo (um genoma pode ser
+  compartilhado por espécies de planta igual, ou servir a um ramo). Aceita o `Sim` ou o ambiente do passo (qualquer
   mapa com `bounds` e `genomes`).
   """
   @spec traits_of(t | map, Organism.t()) :: Species.t()
   def traits_of(%{bounds: %{species: by_id}}, %{genome: nil, species: id}),
     do: Map.fetch!(by_id, id)
 
-  def traits_of(%{genomes: genomes}, %{genome: gid, species: id}) do
+  def traits_of(%{genomes: genomes, bounds: %{species: by_id}}, %{genome: gid, species: id}) do
     case Map.fetch!(genomes, gid).traits do
-      %{id: ^id} = t -> t
-      t -> %{t | id: id}
+      %{id: ^id} = t ->
+        t
+
+      t ->
+        sp = Map.fetch!(by_id, id)
+        %{t | id: id, code: sp.code, name: sp.name}
     end
   end
 

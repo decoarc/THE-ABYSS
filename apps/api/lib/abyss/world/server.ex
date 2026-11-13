@@ -17,7 +17,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo), `step` (`(Sim.t, dt, ms -> Sim.t)`, padrão `Sim.step/3`; injeção para testes) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}], branch_seq: %{mãe => k}})`, chamado no init; `branch_seq` é opcional) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo), `step` (`(Sim.t, dt, ms -> Sim.t)`, padrão `Sim.step/3`; injeção para testes) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -67,13 +67,16 @@ defmodule Abyss.World.Server do
       })
 
     loader = Keyword.get(opts, :species_loader, fn -> %{live: [], extinct: []} end)
-    %{live: live, extinct: extinct} = loader.()
+    %{live: live, extinct: extinct} = loaded = loader.()
     sim = Enum.reduce(live, sim, &Sim.add_species(&2, &1, founders: 3))
 
     sim =
       Enum.reduce(extinct, sim, fn {sp, ms}, acc ->
         Sim.add_species(acc, sp, founders: 0, extinct_ms: ms)
       end)
+
+    # Contadores de ramos não carregados: id de ramo nunca é reaproveitado.
+    sim = Sim.reserve_branch_seq(sim, Map.get(loaded, :branch_seq, %{}))
 
     state = %{
       sim: sim,

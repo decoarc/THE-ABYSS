@@ -314,11 +314,12 @@ defmodule Abyss.World.WireTest do
       [o | rest] = s.organisms
       bp = made2(7).blueprint
       child = %{o | id: "filho", genome: 9}
+      traits = Enum.find(Sim.species(s), &(&1.id == o.species))
 
       s = %{
         s
         | organisms: [child | rest],
-          genomes: Map.put(s.genomes, 9, %{bp: bp, traits: nil}),
+          genomes: Map.put(s.genomes, 9, %{bp: bp, traits: traits}),
           life_events: %{
             deaths: [],
             births: [child],
@@ -335,7 +336,7 @@ defmodule Abyss.World.WireTest do
       assert Enum.all?(t.o, &(length(&1) == 8))
       assert {:ok, _} = Jason.encode(t)
 
-      assert Wire.tick(Sim.step(sim(), 0.1), @meta).g == []
+      assert Wire.tick(Sim.step(s, 0.1), @meta).g == []
     end
 
     test "snapshot leva os genomas vivos" do

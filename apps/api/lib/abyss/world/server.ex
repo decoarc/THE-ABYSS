@@ -17,7 +17,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo), `step` (`(Sim.t, dt, ms -> Sim.t)`, padrão `Sim.step/3`; injeção para testes) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -79,6 +79,7 @@ defmodule Abyss.World.Server do
       sim: sim,
       on_extinct: Keyword.get(opts, :on_extinct, fn _ -> :ok end),
       on_branch: Keyword.get(opts, :on_branch, fn _ -> :ok end),
+      step: Keyword.get(opts, :step, &Sim.step/3),
       world_id: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
       tick_hz: tick_hz,
       broadcast: Keyword.get(opts, :broadcast, fn _ -> :ok end),
@@ -125,7 +126,9 @@ defmodule Abyss.World.Server do
   def handle_info(:tick, state) do
     jitter_ms = max(0.0, (mono_us() - due_us(state)) / 1000)
     meta = meta(state)
-    {step_us, sim} = :timer.tc(fn -> Sim.step(state.sim, 1 / state.tick_hz, meta.server_ms) end)
+
+    {step_us, sim} =
+      :timer.tc(fn -> state.step.(state.sim, 1 / state.tick_hz, meta.server_ms) end)
 
     state.broadcast.(Wire.tick(sim, meta))
     notify_extinct(state.on_extinct, sim.life_events.extinct)

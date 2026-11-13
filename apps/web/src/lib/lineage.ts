@@ -1,4 +1,5 @@
-import type { OrganismInfo, SpeciesInfo } from '../services/wire';
+import type { SpeciesInfo } from '../services/wire';
+import type { Vitals, WorldStore } from '../services/worldStore';
 
 export interface LineageNode {
   species: SpeciesInfo;
@@ -53,9 +54,21 @@ export function rootOf(species: readonly SpeciesInfo[], speciesId: string): stri
   return cur.id;
 }
 
-/** O organismo vivo de menor id do ramo; null se não há. */
-export function firstLiving(roster: readonly OrganismInfo[], speciesId: string): string | null {
+const suffixOf = (id: string) => {
+  const n = Number(id.slice(id.lastIndexOf('-') + 1));
+  return Number.isFinite(n) ? n : 0;
+};
+const idBefore = (a: string, b: string) => suffixOf(a) - suffixOf(b) || (a < b ? -1 : a > b ? 1 : 0);
+
+const probe: Vitals = { energy: 0, juvenile: false, dividing: false, maturedAtMs: null, dividingSinceMs: null, dyingSinceMs: null };
+
+/** O organismo vivo (sem os fantasmas) de menor id do ramo, pelo sufixo numérico; null se não há. */
+export function firstLiving(store: Pick<WorldStore, 'roster' | 'vitals'>, speciesId: string): string | null {
   let best: string | null = null;
-  for (const o of roster) if (o.species === speciesId && (best === null || o.id < best)) best = o.id;
+  for (const o of store.roster()) {
+    if (o.species !== speciesId) continue;
+    if (!store.vitals(o.id, probe) || probe.dyingSinceMs !== null) continue;
+    if (best === null || idBefore(o.id, best) < 0) best = o.id;
+  }
   return best;
 }

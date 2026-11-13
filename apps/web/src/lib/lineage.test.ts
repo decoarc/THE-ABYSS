@@ -1,4 +1,5 @@
 import { buildLineage, firstLiving, rootOf } from './lineage';
+import { createWorldStore } from '../services/worldStore';
 import type { OrganismInfo, SpeciesInfo } from '../services/wire';
 
 const sp = (id: string, parent: string | null, born_ms: number | null, over: Partial<SpeciesInfo> = {}): SpeciesInfo => ({
@@ -59,8 +60,22 @@ it('espécie de teste é raiz de si mesma', () => {
   expect(t.living).toBe(2);
 });
 
-it('firstLiving: o vivo de menor id do ramo', () => {
-  const roster = [org('X-0010', 'x'), org('X-0002', 'x'), org('Y-0003', 'y')];
-  expect(firstLiving(roster, 'x')).toBe('X-0002');
-  expect(firstLiving(roster, 'z')).toBeNull();
+it('firstLiving: o vivo de menor id do ramo, sem fantasmas, pelo sufixo numérico', () => {
+  const store = createWorldStore();
+  const o = (id: string, species: string) => ({ ...org(id, species), p: [0, 0, 0] as [number, number, number] });
+  store.applySnapshot({
+    world_id: 'w', tick: 1, tick_hz: 10, server_ms: 1000, map_id: 'e1', creature_scale: 1, juvenile_scale: 1, divide_s: 1,
+    bounds: { y_min: 0, y_max: 1 }, species: [sp('x', null, 0)], genomes: [], flora: [], particles: [],
+    organisms: [o('X-10000', 'x'), o('X-0002', 'x'), o('X-9999', 'x'), o('Y-0003', 'y')],
+  }, 1000);
+  const row = (): [number, number, number, number, number, number, number, number] => [0, 0, 0, 0, 0, 0, 1, 0];
+  expect(firstLiving(store, 'x')).toBe('X-0002');
+  // X-0002 morre de fome: vira fantasma e não conta.
+  store.applyTick({
+    world_id: 'w', tick: 2, server_ms: 1100, o: [row(), row(), row()], sp: [], g: [], rb: [], b: [],
+    d: [['X-0002', 'starvation']], x: [], f: [], ps: [], pr: [],
+  }, 1100);
+  expect(store.roster().some((r) => r.id === 'X-0002')).toBe(true);
+  expect(firstLiving(store, 'x')).toBe('X-9999');
+  expect(firstLiving(store, 'z')).toBeNull();
 });

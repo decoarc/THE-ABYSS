@@ -1,4 +1,5 @@
 import { createWorldStore, DISSOLVE_MS, type Vitals } from './worldStore';
+import { buildLineage } from '../lib/lineage';
 import { pickBlueprint } from '../organisms/pickBlueprint';
 import type { Blueprint, DeathCause, OrganismInfo, SpeciesInfo, TickMessage, TickRow, Vec3, WorldSnapshot } from './wire';
 
@@ -349,4 +350,20 @@ it('snapshot troca os genomas', () => {
   expect(s.genome(1)).toBeUndefined();
   expect(s.genome(3)).toEqual(bpOf('#333333'));
   expect(s.genomeCount()).toBe(1);
+});
+
+it('poda das extintas poupa o ancestral extinto de espécie viva', () => {
+  const s = ready();
+  const root = mkSp('sp7', { extinct_ms: 1, born_ms: 0 });
+  const kid = mkSp('sp7.1', { parent: 'sp7', root: 'sp7', born_ms: 5 });
+  const extra = Array.from({ length: 120 }, (_, i) => mkSp(`x${i}`, { extinct_ms: 10_000 + i }));
+  s.applyTick(tick(2, [row(0), row(1), row(2)], { sp: [root, kid, ...extra] }), L(2));
+  expect(s.extinct().size).toBe(101); // 100 recentes + a raiz poupada (a 'fil' antiga sai)
+  expect(s.species().some((x) => x.id === 'sp7')).toBe(true);
+  expect(s.extinct().has('sp7')).toBe(true);
+  const living = new Map([['sp7.1', 2]]);
+  const t = buildLineage(s.species(), living, s.extinct(), 'sp7');
+  expect(t).not.toBeNull();
+  expect(t!.extinctMs).toBe(1);
+  expect(t!.children[0].living).toBe(2);
 });

@@ -131,11 +131,24 @@ export function createWorldStore(): WorldStore {
   let lives: Live[] = [];
   let genomes = new Map<number, Blueprint>();
 
-  /** Mantém só as MAX_EXTINCT extintas mais recentes; identidade estável se nada sai. */
+  /** Mantém só as MAX_EXTINCT extintas mais recentes, poupando as que são ancestrais de espécie viva; identidade estável se nada sai. */
   function capExtinct(): boolean {
     if (extinct.size <= MAX_EXTINCT) return false;
-    const keep = [...extinct].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1)).slice(0, MAX_EXTINCT);
+    const byId = new Map(species.map((sp) => [sp.id, sp]));
+    const spared = new Set<string>();
+    for (const sp of species) {
+      if (extinct.has(sp.id)) continue;
+      for (let p = sp.parent, n = 0; p !== null && n < 64; n++) {
+        if (spared.has(p)) break;
+        spared.add(p);
+        p = byId.get(p)?.parent ?? null;
+      }
+    }
+    const rest = [...extinct].filter(([id]) => !spared.has(id));
+    const keep = rest.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? 1 : -1)).slice(0, MAX_EXTINCT);
     const kept = new Map(keep);
+    for (const id of spared) if (extinct.has(id)) kept.set(id, extinct.get(id)!);
+    if (kept.size === extinct.size) return false;
     species = species.filter((sp) => !extinct.has(sp.id) || kept.has(sp.id));
     extinct = kept;
     return true;
@@ -217,6 +230,7 @@ export function createWorldStore(): WorldStore {
       tickHz = s.tick_hz;
       lastTick = s.tick;
       species = s.species;
+      // Genomas são trocados a cada snapshot: o mapa fica limitado pelo resync.
       genomes = new Map(s.genomes ?? []);
       const ex = new Map<string, number>();
       for (const sp of s.species) if (sp.extinct_ms !== null) ex.set(sp.id, sp.extinct_ms);

@@ -1,7 +1,7 @@
 # The Abyss — Pacote de revisão do protótipo visual
 
 **Data:** 2026-10-30 · **Branch:** `prototipo-visual`
-**Status:** aguardando aprovação explícita do autor (único critério que fecha a etapa).
+**Status:** superado pelo protótipo 2 (ver abaixo).
 
 Como ver: `pnpm install`, depois `pnpm build && pnpm preview` e abrir `http://localhost:4173`.
 Variações: `?quality=low`, `?perf=1` (mede e escreve no console após ~15 s).
@@ -50,7 +50,7 @@ Leitura:
 | 5 | Navegação compreensível e dentro dos limites | Órbita ±54°, polar 54°–84°, zoom 5–20, alvo limitado; testes garantem que a borda fica na névoa |
 | 6 | Carregando / erro / sem WebGL / movimento reduzido | Implementados; sem-WebGL e erro cobertos por teste; movimento reduzido conferido em captura |
 | 7 | Desempenho medido nas duas GPUs | Feito (tabela acima) |
-| 8 | Aprovação explícita do autor | **Pendente** |
+| 8 | Aprovação explícita do autor | Não aprovado; substituído pelo protótipo 2 |
 
 ## Desvios em relação à referência
 
@@ -70,7 +70,7 @@ Leitura:
 
 # Protótipo 2
 
-**Status:** aguardando aprovação explícita do autor. O protótipo 1 fica na tag `prototipo-1`; o 2 na tag `prototipo-2`.
+**Status:** **aprovado pelo autor em 2026-10-30 — V-GATE fechado.** Os desvios abaixo ficam documentados e não bloqueiam o gate I. O protótipo 1 fica na tag `prototipo-1`; o 2 na tag `prototipo-2`.
 Design: `docs/superpowers/specs/2026-10-30-prototipo-visual-v2-design.md`.
 
 ## O que mudou

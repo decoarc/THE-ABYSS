@@ -1537,6 +1537,10 @@ defmodule Abyss.World.SimTest do
       assert Sim.traits_of(final, child).diet == :predator
       assert final.bounds.hunted == :all
 
+      # Registrar depois uma espécie flora não desliga a fuga (`hunted` só cresce).
+      later = gspecies(cat, gbp(0.4, [gpart("raspador")]), "gl")
+      assert Sim.add_species(final, later, founders: 0).bounds.hunted == :all
+
       # Um adulto com o genoma do filho perto de uma pequena: ela foge.
       h = %Organism{
         id: "GF-9001",

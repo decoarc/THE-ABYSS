@@ -393,7 +393,8 @@ defmodule Abyss.World.Sim do
         bounds
         | species: Map.put(bounds.species, sp.id, sp),
           species_list: list,
-          hunted: hunted(list)
+          # `:all` só cresce: um genoma predador (boca mutada) pode tê-lo ligado.
+          hunted: if(bounds.hunted == :all, do: :all, else: hunted(list))
       }
 
       sim = %{

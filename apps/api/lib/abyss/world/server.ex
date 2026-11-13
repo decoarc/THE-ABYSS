@@ -17,7 +17,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo)."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -78,6 +78,7 @@ defmodule Abyss.World.Server do
     state = %{
       sim: sim,
       on_extinct: Keyword.get(opts, :on_extinct, fn _ -> :ok end),
+      on_branch: Keyword.get(opts, :on_branch, fn _ -> :ok end),
       world_id: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
       tick_hz: tick_hz,
       broadcast: Keyword.get(opts, :broadcast, fn _ -> :ok end),
@@ -128,6 +129,7 @@ defmodule Abyss.World.Server do
 
     state.broadcast.(Wire.tick(sim, meta))
     notify_extinct(state.on_extinct, sim.life_events.extinct)
+    notify_branch(state.on_branch, sim.life_events.branches)
 
     state = %{
       state
@@ -156,6 +158,17 @@ defmodule Abyss.World.Server do
             Logger.error("on_extinct falhou (#{inspect(e.__struct__)}) para #{ids}")
         end
     end
+  end
+
+  # Ramos novos; uma falha do callback não derruba o mundo.
+  defp notify_branch(_callback, []), do: :ok
+
+  defp notify_branch(callback, branches) do
+    callback.(branches)
+  rescue
+    e ->
+      ids = Enum.map_join(branches, ",", &to_string(&1.id))
+      Logger.error("on_branch falhou (#{inspect(e.__struct__)}) para #{ids}")
   end
 
   # Agenda o tick n+1 contra o relógio de partida (sem acumular deriva).

@@ -131,6 +131,24 @@ defmodule Abyss.World.ServerTest do
     assert Server.stats(pid).tick > 3
   end
 
+  test "on_branch recebe o ramo" do
+    test_pid = self()
+    pid = start_server(on_branch: fn list -> send(test_pid, {:branch, list}) end)
+    assert_receive {:tick, _}, 2000
+
+    branch = Map.merge(made(1), %{id: "sp1.1", parent: "sp1", root: "sp1"})
+
+    # o callback guardado no estado do servidor é o recebido em `on_branch`
+    :sys.get_state(pid).on_branch.([branch])
+    assert_receive {:branch, [%{id: "sp1.1"}]}, 1000
+  end
+
+  test "on_branch que explode não derruba o mundo" do
+    pid = start_server(on_branch: fn _ -> raise "boom" end)
+    assert_receive {:tick, _}, 2000
+    assert Process.alive?(pid)
+  end
+
   defp all_binary_ids? do
     receive do
       {:extinct, list} -> Enum.all?(list, fn {id, _} -> is_binary(id) end) and all_binary_ids?()

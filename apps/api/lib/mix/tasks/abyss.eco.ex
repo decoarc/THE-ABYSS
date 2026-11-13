@@ -1,11 +1,13 @@
 defmodule Mix.Tasks.Abyss.Eco do
   @shortdoc "Roda um experimento ecológico offline e imprime CSV por minuto"
   @moduledoc """
-  Uso: `mix abyss.eco --seed N --minutes M [--population P] [--food-boost K] [--genesis N]`.
+  Uso: `mix abyss.eco --seed N --minutes M [--population P] [--food-boost K] [--mutation-boost K] [--genesis N]`.
 
   `--genesis N` soma N espécies sorteadas (3 fundadoras cada), colunas `pop_sp1`…
 
   `--food-boost` (só para medição) multiplica a comida, ver `Abyss.World.Sim.boost_food/2`.
+
+  `--mutation-boost` (só para medição) multiplica `part_p` do catálogo (teto 1).
 
   Imprime uma linha CSV por minuto simulado (passo fixo de 0,1 s, repetível
   pela semente): população por espécie, nascimentos, mortes por causa e botes (certos e
@@ -19,6 +21,7 @@ defmodule Mix.Tasks.Abyss.Eco do
     minutes: :integer,
     population: :integer,
     food_boost: :float,
+    mutation_boost: :float,
     genesis: :integer
   ]
 

@@ -408,7 +408,7 @@ defmodule Abyss.World.SimTest do
       end
 
       assert sim.organisms |> Enum.map(& &1.energy) |> Enum.uniq() |> length() > 10
-      assert sim.life_events == %{deaths: [], births: [], extinct: [], species: []}
+      assert sim.life_events == %{deaths: [], births: [], extinct: [], species: [], genomes: []}
     end
 
     test "forrageia até encher" do
@@ -1326,6 +1326,224 @@ defmodule Abyss.World.SimTest do
 
       # Controle: sem placa, nenhum bote escapa.
       assert Enum.frequencies(for i <- 1..50, do: strike.("spR", i)) == %{caught: 50}
+    end
+  end
+
+  describe "genoma" do
+    alias Abyss.Genesis.{Blueprint, Catalog, Traits}
+    alias Abyss.World.{Flora, Organism}
+
+    defp with_mutation(cat, m), do: %{cat | mutation: Map.merge(cat.mutation, m)}
+
+    # Catálogo de teste: flagelo é a única peça fora das bocas e toda mutação de peça é um add.
+    defp flagelo_cat do
+      cat =
+        with_mutation(Catalog.get(), %{
+          part_p: 1.0,
+          mouth_share: 0.0,
+          ops: %{add: 1.0, remove: 0.0, swap: 0.0},
+          drift_p: 0.0
+        })
+
+      %{cat | parts: Map.filter(cat.parts, fn {k, s} -> s.group == "boca" or k == "flagelo" end)}
+    end
+
+    defp gworld(cat) do
+      sim =
+        Sim.new(
+          Map.merge(@opts, %{
+            test_species: false,
+            food: %{@food | particle_rate: 0.0},
+            catalog: cat
+          })
+        )
+
+      %{sim | flora: Flora.put_patches(sim.flora, {})}
+    end
+
+    defp gbp(r, parts) do
+      %{
+        "v" => 1,
+        "body" => %{"spine" => [[-0.3, 0.0, r], [0.0, 0.0, r], [0.3, 0.0, r]]},
+        "parts" => parts,
+        "colors" => %{"glow" => "#7fe9dd", "body" => "#3f5a4a"},
+        "pattern" => "liso"
+      }
+    end
+
+    defp gpart(kind, mirror \\ false) do
+      %{
+        "kind" => kind,
+        "at" => 0.5,
+        "around" => 1.57,
+        "size" => 1.0,
+        "angle" => 0.0,
+        "mirror" => mirror
+      }
+    end
+
+    defp gspecies(cat, bp, id) do
+      assert {:ok, _} = Blueprint.validate(bp, cat)
+      Traits.species(bp, cat, %{id: id, code: String.upcase(id), name: id})
+    end
+
+    # Uma fundadora de `sp`, entregue no passo seguinte e posta com energia cheia.
+    defp founded(sim, sp) do
+      s = sim |> Sim.add_species(sp, founders: 1) |> Sim.step(0.1)
+      [f] = s.organisms
+      %{s | organisms: [%{f | energy: sp.energy_max}]}
+    end
+
+    defp first_birth(sim, max) do
+      Enum.reduce_while(1..max, sim, fn _, s ->
+        s = Sim.step(s, 0.1)
+        if s.life_events.births != [], do: {:halt, s}, else: {:cont, s}
+      end)
+    end
+
+    test "filho herda o genoma do pai sem mutação" do
+      cat = with_mutation(Catalog.get(), %{part_p: 0.0, drift_p: 0.0})
+      sp = gspecies(cat, gbp(0.5, [gpart("raspador")]), "g1")
+
+      s0 = gworld(cat) |> Sim.add_species(sp, founders: 1) |> Sim.step(0.1)
+      [f] = s0.organisms
+      assert is_integer(f.genome) and f.mutated == false
+      assert Sim.genome(s0, f.genome) == sp.blueprint
+      assert s0.life_events.genomes == [{f.genome, sp.blueprint}]
+      assert Sim.traits_of(s0, f) == sp
+
+      s = founded(gworld(cat), sp)
+      [parent] = s.organisms
+      final = first_birth(s, 200)
+      assert [child] = final.life_events.births
+      assert child.genome == parent.genome and child.mutated == false
+      assert final.life_events.genomes == []
+      assert map_size(final.genomes) == 1
+    end
+
+    test "filho mutado tem genoma e características próprias" do
+      cat = flagelo_cat()
+      sp = gspecies(cat, gbp(0.5, [gpart("raspador")]), "g2")
+      s = founded(gworld(cat), sp)
+      [parent] = s.organisms
+
+      final = first_birth(s, 200)
+      assert [child] = final.life_events.births
+      assert child.mutated
+      assert child.genome != parent.genome
+      bp = Sim.genome(final, child.genome)
+      assert final.life_events.genomes == [{child.genome, bp}]
+      assert Enum.count(bp["parts"], &(&1["kind"] == "flagelo")) == 1
+
+      parent = Enum.find(final.organisms, &(&1.id == parent.id))
+      assert parent.genome != child.genome and parent.mutated == false
+      child_traits = Sim.traits_of(final, child)
+      assert child_traits.id == child.species
+      assert child_traits.max_speed > Sim.traits_of(final, parent).max_speed
+      assert child_traits == Traits.species(bp, cat, %{id: sp.id, code: sp.code, name: sp.name})
+    end
+
+    test "características vêm do genoma" do
+      cat = Catalog.get()
+      pred = gspecies(cat, gbp(0.8, [gpart("mandibula")]), "gp")
+      bare_bp = gbp(0.3, [gpart("raspador")])
+      # Placa espelhada: 2 instâncias.
+      plated_bp = gbp(0.3, [gpart("raspador"), gpart("placa", true)])
+      prey = gspecies(cat, bare_bp, "gq")
+      plated = gspecies(cat, plated_bp, "gq")
+      assert prey.escape == 0.0 and plated.escape > 0.0
+
+      base =
+        gworld(cat)
+        |> Sim.add_species(pred, founders: 0)
+        |> Sim.add_species(prey, founders: 0)
+        |> immortal()
+
+      base = %{
+        base
+        | genomes: %{1 => %{bp: bare_bp, traits: prey}, 2 => %{bp: plated_bp, traits: plated}},
+          genome_index: %{bare_bp => 1, plated_bp => 2},
+          next_genome: 3
+      }
+
+      strike = fn gid, i ->
+        h = %Organism{id: "GP-#{i}", species: "gp", born_ms: 0, pos: @open, energy: 30.0}
+
+        p = %Organism{
+          id: "GQ-#{i}",
+          species: "gq",
+          genome: gid,
+          born_ms: 0,
+          pos: shift(@open, -0.7)
+        }
+
+        assert Sim.traits_of(base, p).escape == if(gid == 2, do: plated.escape, else: 0.0)
+
+        Enum.reduce_while(1..30, %{base | organisms: [h, p]}, fn _, s ->
+          s = Sim.step(s, 0.1)
+
+          case s.eco_totals do
+            %{hunts_escaped: 1} -> {:halt, :escaped}
+            %{hunts_ok: 1} -> {:halt, :caught}
+            _ -> {:cont, s}
+          end
+        end)
+      end
+
+      assert Enum.frequencies(for i <- 1..60, do: strike.(1, i)) == %{caught: 60}
+      outcomes = Enum.frequencies(for i <- 1..60, do: strike.(2, i))
+      assert Map.get(outcomes, :escaped, 0) > 0
+      assert Map.get(outcomes, :escaped, 0) + Map.get(outcomes, :caught, 0) == 60
+    end
+
+    test "espécies de teste não têm genoma" do
+      s = Sim.new(Map.put(@opts, :catalog, Catalog.get())) |> run(600)
+      assert s.organisms != []
+      assert Enum.all?(s.organisms, &(&1.genome == nil and &1.mutated == false))
+      assert s.genomes == %{} and s.genome_index == %{}
+    end
+
+    test "genoma sem vivos é coletado" do
+      cat = with_mutation(Catalog.get(), %{part_p: 0.0, drift_p: 0.0})
+      sp = gspecies(cat, gbp(0.5, [gpart("raspador")]), "g5")
+      s = founded(gworld(cat), sp)
+      [f] = s.organisms
+      gid = f.genome
+
+      s = Sim.step(%{s | organisms: [%{f | energy: 0.0}]}, 0.1)
+      assert s.organisms == []
+      assert Sim.genome(s, gid) == sp.blueprint
+
+      s = run(s, round(s.ecology.branch_scan_s * 10))
+      assert Sim.genome(s, gid) == nil
+      assert s.genomes == %{} and s.genome_index == %{}
+    end
+
+    test "mutation_boost multiplica part_p, com teto 1" do
+      cat = Catalog.get()
+      opts = Map.merge(@opts, %{test_species: false, catalog: cat})
+      assert Sim.new(opts).catalog == cat
+      boosted = Sim.new(Map.put(opts, :mutation_boost, 2)).catalog
+      assert boosted.mutation.part_p == cat.mutation.part_p * 2
+      assert Sim.new(Map.put(opts, :mutation_boost, 1.0e6)).catalog.mutation.part_p == 1.0
+    end
+
+    test "sem catálogo, nada muda" do
+      cat = Catalog.get()
+      sp = gspecies(cat, gbp(0.5, [gpart("raspador")]), "g6")
+      s = founded(gworld(nil), sp)
+      [parent] = s.organisms
+      assert parent.genome == nil
+
+      final = first_birth(s, 200)
+      assert [child] = final.life_events.births
+      assert child.genome == nil and child.mutated == false
+      assert final.genomes == %{} and final.life_events.genomes == []
+
+      # Igual ao mundo do S1, que não conhece catálogo.
+      plain = Sim.new(%{@opts | test_species: false, food: %{@food | particle_rate: 0.0}})
+      plain = %{plain | flora: Flora.put_patches(plain.flora, {})}
+      assert first_birth(founded(plain, sp), 200).organisms == final.organisms
     end
   end
 end

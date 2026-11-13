@@ -18,7 +18,7 @@ defmodule Abyss.World.HuntTest do
     orgs
     |> Enum.with_index(fn o, i ->
       {x, _, z} = o.pos
-      {x, z, {i, o.id, o.pos, r(o), o.species, o.vel, o.energy}}
+      {x, z, {i, o.id, o.pos, r(o), sp(o.species), o.vel, o.energy}}
     end)
     |> Grid.build()
   end

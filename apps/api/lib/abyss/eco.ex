@@ -15,7 +15,8 @@ defmodule Abyss.Eco do
   @doc """
   `opts`: `seed` (padrão 1), `minutes` (padrão 10), `population` (padrão o da
   configuração do mundo), `food_boost` (padrão o da configuração do mundo, 1.0;
-  só para medição, ver `Sim.boost_food/2`), `test_species` (padrão o da
+  só para medição, ver `Sim.boost_food/2`), `mutation_boost` (padrão o da
+  configuração do mundo, 1.0; só para medição: `part_p` × k), `test_species` (padrão o da
   configuração do mundo) e `genesis` (padrão 0: quantas espécies
   `Random.blueprint` somar, 3 fundadoras cada, ids `sp1`…, sorteio próprio da semente). Cada linha: `%{minute, pop, births, births_by, deaths,
   hunts_ok, hunts_escaped, extinct}`; `births`, `deaths` e `hunts_*` contam só aquele minuto, `pop` é o fim dele.
@@ -28,6 +29,9 @@ defmodule Abyss.Eco do
     population = Keyword.get(opts, :population) || Keyword.fetch!(world, :population)
     boost = Keyword.get(opts, :food_boost) || Keyword.get(world, :food_boost, 1.0)
 
+    mutation_boost =
+      Keyword.get(opts, :mutation_boost) || Keyword.get(world, :mutation_boost, 1.0)
+
     sim =
       Sim.new(%{
         population: population,
@@ -37,7 +41,9 @@ defmodule Abyss.Eco do
         creature_scale: Keyword.fetch!(world, :creature_scale),
         test_species: Keyword.get(opts, :test_species, Keyword.fetch!(world, :test_species)),
         food: :abyss |> Application.fetch_env!(:food) |> Map.new() |> Sim.boost_food(boost),
-        ecology: :abyss |> Application.fetch_env!(:ecology) |> Map.new()
+        ecology: :abyss |> Application.fetch_env!(:ecology) |> Map.new(),
+        catalog: Catalog.get(),
+        mutation_boost: mutation_boost
       })
 
     sim = add_genesis(sim, Keyword.get(opts, :genesis, 0), seed)

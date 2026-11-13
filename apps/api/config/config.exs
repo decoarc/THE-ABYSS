@@ -29,7 +29,10 @@ config :abyss, :world,
   creature_scale: 0.5,
   # Só para medição (ABYSS_FOOD_BOOST): multiplica a velocidade da flora e a
   # taxa e o teto das partículas. 1.0 = a comida canônica, sem mudança.
-  food_boost: 1.0
+  food_boost: 1.0,
+  # Só para medição (ABYSS_MUTATION_BOOST): multiplica part_p do catálogo
+  # (teto 1). 1.0 = a mutação canônica.
+  mutation_boost: 1.0
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,
@@ -69,7 +72,9 @@ config :abyss, :ecology,
   school_weight: 0.3,
   corpse_particles: {3, 4.0},
   founder_energy: {0.6, 0.9},
-  founder_age: 0.5
+  founder_age: 0.5,
+  # Varredura periódica (s do relógio do mundo): coleta de genomas sem vivos (gate S2).
+  branch_scan_s: 10
 
 # Gênese de espécies (gate S1): link de verificação por e-mail.
 config :abyss, :genesis,

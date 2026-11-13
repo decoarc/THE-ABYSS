@@ -7,6 +7,7 @@ defmodule Abyss.World.Server do
 
   use GenServer
 
+  alias Abyss.Genesis.Catalog
   alias Abyss.World.Map, as: WMap
   alias Abyss.World.{Observers, Sim, Wire}
 
@@ -16,7 +17,7 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` (medição), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo)."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}]})`, chamado no init) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -60,7 +61,9 @@ defmodule Abyss.World.Server do
           |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0)),
         ecology:
           Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
-          |> Map.new()
+          |> Map.new(),
+        catalog: Keyword.get_lazy(opts, :catalog, &Catalog.get/0),
+        mutation_boost: Keyword.get(opts, :mutation_boost, 1.0)
       })
 
     loader = Keyword.get(opts, :species_loader, fn -> %{live: [], extinct: []} end)

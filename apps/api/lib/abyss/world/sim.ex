@@ -9,6 +9,7 @@ defmodule Abyss.World.Sim do
   soma e o desempate são os da varredura linear, então o resultado é idêntico.
   """
 
+  alias Abyss.Genesis.{Mutation, Traits}
   alias Abyss.World.{Flora, Grid, Hunt, Life, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
@@ -32,7 +33,7 @@ defmodule Abyss.World.Sim do
 
   @no_events %{changed: [], spawned: [], removed: []}
   @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
-  @no_life %{deaths: [], births: [], extinct: [], species: []}
+  @no_life %{deaths: [], births: [], extinct: [], species: [], genomes: []}
   @no_eco %{
     births: %{},
     deaths: %{},
@@ -58,8 +59,15 @@ defmodule Abyss.World.Sim do
             extinct: %{},
             next_seq: %{},
             pending_species: [],
-            pending_founders: []
+            pending_founders: [],
+            catalog: nil,
+            genomes: %{},
+            genome_index: %{},
+            next_genome: 1,
+            pending_genomes: [],
+            next_scan_ms: 0
 
+  @type genome :: %{bp: map, traits: Species.t()}
   @type food_events :: %{
           changed: [{non_neg_integer, float}],
           spawned: [map],
@@ -81,13 +89,20 @@ defmodule Abyss.World.Sim do
             deaths: [{String.t(), atom}],
             births: [Organism.t()],
             extinct: [tuple],
-            species: [Species.t()]
+            species: [Species.t()],
+            genomes: [{pos_integer, map}]
           },
           eco_totals: map,
           extinct: %{atom => integer},
           next_seq: %{atom => pos_integer},
           pending_species: [Species.t()],
-          pending_founders: [Organism.t()]
+          pending_founders: [Organism.t()],
+          catalog: map | nil,
+          genomes: %{pos_integer => genome},
+          genome_index: %{map => pos_integer},
+          next_genome: pos_integer,
+          pending_genomes: [pos_integer],
+          next_scan_ms: integer
         }
 
   @doc """
@@ -96,7 +111,10 @@ defmodule Abyss.World.Sim do
   (false = mundo sem organismos), `food` (mapa do bloco `:food`), `species`
   (tabela de espécies, padrão `Species.all/0`) e `ecology` (mapa do bloco
   `:ecology`, padrão o da configuração) e `max_body_radius` (maior raio de corpo que
-  uma espécie registrada depois pode ter; padrão 1.6, o do catálogo da gênese).
+  uma espécie registrada depois pode ter; padrão 1.6, o do catálogo da gênese),
+  `catalog` (catálogo da gênese; padrão nil = sem genomas nem mutação) e
+  `mutation_boost` (só para medição: multiplica `part_p` do catálogo, teto 1;
+  padrão 1).
   """
   @spec new(map) :: t
   def new(
@@ -158,8 +176,11 @@ defmodule Abyss.World.Sim do
       particles: Particles.new(map, food),
       food_cfg: food,
       ecology: ecology,
-      now_ms: now_ms
+      now_ms: now_ms,
+      catalog: opts |> Map.get(:catalog) |> boost_mutation(Map.get(opts, :mutation_boost, 1)),
+      next_scan_ms: now_ms + scan_ms(ecology)
     }
+    |> assign_genomes()
   end
 
   def new(%{population: pop}) do
@@ -239,6 +260,106 @@ defmodule Abyss.World.Sim do
     }
   end
 
+  # Só para medição (ABYSS_MUTATION_BOOST): part_p × k, no máximo 1.
+  defp boost_mutation(nil, _k), do: nil
+  defp boost_mutation(cat, k) when k == 1, do: cat
+
+  defp boost_mutation(cat, k) when k > 0,
+    do: put_in(cat, [:mutation, :part_p], min(cat.mutation.part_p * k, 1.0))
+
+  defp scan_ms(ecology), do: round(ecology.branch_scan_s * 1000)
+
+  # Organismos iniciais de espécie com planta (com catálogo) recebem o genoma dela.
+  defp assign_genomes(%{catalog: nil} = sim), do: sim
+
+  defp assign_genomes(sim) do
+    {orgs, sim} =
+      Enum.map_reduce(sim.organisms, sim, fn o, sim ->
+        sp = spec(sim.bounds, o.species)
+
+        case Map.get(sp, :blueprint) do
+          nil ->
+            {o, sim}
+
+          bp ->
+            {gid, sim} = ensure_genome(sim, bp, fn -> sp end)
+            {%{o | genome: gid}, sim}
+        end
+      end)
+
+    %{sim | organisms: orgs}
+  end
+
+  # Acha o genoma da planta ou cria um (características de `traits_fun`); o novo
+  # entra em `pending_genomes`, anunciado em `life_events.genomes` do passo.
+  defp ensure_genome(sim, bp, traits_fun) do
+    case sim.genome_index do
+      %{^bp => gid} ->
+        {gid, sim}
+
+      _ ->
+        gid = sim.next_genome
+
+        {gid,
+         %{
+           sim
+           | genomes: Map.put(sim.genomes, gid, %{bp: bp, traits: traits_fun.()}),
+             genome_index: Map.put(sim.genome_index, bp, gid),
+             next_genome: gid + 1,
+             pending_genomes: [gid | sim.pending_genomes]
+         }}
+    end
+  end
+
+  @doc "Planta do genoma `gid`; nil se ele não existe (ou já foi coletado)."
+  @spec genome(t, pos_integer) :: map | nil
+  def genome(%__MODULE__{genomes: genomes}, gid) do
+    case genomes do
+      %{^gid => %{bp: bp}} -> bp
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Características do organismo: as do seu genoma ou, sem genoma, as da espécie;
+  sempre com `id == o.species`. Aceita o `Sim` ou o ambiente do passo (qualquer
+  mapa com `bounds` e `genomes`).
+  """
+  @spec traits_of(t | map, Organism.t()) :: Species.t()
+  def traits_of(%{bounds: %{species: by_id}}, %{genome: nil, species: id}),
+    do: Map.fetch!(by_id, id)
+
+  def traits_of(%{genomes: genomes}, %{genome: gid, species: id}) do
+    case Map.fetch!(genomes, gid).traits do
+      %{id: ^id} = t -> t
+      t -> %{t | id: id}
+    end
+  end
+
+  # Genomas sem nenhum organismo vivo saem de `genomes` e `genome_index`.
+  defp collect_genomes(%{genomes: genomes} = sim) when map_size(genomes) == 0, do: sim
+
+  defp collect_genomes(sim) do
+    live =
+      for o <- sim.organisms ++ sim.pending_founders,
+          o.genome != nil,
+          into: MapSet.new(),
+          do: o.genome
+
+    %{
+      sim
+      | genomes: Map.filter(sim.genomes, fn {gid, _} -> MapSet.member?(live, gid) end),
+        genome_index: Map.filter(sim.genome_index, fn {_, gid} -> MapSet.member?(live, gid) end)
+    }
+  end
+
+  # Varredura periódica (a cada branch_scan_s do relógio do mundo).
+  defp scan(sim, now_ms) do
+    if now_ms >= sim.next_scan_ms,
+      do: %{collect_genomes(sim) | next_scan_ms: now_ms + scan_ms(sim.ecology)},
+      else: sim
+  end
+
   @doc """
   Registra uma espécie em tempo de execução (id já existente: no-op). `opts`:
   `founders` (padrão 3) adultas juntas num ponto de uma região sorteada com
@@ -276,6 +397,14 @@ defmodule Abyss.World.Sim do
   defp add_founders(sim, _sp, 0), do: sim
 
   defp add_founders(%{bounds: bounds} = sim, sp, n) do
+    # Com catálogo, as fundadoras de espécie com planta recebem o genoma dela.
+    {gid, sim} =
+      case {sim.catalog, Map.get(sp, :blueprint)} do
+        {nil, _} -> {nil, sim}
+        {_, nil} -> {nil, sim}
+        {_, bp} -> ensure_genome(sim, bp, fn -> sp end)
+      end
+
     {{cx, y, cz}, rng} = random_position(%{diet: nil}, bounds, sim.rng)
     r = eff_radius(sp, bounds)
 
@@ -301,7 +430,8 @@ defmodule Abyss.World.Sim do
            stage_ms: sim.now_ms,
            generation: 1,
            parent_id: nil,
-           dividing_left: 0.0
+           dividing_left: 0.0,
+           genome: gid
          }, rng}
       end)
 
@@ -369,6 +499,7 @@ defmodule Abyss.World.Sim do
       cfg: sim.food_cfg,
       now_ms: now_ms,
       particle_index: Particles.index(particles, now_ms),
+      genomes: sim.genomes,
       grid: nil
     }
 
@@ -387,14 +518,16 @@ defmodule Abyss.World.Sim do
       hunts_escaped: 0
     }
 
-    # {i, id, pos, r, species, vel, energy}, do começo do passo: i é a ordem da
-    # lista, para a separação somar na mesma ordem e as buscas desempatarem.
+    # {i, id, pos, r, traits, vel, energy}, do começo do passo: i é a ordem da
+    # lista, para a separação somar na mesma ordem e as buscas desempatarem;
+    # traits são as características do organismo (`traits_of`, id = espécie).
     snapshot =
       orgs
       |> Enum.with_index(fn o, i ->
         {x, _, z} = o.pos
-        r = Life.radius(o, spec(bounds, o.species), bounds.creature_scale, sim.ecology)
-        {x, z, {i, o.id, o.pos, r, o.species, o.vel, o.energy}}
+        traits = traits_of(env, o)
+        r = Life.radius(o, traits, bounds.creature_scale, sim.ecology)
+        {x, z, {i, o.id, o.pos, r, traits, o.vel, o.energy}}
       end)
       |> Grid.build()
 
@@ -418,7 +551,8 @@ defmodule Abyss.World.Sim do
     # Divisões: concluem (nascidos no fim da lista) antes de remover os mortos,
     # então o filho de um pai que morre neste passo nasce mesmo assim — também o
     # de uma presa que concluiu a divisão no seu próprio passo e depois foi comida.
-    {new_orgs, births, next_seq} = complete_divisions(orgs, new_orgs, sim, now_ms)
+    # A mutação no nascimento usa o rng do passo (encadeado: determinístico).
+    {new_orgs, births, sim, rng} = complete_divisions(orgs, new_orgs, sim, now_ms, rng)
     {new_orgs, cap_holds} = start_divisions(new_orgs, births, food.wants, sim)
     new_orgs = new_orgs ++ sim.pending_founders ++ births
 
@@ -426,13 +560,19 @@ defmodule Abyss.World.Sim do
     {survivors, dead} =
       Enum.split_with(new_orgs, fn o ->
         not MapSet.member?(eaten, o.id) and
-          Life.death_cause(o, spec(bounds, o.species), now_ms) == nil
+          Life.death_cause(o, traits_of(sim, o), now_ms) == nil
       end)
 
     {food, corpse_events, rng} = bury(dead, eaten, food, sim, now_ms, rng)
 
     # Extinção decidida só aqui, depois de mortes e nascimentos do passo.
+    next_seq = sim.next_seq
     {extinct, new_extinct} = detect_extinct(survivors, next_seq, sim.extinct, now_ms)
+
+    # Genomas criados no passo (e no registro de espécies desde o passo anterior).
+    new_genomes =
+      for gid <- Enum.sort(sim.pending_genomes),
+          do: {gid, Map.fetch!(sim.genomes, gid).bp}
 
     removed = expired ++ Enum.reverse(food.eaten_ids)
     spawned = spawned ++ corpse_events.spawned
@@ -457,12 +597,14 @@ defmodule Abyss.World.Sim do
         extinct: extinct,
         pending_species: [],
         pending_founders: [],
+        pending_genomes: [],
         life_events: %{
           @no_life
           | deaths: corpse_events.deaths,
             births: sim.pending_founders ++ births,
             extinct: new_extinct,
-            species: sim.pending_species
+            species: sim.pending_species,
+            genomes: new_genomes
         },
         # Fundadoras não são nascimentos da ecologia: só as divisões contam.
         eco_totals:
@@ -475,6 +617,7 @@ defmodule Abyss.World.Sim do
           |> Map.update!(:hunts_escaped, &(&1 + food.hunts_escaped))
     }
     |> prune_extinct()
+    |> scan(now_ms)
   end
 
   # Espécie que já teve indivíduos (`next_seq` > 1) e agora não tem nenhum entra
@@ -493,30 +636,52 @@ defmodule Abyss.World.Sim do
   end
 
   # Quem tinha `dividing_left > 0` e zerou neste passo termina a divisão: o pai
-  # fica com split_parent × energy_max e nasce um jovem ao lado dele.
-  defp complete_divisions(old_orgs, new_orgs, sim, now_ms) do
+  # fica com split_parent × energy_max e nasce um jovem ao lado dele. Devolve o
+  # `sim` com `next_seq` e os genomas (novos em `pending_genomes`) atualizados.
+  defp complete_divisions(old_orgs, new_orgs, sim, now_ms, rng) do
     old_orgs
     |> Enum.zip(new_orgs)
-    |> Enum.map_reduce({[], sim.next_seq}, fn {old, o}, {born, seq} ->
+    |> Enum.map_reduce({[], sim, rng}, fn {old, o}, {born, sim, rng} ->
       if old.dividing_left > 0 and o.dividing_left == 0 do
-        sp = spec(sim.bounds, o.species)
-        n = Map.fetch!(seq, o.species)
-        child = newborn(o, sp, n, sim, now_ms)
+        sp = traits_of(sim, o)
+        n = Map.fetch!(sim.next_seq, o.species)
+        {child, sim, rng} = newborn(o, sp, n, sim, now_ms, rng)
         parent = %{o | energy: sim.ecology.split_parent * sp.energy_max}
-        {parent, {[child | born], Map.put(seq, o.species, n + 1)}}
+
+        {parent,
+         {[child | born], %{sim | next_seq: Map.put(sim.next_seq, o.species, n + 1)}, rng}}
       else
-        {o, {born, seq}}
+        {o, {born, sim, rng}}
       end
     end)
-    |> then(fn {orgs, {born, seq}} -> {orgs, Enum.reverse(born), seq} end)
+    |> then(fn {orgs, {born, sim, rng}} -> {orgs, Enum.reverse(born), sim, rng} end)
   end
 
-  defp newborn(parent, sp, n, sim, now_ms) do
+  # Genoma do filho: sem genoma no pai, nenhum; sem catálogo, o do pai; senão a
+  # planta do pai passa por `Mutation.child` e o genoma é achado ou criado.
+  defp inherit(%{genome: nil}, _sp, sim, rng), do: {nil, false, sim, rng}
+  defp inherit(%{genome: gid}, _sp, %{catalog: nil} = sim, rng), do: {gid, false, sim, rng}
+
+  defp inherit(%{genome: gid}, sp, %{catalog: cat} = sim, rng) do
+    bp = Map.fetch!(sim.genomes, gid).bp
+    {child_bp, mutated, rng} = Mutation.child(bp, cat, rng)
+
+    if child_bp == bp do
+      {gid, mutated, sim, rng}
+    else
+      traits = fn -> Traits.species(child_bp, cat, %{id: sp.id, code: sp.code, name: sp.name}) end
+      {child_gid, sim} = ensure_genome(sim, child_bp, traits)
+      {child_gid, mutated, sim, rng}
+    end
+  end
+
+  defp newborn(parent, sp, n, sim, now_ms, rng) do
+    {genome, mutated, sim, rng} = inherit(parent, sp, sim, rng)
     r = Life.radius(parent, sp, sim.bounds.creature_scale, sim.ecology)
     side = parent.yaw + :math.pi() / 2
     {x, y, z} = parent.pos
 
-    %Organism{
+    child = %Organism{
       id: "#{sp.code}-#{n |> Integer.to_string() |> String.pad_leading(4, "0")}",
       species: parent.species,
       born_ms: now_ms,
@@ -531,8 +696,12 @@ defmodule Abyss.World.Sim do
       stage_ms: now_ms,
       generation: parent.generation + 1,
       parent_id: parent.id,
-      dividing_left: 0.0
+      dividing_left: 0.0,
+      genome: genome,
+      mutated: mutated
     }
+
+    {child, sim, rng}
   end
 
   # Quem quer dividir (energia cheia) começa se houver vaga: população mais
@@ -540,7 +709,7 @@ defmodule Abyss.World.Sim do
   # Sem vaga, conta um cap_hold e tenta de novo no passo seguinte.
   defp start_divisions(orgs, _births, [], _sim), do: {orgs, 0}
 
-  defp start_divisions(orgs, births, wants, %{ecology: eco, bounds: bounds} = sim) do
+  defp start_divisions(orgs, births, wants, %{ecology: eco} = sim) do
     in_course = Enum.count(orgs, &(&1.dividing_left > 0))
     used = length(orgs) + length(births) + length(sim.pending_founders) + in_course
 
@@ -560,7 +729,7 @@ defmodule Abyss.World.Sim do
            %{o | dividing_left: eco.divide_s * 1.0}
 
          MapSet.member?(held, o.id) ->
-           %{o | energy: spec(bounds, o.species).energy_max}
+           %{o | energy: traits_of(sim, o).energy_max}
 
          true ->
            o
@@ -587,7 +756,7 @@ defmodule Abyss.World.Sim do
 
     {food, events, rng} =
       Enum.reduce(dead, acc0, fn o, {food, ev, rng} ->
-        sp = spec(sim.bounds, o.species)
+        sp = traits_of(sim, o)
         predation? = MapSet.member?(eaten, o.id)
         cause = if predation?, do: :predation, else: Life.death_cause(o, sp, now_ms)
         r = Life.radius(o, sp, sim.bounds.creature_scale, sim.ecology)
@@ -741,7 +910,7 @@ defmodule Abyss.World.Sim do
   # --- step ------------------------------------------------------------------
 
   defp step_one(o, snapshot, %{bounds: bounds} = env, dt, rng, food) do
-    sp = spec(env.bounds, o.species)
+    sp = traits_of(env, o)
     r = Life.radius(o, sp, bounds.creature_scale, env.eco)
     sdt = :math.sqrt(dt)
 
@@ -952,7 +1121,7 @@ defmodule Abyss.World.Sim do
 
         if id != o.id and not MapSet.member?(food.prey_eaten, id) and
              not ignored?(o.gave_up, id, env.now_ms) and closer?(d, i, best) and
-             Hunt.can_eat?(sp, r, spec(env.bounds, psp), pr) and
+             Hunt.can_eat?(sp, r, psp, pr) and
              d <= Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos)),
            do: {d, i, item},
            else: best
@@ -994,7 +1163,7 @@ defmodule Abyss.World.Sim do
       env.grid
       |> Grid.near(x, z, sp.perception * 1.2)
       |> Enum.find(fn {_, pid, pos, pr, psp, _, _} ->
-        pid == id and Hunt.can_eat?(sp, r, spec(env.bounds, psp), pr) and
+        pid == id and Hunt.can_eat?(sp, r, psp, pr) and
           dist(o.pos, pos) <=
             1.2 * Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos))
       end)
@@ -1003,7 +1172,7 @@ defmodule Abyss.World.Sim do
 
   defp approach_or_catch(o, {_, id, ppos, pr, psp, _, pe}, sp, r, env, food) do
     if dist(o.pos, ppos) <= r + pr + @eat_margin do
-      escape = Map.get(spec(env.bounds, psp), :escape, 0.0)
+      escape = Map.get(psp, :escape, 0.0)
 
       if escape > 0 and Hunt.escapes?(escape, o.id, id, env.now_ms),
         do: escaped(o, id, env, food),

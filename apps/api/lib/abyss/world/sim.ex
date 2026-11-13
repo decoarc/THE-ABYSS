@@ -10,7 +10,7 @@ defmodule Abyss.World.Sim do
   """
 
   alias Abyss.Genesis.{Mutation, Traits}
-  alias Abyss.World.{Flora, Grid, Hunt, Life, Organism, Particles, Species}
+  alias Abyss.World.{Branching, Flora, Grid, Hunt, Life, Organism, Particles, Species}
   alias Abyss.World.Map, as: WMap
 
   @edge_margin 3.0
@@ -33,14 +33,23 @@ defmodule Abyss.World.Sim do
 
   @no_events %{changed: [], spawned: [], removed: []}
   @no_totals %{eaten_flora: 0, eaten_particles: 0, particles_expired: 0}
-  @no_life %{deaths: [], births: [], extinct: [], species: [], genomes: []}
+  @no_life %{
+    deaths: [],
+    births: [],
+    extinct: [],
+    species: [],
+    genomes: [],
+    branches: [],
+    rebranch: []
+  }
   @no_eco %{
     births: %{},
     deaths: %{},
     hunts_ok: 0,
     hunts_abandoned: 0,
     hunts_escaped: 0,
-    cap_holds: 0
+    cap_holds: 0,
+    branches: 0
   }
 
   defstruct organisms: [],
@@ -58,6 +67,8 @@ defmodule Abyss.World.Sim do
             eco_totals: @no_eco,
             extinct: %{},
             next_seq: %{},
+            # Espécies povoadas sem passar por `next_seq` (ramos): contam para a extinção.
+            populated: MapSet.new(),
             pending_species: [],
             pending_founders: [],
             catalog: nil,
@@ -90,11 +101,14 @@ defmodule Abyss.World.Sim do
             births: [Organism.t()],
             extinct: [tuple],
             species: [Species.t()],
-            genomes: [{pos_integer, map}]
+            genomes: [{pos_integer, map}],
+            branches: [Species.t()],
+            rebranch: [{String.t(), String.t()}]
           },
           eco_totals: map,
           extinct: %{atom => integer},
           next_seq: %{atom => pos_integer},
+          populated: MapSet.t(),
           pending_species: [Species.t()],
           pending_founders: [Organism.t()],
           catalog: map | nil,
@@ -367,7 +381,8 @@ defmodule Abyss.World.Sim do
     }
   end
 
-  # Varredura periódica (a cada branch_scan_s do relógio do mundo).
+  # Varredura periódica (a cada branch_scan_s do relógio do mundo); os ramos
+  # (`Branching.scan`) rodam no mesmo vencimento, dentro do `step`.
   defp scan(sim, now_ms) do
     if now_ms >= sim.next_scan_ms,
       do: %{collect_genomes(sim) | next_scan_ms: now_ms + scan_ms(sim.ecology)},
@@ -454,15 +469,20 @@ defmodule Abyss.World.Sim do
   end
 
   # Só as 100 extintas criadas (id string) mais recentes ficam; as de teste
-  # (id átomo) nunca saem. Some de `bounds`, `next_seq` e `extinct` juntos.
+  # (id átomo) nunca saem, nem a ancestral (prefixo do id seguido de ".") de
+  # uma espécie registrada viva. Some de `bounds`, `next_seq`, `populated` e
+  # `extinct` juntos.
   defp prune_extinct(%{extinct: extinct} = sim) do
     created = for {id, ms} <- extinct, is_binary(id), do: {ms, id}
 
     if length(created) <= @max_extinct_created do
       sim
     else
+      kept = ancestors_of_live(sim.bounds.species, extinct)
+
       drop =
         created
+        |> Enum.reject(fn {_, id} -> MapSet.member?(kept, id) end)
         |> Enum.sort()
         |> Enum.take(length(created) - @max_extinct_created)
         |> MapSet.new(&elem(&1, 1))
@@ -480,10 +500,21 @@ defmodule Abyss.World.Sim do
         sim
         | bounds: bounds,
           next_seq: Map.filter(sim.next_seq, fn {id, _} -> keep.(id) end),
+          populated: MapSet.filter(sim.populated, keep),
           pending_species: Enum.filter(sim.pending_species, &keep.(&1.id)),
           extinct: Map.filter(extinct, fn {id, _} -> keep.(id) end)
       }
     end
+  end
+
+  defp ancestors_of_live(by_id, extinct) do
+    for {id, _} <- by_id,
+        is_binary(id),
+        not Map.has_key?(extinct, id),
+        parts = String.split(id, "."),
+        n <- 1..(length(parts) - 1)//1,
+        into: MapSet.new(),
+        do: parts |> Enum.take(n) |> Enum.join(".")
   end
 
   @doc "Espécies da simulação, na ordem dada."
@@ -580,9 +611,21 @@ defmodule Abyss.World.Sim do
 
     {food, corpse_events, rng} = bury(dead, eaten, food, sim, now_ms, rng)
 
+    # Ramos: na varredura periódica, depois da remoção dos mortos e antes da
+    # extinção (a mãe que passou todos para o ramo se extingue neste passo).
+    {survivors, sim, branches, rebranch} =
+      if now_ms >= sim.next_scan_ms do
+        {sim, branches, rebranch} = Branching.scan(%{sim | organisms: survivors, now_ms: now_ms})
+        {sim.organisms, sim, branches, rebranch}
+      else
+        {survivors, sim, [], []}
+      end
+
     # Extinção decidida só aqui, depois de mortes e nascimentos do passo.
     next_seq = sim.next_seq
-    {extinct, new_extinct} = detect_extinct(survivors, next_seq, sim.extinct, now_ms)
+
+    {extinct, new_extinct} =
+      detect_extinct(survivors, next_seq, sim.populated, sim.extinct, now_ms)
 
     # Genomas criados no passo (e no registro de espécies desde o passo anterior).
     new_genomes =
@@ -619,7 +662,9 @@ defmodule Abyss.World.Sim do
             births: sim.pending_founders ++ births,
             extinct: new_extinct,
             species: sim.pending_species,
-            genomes: new_genomes
+            genomes: new_genomes,
+            branches: branches,
+            rebranch: rebranch
         },
         # Fundadoras não são nascimentos da ecologia: só as divisões contam.
         eco_totals:
@@ -630,19 +675,20 @@ defmodule Abyss.World.Sim do
           |> Map.update!(:hunts_ok, &(&1 + food.hunts_ok))
           |> Map.update!(:hunts_abandoned, &(&1 + food.hunts_abandoned))
           |> Map.update!(:hunts_escaped, &(&1 + food.hunts_escaped))
+          |> Map.update!(:branches, &(&1 + length(branches)))
     }
     |> prune_extinct()
     |> scan(now_ms)
   end
 
-  # Espécie que já teve indivíduos (`next_seq` > 1) e agora não tem nenhum entra
-  # em `extinct` com o ms do passo; nunca sai.
-  defp detect_extinct(survivors, next_seq, extinct, now_ms) do
+  # Espécie que já teve indivíduos (`next_seq` > 1, ou povoada por um ramo) e
+  # agora não tem nenhum entra em `extinct` com o ms do passo; nunca sai.
+  defp detect_extinct(survivors, next_seq, populated, extinct, now_ms) do
     present = MapSet.new(survivors, & &1.species)
 
     new =
       for {id, seq} <- next_seq,
-          seq > 1,
+          seq > 1 or MapSet.member?(populated, id),
           not Map.has_key?(extinct, id),
           not MapSet.member?(present, id),
           do: {id, now_ms}
@@ -837,6 +883,7 @@ defmodule Abyss.World.Sim do
       hunts_abandoned: t.hunts_abandoned,
       hunts_escaped: t.hunts_escaped,
       cap_holds: t.cap_holds,
+      branches_total: t.branches,
       extinct: extinct
     }
   end

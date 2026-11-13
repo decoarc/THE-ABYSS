@@ -73,8 +73,13 @@ config :abyss, :ecology,
   corpse_particles: {3, 4.0},
   founder_energy: {0.6, 0.9},
   founder_age: 0.5,
-  # Varredura periódica (s do relógio do mundo): coleta de genomas sem vivos (gate S2).
-  branch_scan_s: 10
+  # Varredura periódica (s do relógio do mundo): coleta de genomas sem vivos e ramos (gate S2).
+  branch_scan_s: 10,
+  # Ramo: grupo com a mesma diferença de peças (distância >= branch_diff) da planta da
+  # espécie, com >= branch_min vivos, dos quais >= branch_inherited nasceram sem mutação.
+  branch_diff: 2,
+  branch_min: 5,
+  branch_inherited: 3
 
 # Gênese de espécies (gate S1): link de verificação por e-mail.
 config :abyss, :genesis,

@@ -112,10 +112,18 @@ defmodule Abyss.Genesis do
 
   @spec species_from_record(SpeciesRecord.t()) :: Abyss.World.Species.t()
   def species_from_record(%SpeciesRecord{} = record) do
+    id = "sp#{record.id}"
+
     Traits.species(record.blueprint, Catalog.get(), %{
-      id: "sp#{record.id}",
+      id: id,
       code: record.code,
       name: record.name
+    })
+    |> Map.merge(%{
+      parent: nil,
+      root: id,
+      region: nil,
+      born_ms: record.published_at && DateTime.to_unix(record.published_at, :millisecond)
     })
   end
 

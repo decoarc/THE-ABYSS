@@ -130,6 +130,15 @@ defmodule Abyss.Genesis.BlueprintTest do
     assert Blueprint.part_distance(%{}) == 0
   end
 
+  test "peça espelhada conta 1 na distância", %{cat: _cat} do
+    mouth = part("raspador")
+    a = base([mouth])
+    b = base([mouth, part("flagelo", true)])
+    assert Blueprint.part_delta(a, b) == %{"flagelo" => 1}
+    assert Blueprint.part_distance(Blueprint.part_delta(a, b)) == 1
+    assert Blueprint.part_distance(Blueprint.part_delta(b, a)) == 1
+  end
+
   test "budget: false aceita planta cara mas não planta quebrada", %{cat: cat} do
     cara = base([part("mandibula"), part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
     assert {:error, ["estoura o orçamento"]} = Blueprint.validate(cara, cat)

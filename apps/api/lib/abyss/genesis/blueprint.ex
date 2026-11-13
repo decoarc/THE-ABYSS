@@ -234,11 +234,11 @@ defmodule Abyss.Genesis.Blueprint do
     end)
   end
 
-  @doc "Diferença de instâncias por tipo (b − a), só os não-zero."
+  @doc "Diferença de entradas de `parts` por tipo (b − a); espelhada conta 1. Só os não-zero."
   @spec part_delta(map, map) :: %{String.t() => integer}
   def part_delta(a, b) do
-    ia = instances(a)
-    ib = instances(b)
+    ia = Enum.frequencies_by(a["parts"], & &1["kind"])
+    ib = Enum.frequencies_by(b["parts"], & &1["kind"])
 
     (Map.keys(ia) ++ Map.keys(ib))
     |> Enum.uniq()

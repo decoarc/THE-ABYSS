@@ -76,4 +76,45 @@ defmodule Abyss.Genesis.MutationTest do
     st = :rand.seed_s(:exsss, {5, 5, 5})
     assert Mutation.child(bp, cat, st) == Mutation.child(bp, cat, st)
   end
+
+  test "cada operação muda as peças em distância 1 e swap desliga espelho", %{cat: cat} do
+    cat = %{cat | mutation: %{cat.mutation | part_p: 1.0, drift_p: 0.0}}
+    mouth = %{"kind" => "raspador", "at" => 0.5, "around" => 0.0, "size" => 1.0, "angle" => 0.0, "mirror" => false}
+    flag = %{mouth | "kind" => "flagelo", "mirror" => true}
+    bp = %{planta(cat) | "parts" => [mouth, flag, %{flag | "kind" => "ocelo"}]}
+
+    {kinds, _} =
+      Enum.reduce(1..3000, {MapSet.new(), :rand.seed_s(:exsss, {3, 3, 3})}, fn _, {seen, st} ->
+        {filho, mut, st} = Mutation.child(bp, cat, st)
+        delta = Blueprint.part_delta(bp, filho)
+
+        for p <- filho["parts"], do: assert(not p["mirror"] or cat.parts[p["kind"]].mirror)
+
+        seen =
+          if mut do
+            assert Blueprint.part_distance(delta) == 1
+            vals = delta |> Map.values() |> Enum.sort()
+
+            op =
+              case vals do
+                [1] -> :add
+                [-1] -> :remove
+                [-1, 1] -> :swap
+              end
+
+            seen = MapSet.put(seen, op)
+
+            nm = Enum.any?(filho["parts"], &(&1["kind"] in ["cardume", "gancho"]))
+            if nm, do: assert(Enum.all?(filho["parts"], &(&1["kind"] not in ["cardume", "gancho"] or &1["mirror"] == false)))
+            if nm and op == :swap, do: MapSet.put(seen, :swap_nao_espelhavel), else: seen
+          else
+            assert delta == %{}
+            seen
+          end
+
+        {seen, st}
+      end)
+
+    assert MapSet.subset?(MapSet.new([:add, :remove, :swap, :swap_nao_espelhavel]), kinds)
+  end
 end

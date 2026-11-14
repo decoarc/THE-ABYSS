@@ -15,7 +15,7 @@ p50 ≤ 16,7 ms, parado (floresta) e voando (`?flypath`, percurso).
 
 | Arquivo | O que é |
 | --- | --- |
-| `perf.json` | suíte `s2` completa: todos os cenários nas duas GPUs, e a contagem de programas com 2 min de nascimentos e resync forçado. |
+| `perf.json` | suíte `s2` completa: todos os cenários nas duas GPUs, e a contagem de programas com 2 min de nascimentos e resync forçado; mais as 2 execuções da repetição do percurso Arc `low` com 229 genomas (`rerun: true`). |
 | `carga-2026-11-14T16-47-50-872Z.{md,json}` | 1ª carga (50 observadores, 1800 s, sem aquecimento) com o mundo restaurado do banco: **FAIL** na memória (ver abaixo). |
 | `carga-2026-11-14T17-19-09-551Z.{md,json}` | 2ª carga (mesma, com `--warmup 600`): **PASS**. É a oficial. |
 
@@ -28,12 +28,22 @@ mutação extingue algumas).
 | GPU · qualidade | Cenário | Criadas vivas | Genomas | p50 | p95 | > 33 ms | > 50 ms | programas ligados | Critério | Resultado |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Arc · low | floresta (parado) | 35/50 | 228 | 16,7 | 16,7 | 0 | 0 | 0 | p95 ≤ 33 | **PASS** |
-| Arc · low | percurso (voando) | 50/50 | 82 | 16,7 | 16,8 | 21 | 17 | 0 | p95 ≤ 33 | **PASS** |
+| Arc · low | percurso (voando) | 50/50 | 82 | 16,7 | 16,8 | 21 | 17 | 0 | p95 ≤ 33 | PASS (só 82 genomas: ver a repetição) |
+| Arc · low | percurso, **repetição com 229 genomas** | 30/50 | 229 | 16,7 | 16,7 | 0 | 0 | 0 | p95 ≤ 33 | **PASS** |
 | RTX · high | floresta (parado) | 33/50 | 226 | 16,7 | 16,8 | 0 | 0 | 0 | p50 ≤ 16,7 | **PASS** |
 | RTX · high | percurso (voando) | 35/50 | 216 | 16,7 | 16,7 | 0 | 0 | 0 | p50 ≤ 16,7 | **PASS** |
 
 Os dois critérios do orçamento passam (Arc low p95 16,8 ms; RTX high p50 16,7 ms) e a contagem de programas ligados
-depois do aquecimento é 0 em todas as janelas. **Um alvo auxiliar do script reprova:** "0 quadros > 50 ms depois do
+depois do aquecimento é 0 em todas as janelas. **Repetição do percurso Arc `low` com ~250 genomas:** o percurso Arc `low` da suíte rodou cedo (20 min de mundo), com só 82
+genomas distintos na aba, então o seu PASS não cobria os 250 genomas pedidos. Repeti só esse cenário
+(`--only`), num mundo refeito do zero com o mesmo método (reset, 50 criadas, mutação ×8) e 40 min de mundo: **229
+genomas distintos** (250 organismos). Resultado: 2ª volta p50 16,7 / p95 16,7, **0 quadros > 33 ms, 0 > 50 ms**, 0
+programas ligados (1ª volta, de aquecimento: 3 quadros > 33 ms, máx 717 ms, a compilação inicial). Sem vsync (informativo)
+a 2ª volta teve p95 28,9 ms, 248 quadros > 33 ms e 76 tarefas longas (rajadas, o ponto Arc/CPU já registrado), o que o
+critério com vsync não vê. Entra em `perf.json` como as duas execuções marcadas "repetição". A rajada de 17 quadros
+> 50 ms da execução com 82 genomas não se repetiu com 229 genomas; ela não depende do número de genomas.
+
+**O alvo auxiliar do script que reprovou na suíte original:** "0 quadros > 50 ms depois do
 aquecimento" deu 17, todos na 2ª volta do percurso Arc `low` (21 quadros > 33 ms, máx 150 ms, p95 ainda 16,8). É o
 mesmo ponto já registrado no S1 (Arc: rajadas de quadros longos, provável disputa de CPU com Docker/WSL2 e o
 Chromium); a mesma volta Arc `high` e todas as da RTX tiveram 0. Registrado, não ajustado.

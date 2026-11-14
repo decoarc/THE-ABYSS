@@ -1798,6 +1798,450 @@
         "particles": 800,
         "step_us_max": 48276
       }
+    },
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low · repetição com ~230 genomas (mundo de 40 min)",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": true,
+      "api": {
+        "world_id": "cf1de400387acdc121ba1b1887f0a897",
+        "uptime_ms": 2446992,
+        "population": 250,
+        "births_total": 491,
+        "deaths_total": {
+          "starvation": 110,
+          "predation": 196,
+          "old_age": 335
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 170.926,
+        "particles": 799,
+        "step_us_max": 76377
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 171.34000019356608,
+        "particles": 796
+      },
+      "programs": {
+        "start": 21,
+        "end": 22
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 30,
+        "organisms": 248,
+        "createdOrganisms": 240,
+        "distinctGenomes": 229
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 5197,
+          "p50": 16.7,
+          "p95": 16.8,
+          "p99": 16.8,
+          "max": 716.7,
+          "over33": 3,
+          "over50": 2,
+          "longTasks": 1,
+          "longTaskMaxMs": 113,
+          "programLinks": 4,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 716.7
+            },
+            {
+              "atS": 0,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 716.7
+            },
+            {
+              "atS": 0.1,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 716.7
+            },
+            {
+              "atS": 36.6,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 100
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.2,
+              "ms": 716.7
+            },
+            {
+              "atS": 36.6,
+              "ms": 100
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 5215,
+          "p50": 16.7,
+          "p95": 16.7,
+          "p99": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "over50": 0,
+          "longTasks": 0,
+          "longTaskMaxMs": 0,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": []
+        }
+      ],
+      "population": {
+        "min": 246,
+        "max": 250,
+        "samples": 72
+      },
+      "apiEnd": {
+        "world_id": "cf1de400387acdc121ba1b1887f0a897",
+        "uptime_ms": 2626255,
+        "population": 248,
+        "births_total": 510,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 205,
+          "old_age": 335
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 181.658,
+        "particles": 797,
+        "step_us_max": 76377
+      },
+      "rerun": true
+    },
+    {
+      "label": "percurso · GPU padrão (Intel Arc) · low · sem vsync · repetição com ~230 genomas (mundo de 40 min)",
+      "scenario": "percurso",
+      "gpu": "arc",
+      "quality": "low",
+      "vsync": false,
+      "api": {
+        "world_id": "cf1de400387acdc121ba1b1887f0a897",
+        "uptime_ms": 2627596,
+        "population": 249,
+        "births_total": 511,
+        "deaths_total": {
+          "starvation": 122,
+          "predation": 205,
+          "old_age": 335
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 181.852,
+        "particles": 796,
+        "step_us_max": 76377
+      },
+      "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "lapS": 86.9,
+      "food": {
+        "floraSum": 182.1399999372661,
+        "particles": 794
+      },
+      "programs": {
+        "start": 21,
+        "end": 22
+      },
+      "world": {
+        "species": 55,
+        "createdSpecies": 50,
+        "createdSpeciesAlive": 30,
+        "organisms": 250,
+        "createdOrganisms": 242,
+        "distinctGenomes": 231
+      },
+      "programLinksBeforePath": 18,
+      "laps": [
+        {
+          "seconds": 86.9,
+          "frames": 11921,
+          "p50": 7.2,
+          "p95": 9.7,
+          "p99": 11.5,
+          "max": 642.2,
+          "over33": 2,
+          "over50": 2,
+          "longTasks": 1,
+          "longTaskMaxMs": 117,
+          "programLinks": 4,
+          "links": [
+            {
+              "atS": 0,
+              "shader": "MeshBasicMaterial pl0",
+              "frameMs": 642.2
+            },
+            {
+              "atS": 0,
+              "shader": "ShaderMaterial [uTime,uSwim,uSkin,uGlow,uFade] pl0",
+              "frameMs": 642.2
+            },
+            {
+              "atS": 0.1,
+              "shader": "ShaderMaterial [uSkin,uGlow,uPattern,uPulse,uFade] pl0",
+              "frameMs": 642.2
+            },
+            {
+              "atS": 35.6,
+              "shader": "ShaderMaterial [uTime,uWobble,uBreath,uRim,uInner] pl0",
+              "frameMs": 125.3
+            }
+          ],
+          "slowFrames": [
+            {
+              "atS": 0.2,
+              "ms": 642.2
+            },
+            {
+              "atS": 35.7,
+              "ms": 125.3
+            }
+          ]
+        },
+        {
+          "seconds": 86.9,
+          "frames": 8975,
+          "p50": 7.2,
+          "p95": 28.9,
+          "p99": 37.8,
+          "max": 1549.9,
+          "over33": 248,
+          "over50": 47,
+          "longTasks": 76,
+          "longTaskMaxMs": 1565,
+          "programLinks": 0,
+          "links": [],
+          "slowFrames": [
+            {
+              "atS": 40.1,
+              "ms": 56.3
+            },
+            {
+              "atS": 40.2,
+              "ms": 58.8
+            },
+            {
+              "atS": 62,
+              "ms": 64.4
+            },
+            {
+              "atS": 62,
+              "ms": 57.3
+            },
+            {
+              "atS": 62.1,
+              "ms": 54.8
+            },
+            {
+              "atS": 62.2,
+              "ms": 56.9
+            },
+            {
+              "atS": 62.3,
+              "ms": 55.3
+            },
+            {
+              "atS": 62.4,
+              "ms": 57.3
+            },
+            {
+              "atS": 62.5,
+              "ms": 62.3
+            },
+            {
+              "atS": 62.6,
+              "ms": 68.6
+            },
+            {
+              "atS": 62.9,
+              "ms": 54.1
+            },
+            {
+              "atS": 63.3,
+              "ms": 67.7
+            },
+            {
+              "atS": 63.5,
+              "ms": 60.3
+            },
+            {
+              "atS": 63.8,
+              "ms": 59.7
+            },
+            {
+              "atS": 63.9,
+              "ms": 68
+            },
+            {
+              "atS": 64.3,
+              "ms": 58.2
+            },
+            {
+              "atS": 64.4,
+              "ms": 60.3
+            },
+            {
+              "atS": 64.7,
+              "ms": 59.4
+            },
+            {
+              "atS": 64.8,
+              "ms": 56.7
+            },
+            {
+              "atS": 65,
+              "ms": 56.3
+            },
+            {
+              "atS": 65.1,
+              "ms": 61.1
+            },
+            {
+              "atS": 65.3,
+              "ms": 58.1
+            },
+            {
+              "atS": 65.4,
+              "ms": 62.3
+            },
+            {
+              "atS": 66,
+              "ms": 60.6
+            },
+            {
+              "atS": 66,
+              "ms": 60.3
+            },
+            {
+              "atS": 66.4,
+              "ms": 59.5
+            },
+            {
+              "atS": 66.5,
+              "ms": 58.9
+            },
+            {
+              "atS": 66.6,
+              "ms": 56.6
+            },
+            {
+              "atS": 68.3,
+              "ms": 1549.9
+            },
+            {
+              "atS": 73.4,
+              "ms": 59.1
+            },
+            {
+              "atS": 84,
+              "ms": 55.1
+            },
+            {
+              "atS": 84.1,
+              "ms": 63.4
+            },
+            {
+              "atS": 84.2,
+              "ms": 57.2
+            },
+            {
+              "atS": 84.3,
+              "ms": 57
+            },
+            {
+              "atS": 84.7,
+              "ms": 62.7
+            },
+            {
+              "atS": 85,
+              "ms": 53.9
+            },
+            {
+              "atS": 85.1,
+              "ms": 55
+            },
+            {
+              "atS": 85.4,
+              "ms": 61.8
+            },
+            {
+              "atS": 85.5,
+              "ms": 59.2
+            },
+            {
+              "atS": 85.6,
+              "ms": 66.5
+            },
+            {
+              "atS": 85.8,
+              "ms": 60.6
+            },
+            {
+              "atS": 85.8,
+              "ms": 59.1
+            },
+            {
+              "atS": 85.9,
+              "ms": 62.6
+            },
+            {
+              "atS": 86,
+              "ms": 67.4
+            },
+            {
+              "atS": 86.3,
+              "ms": 56
+            },
+            {
+              "atS": 86.8,
+              "ms": 60.5
+            },
+            {
+              "atS": 86.9,
+              "ms": 62.2
+            }
+          ]
+        }
+      ],
+      "population": {
+        "min": 249,
+        "max": 250,
+        "samples": 67
+      },
+      "apiEnd": {
+        "world_id": "cf1de400387acdc121ba1b1887f0a897",
+        "uptime_ms": 2806120,
+        "population": 250,
+        "births_total": 519,
+        "deaths_total": {
+          "starvation": 126,
+          "predation": 208,
+          "old_age": 335
+        },
+        "flora_patches": 200,
+        "flora_level_sum": 187.232,
+        "particles": 798,
+        "step_us_max": 76377
+      },
+      "rerun": true
     }
-  ]
+  ],
+  "rerun_meta": {
+    "date": "2026-11-14T18:50:13.108Z",
+    "base": "http://localhost:4174/",
+    "suite": "s2",
+    "seed": null,
+    "viewport": "1920×1080"
+  }
 }

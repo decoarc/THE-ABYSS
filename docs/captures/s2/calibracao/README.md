@@ -165,3 +165,24 @@ A rodada 3 ficou como final. Ela melhora todas as metas em relação ao "antes" 
   - S2: média 3,4 ms, p99 6,2 ms
   - E2: média 2,7 ms, p99 5,2 ms
   - S1: média 3,3 ms, p99 6,7 ms
+
+## Parada 1: mandíbula com `effect.perception` 6,0 → 5,0
+
+Ajuste do autor: com 6,0 o predador (base 4,0 + 6,0) saturava o teto de percepção 10 e o ocelo não servia a ele. Com 5,0, o ocelo volta a valer. Só o catálogo mudou (e `traits.perception` da fixture "mandibula": 10,0 → 9,0). Mesmas sementes e opções da rodada 3 (`--genesis 10 --no-test-species`, sementes 1–5).
+
+| semente | 1º ramo (min) | ramos@90 | árvores vivas @60 | predadores @60 | maior árvore @90 |
+|---|---|---|---|---|---|
+| 1 | 54 | 8 | 1 | 0 | sp3 100% |
+| 2 | 22 | 4 | 8 | 4 | sp1 34,3% |
+| 3 | 19 | 7 | 5 | 0 | sp10 42,4% |
+| 4 | 19 | 4 | 5 | 3 | sp7 47,2% |
+| 5 | 32 | 13 | 3 | 23 | sp6 52,0% |
+
+| meta | rodada 3 (6,0) | com 5,0 |
+|---|---|---|
+| 1 | mediana 50 | mediana 22 (abaixo da faixa 30–60), todas com ramo |
+| 2 | mediana 5 | mediana 5 |
+| 3 | 5/5 | 3/5 (cumpre o piso do plano, ≥ 3/5) |
+| 4 | 2 sementes | 1 semente (s1 100%, boom-bust) |
+
+O autor aceitou este resultado na Parada 1, em 2026-11-14.

@@ -26,7 +26,7 @@
   "parts": {
     "raspador":  { "group": "boca", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.005, "diet": "flora" },
     "filtro":    { "group": "boca", "cost": 2, "step": 0, "max": 1, "mirror": false, "metab": 0.005, "diet": "particles" },
-    "mandibula": { "group": "boca", "cost": 4, "step": 0, "max": 1, "mirror": false, "metab": 0.0, "diet": "predator", "effect": { "perception": 6.0 } },
+    "mandibula": { "group": "boca", "cost": 4, "step": 0, "max": 1, "mirror": false, "metab": 0.0, "diet": "predator", "effect": { "perception": 5.0 } },
     "flagelo":   { "group": "movimento", "cost": 3, "step": 1, "max": 4, "mirror": true,  "metab": 0.010, "effect": { "max_speed": 0.12 } },
     "cilios":    { "group": "movimento", "cost": 2, "step": 1, "max": 4, "mirror": true,  "metab": 0.0075, "effect": { "burst": 0.3 } },
     "aleta":     { "group": "movimento", "cost": 2, "step": 1, "max": 4, "mirror": true,  "metab": 0.005, "effect": { "turn_rate": 0.35 } },

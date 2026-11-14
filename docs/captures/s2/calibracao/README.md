@@ -13,7 +13,7 @@ docker compose -f infra/compose/compose.yaml run --rm api \
   mix abyss.eco --seed S --minutes 90 --genesis 50 --no-test-species   # S = 1..3 (meta 5)
 ```
 
-As corridas de cada rodada rodaram em um container só, com as 5 sementes em paralelo. Os CSVs ficaram fora do repositório. As colunas usadas são estas:
+As corridas de cada rodada rodaram com um container por vez, depois de checar a memória, sem corridas simultâneas. Os CSVs ficaram fora do repositório. As colunas usadas são estas:
 - `branches_total`: o primeiro minuto com valor > 0 é o 1º ramo.
 - `trees_alive`: lida no minuto 60.
 - `predators`: vivos de dieta predadora pelo genoma, no minuto 60.

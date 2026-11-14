@@ -795,10 +795,10 @@ defmodule Abyss.World.SimTest do
       end)
     end
 
-    test "caçador come presa jovem" do
-      sim = hunt_world([hunter(@open), young(shift(@open, -3.0))])
+    # Roda a caça até a presa sumir e devolve o ganho esperado pela regra
+    # ganho = prey_base + prey_yield × energia da presa, mais o que o caçador tinha e o teto.
+    defp hunt_result(sim) do
       {n, before, after_, spawned} = until_gone(sim, "CEL-0001", 150)
-
       assert n != nil
       assert after_.life_events.deaths == [{"CEL-0001", :predation}]
       assert spawned == []
@@ -810,8 +810,26 @@ defmodule Abyss.World.SimTest do
       h1 = find(after_, "FIL-0001")
       gain = sim.ecology.prey_base + sim.ecology.prey_yield * prey.energy
       cap = Sim.traits_of(after_, h1).energy_max
-      assert_in_delta h1.energy, min(h0.energy + gain, cap), 0.5
       assert h1.target == nil and h1.sated_left > 0
+      {h0, h1, gain, cap}
+    end
+
+    test "caçador come presa jovem: ganho = prey_base + prey_yield × energia da presa" do
+      # Ganho pequeno e fixo: energia + ganho fica longe do teto, então a fórmula aparece inteira.
+      sim = hunt_world([hunter(@open), young(shift(@open, -3.0))])
+      sim = %{sim | ecology: %{sim.ecology | prey_base: 10.0, prey_yield: 0.5}}
+
+      {h0, h1, gain, cap} = hunt_result(sim)
+      assert h0.energy + gain < cap
+      assert_in_delta h1.energy, h0.energy + gain, 0.5
+    end
+
+    test "caçador come presa jovem: ganho limitado ao teto de energia" do
+      sim = hunt_world([hunter(@open), young(shift(@open, -3.0))])
+
+      {h0, h1, gain, cap} = hunt_result(sim)
+      assert h0.energy + gain > cap
+      assert_in_delta h1.energy, cap, 0.5
     end
 
     test "presa com placa escapa do bote" do
@@ -859,8 +877,16 @@ defmodule Abyss.World.SimTest do
     end
 
     test "caçador cheio não caça" do
-      # Cheio: acima de hunt_below × energy_max durante os 3 s.
-      sim = hunt_world([hunter(@open, energy: 100.0), young(shift(@open, -3.0))])
+      # Cheio: energia no teto, acima de hunt_below × energy_max durante os 3 s.
+      base = hunt_world([hunter(@open), young(shift(@open, -3.0))])
+      full = Sim.traits_of(base, find(base, "FIL-0001")).energy_max
+      assert full > base.ecology.hunt_below * full
+
+      sim = %{
+        base
+        | organisms:
+            Enum.map(base.organisms, &if(&1.id == "FIL-0001", do: %{&1 | energy: full}, else: &1))
+      }
 
       final =
         Enum.reduce(1..30, sim, fn _, s ->

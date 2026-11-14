@@ -68,8 +68,9 @@ defmodule Abyss.Genesis.TraitsTest do
     assert sp.id == "sp1" and sp.code == "S01" and sp.name == "Teste"
     assert sp.run_s == nil and sp.pause_s == nil
     assert sp.diet == :flora and sp.school == false and sp.shelter == false
-    assert sp.max_speed == 0.25 and sp.escape == 0.0 and sp.wander == 0.3
-    assert sp.sated_s == 12 and sp.energy_max == 150.0
+    assert sp.max_speed == cat.base.max_speed and sp.escape == cat.base.escape
+    assert sp.wander == cat.base.wander
+    assert sp.sated_s == cat.base.sated_s and sp.energy_max == cat.base.energy_max
     assert is_map(sp.blueprint)
   end
 

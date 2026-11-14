@@ -1,17 +1,49 @@
 // E2E da evolução (gate S2): um ramo (sub-espécie) aparece na árvore da espécie e se seleciona por ela.
 // Pré-requisitos: `pnpm api:up` (dev) e `pnpm build` (o script sobe o preview).
-// ATENÇÃO: começa com o reset total da gênese (`mix abyss.reset --yes`), como o e2e:genesis.
+// ATENÇÃO: este cenário esvazia a gênese (`mix abyss.reset --yes`). Para não destruir o mundo de dev, o script faz
+// pg_dump do banco antes e o restaura ao fim (também se falhar), reiniciando a API. (O run.mjs não mexe no banco.)
 // O ramo não espera nascer na natureza (com boost alto nenhum ramo se firma; com 1,5 leva ~30 min): o
 // script grava um ramo no banco (`mix abyss.seed_branch`, planta da raiz + 2 peças) e reinicia a API,
 // que no boot o restaura e faz nascer as fundadoras.
 // Uso: node scripts/e2e/evolution.mjs   (E2E_NEGATE=1 inverte a asserção principal, para ver falhar)
+import { spawn } from 'node:child_process';
+import { mkdtempSync, openSync, closeSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import assert from 'node:assert/strict';
-import { API, COMPOSE, exec, expectOk, openWorld, restartApi, scenario, withPreview } from './harness.mjs';
+import { API, COMPOSE, exec, expectOk, openWorld, restartApi, scenario, waitHttp, withPreview } from './harness.mjs';
 
 const mix = (...args) => exec('docker', ['compose', '-f', COMPOSE, 'run', '--rm', 'api', 'mix', ...args], { timeout: 300_000 });
 const BRANCH_TIMEOUT_MS = Number(process.env.E2E_BRANCH_S ?? 600) * 1000;
 
+const dumpDir = mkdtempSync(join(tmpdir(), 'abyss-e2e-'));
+const dumpFile = join(dumpDir, 'abyss_dev.dump');
+const dc = (args, { stdin, stdout } = {}) =>
+  new Promise((resolve, reject) => {
+    const fdIn = stdin ? openSync(stdin, 'r') : 'ignore';
+    const fdOut = stdout ? openSync(stdout, 'w') : 'ignore';
+    const p = spawn('docker', ['compose', '-f', COMPOSE, ...args], { stdio: [fdIn, fdOut, 'inherit'] });
+    p.on('exit', (code) => {
+      if (stdin) closeSync(fdIn);
+      if (stdout) closeSync(fdOut);
+      code === 0 ? resolve() : reject(new Error(`docker compose ${args.join(' ')} saiu com ${code}`));
+    });
+  });
+console.log(`dump do banco de dev em ${dumpFile}…`);
+await dc(['exec', '-T', 'db', 'pg_dump', '-U', 'postgres', '-Fc', 'abyss_dev'], { stdout: dumpFile });
+
+async function restoreDb() {
+  console.log('restaurando o banco de dev…');
+  await dc(['stop', 'api']);
+  await dc(['exec', '-T', 'db', 'psql', '-U', 'postgres', '-c', 'DROP DATABASE abyss_dev WITH (FORCE)', '-c', 'CREATE DATABASE abyss_dev']);
+  await dc(['exec', '-T', 'db', 'pg_restore', '-U', 'postgres', '-d', 'abyss_dev'], { stdin: dumpFile });
+  await dc(['start', 'api']);
+  await waitHttp(`${API}/api/health`, 120_000);
+  rmSync(dumpDir, { recursive: true, force: true });
+}
+
+try {
 console.log('reset da gênese, semeadura de 1 espécie e de 1 ramo, reinício da API…');
 await mix('abyss.reset', '--yes');
 await mix('abyss.seed_species', '--count', '1', '--seed', '3');
@@ -53,3 +85,6 @@ await withPreview(async (browser) => {
     await page.close();
   });
 });
+} finally {
+  await restoreDb();
+}

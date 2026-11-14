@@ -13,9 +13,12 @@ defmodule Abyss.World.LifeTest do
     assert_in_delta Life.drain(org(energy: 50.0), @sp, @eco, 1.0), 50.0 - @sp.metabolism, 1.0e-9
   end
 
-  test "nadando no máximo gasta 2,5×" do
+  test "nadando no máximo gasta (1 + swim_cost)×" do
     o = org(energy: 50.0, vel: {@sp.max_speed, 0.0, 0.0})
-    assert_in_delta Life.drain(o, @sp, @eco, 1.0), 50.0 - @sp.metabolism * 2.5, 1.0e-9
+
+    assert_in_delta Life.drain(o, @sp, @eco, 1.0),
+                    50.0 - @sp.metabolism * (1 + @eco.swim_cost),
+                    1.0e-9
   end
 
   test "gain não passa do máximo" do

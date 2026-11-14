@@ -26,6 +26,7 @@ defmodule Abyss.World.Sim do
   # gigante no Poisson das partículas (Knuth degrada com lambda grande).
   @max_food_dt 0.5
   @eat_margin 0.6
+  # Padrão da deriva rumo à região rica, se o bloco :ecology não trouxer drift_weight.
   @drift_weight 0.15
   @max_body_radius 1.6
   @founder_spread 1.5
@@ -1088,7 +1089,7 @@ defmodule Abyss.World.Sim do
       o = %{o | sated_left: 0.0}
 
       case valid_target(o.target, env, food) || find_target(o, sp, env, food) do
-        nil -> {%{o | target: nil}, drift(o, sp, env.bounds), food}
+        nil -> {%{o | target: nil}, drift(o, sp, env), food}
         target -> approach_or_eat(%{o | target: target}, target, sp, r, env, food)
       end
     end
@@ -1167,11 +1168,12 @@ defmodule Abyss.World.Sim do
   end
 
   # Faminto e sem nada à vista: deriva rumo ao centro da região mais rica na sua dieta.
-  defp drift(o, sp, bounds) do
+  defp drift(o, sp, %{bounds: bounds, eco: eco}) do
     {cx, cz} = Map.fetch!(bounds.richest, sp.diet)
     {x, _, z} = o.pos
     {ux, _, uz} = unit({cx - x, 0.0, cz - z})
-    {ux * @drift_weight * sp.max_speed, 0.0, uz * @drift_weight * sp.max_speed}
+    w = Map.get(eco, :drift_weight, @drift_weight) * sp.max_speed
+    {ux * w, 0.0, uz * w}
   end
 
   # --- caça e fuga --------------------------------------------------------------

@@ -24,7 +24,14 @@ defmodule Abyss.Genesis.TraitsTest do
   defp part(kind), do: part(kind, false)
 
   defp part(kind, mirror) do
-    %{"kind" => kind, "at" => 0.5, "around" => 0.0, "size" => 1.0, "angle" => 0.0, "mirror" => mirror}
+    %{
+      "kind" => kind,
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 1.0,
+      "angle" => 0.0,
+      "mirror" => mirror
+    }
   end
 
   defp traits(bp, cat) do
@@ -61,8 +68,8 @@ defmodule Abyss.Genesis.TraitsTest do
     assert sp.id == "sp1" and sp.code == "S01" and sp.name == "Teste"
     assert sp.run_s == nil and sp.pause_s == nil
     assert sp.diet == :flora and sp.school == false and sp.shelter == false
-    assert sp.max_speed == 0.15 and sp.escape == 0.0 and sp.wander == 0.3
-    assert sp.sated_s == 12 and sp.energy_max == 100.0
+    assert sp.max_speed == 0.25 and sp.escape == 0.0 and sp.wander == 0.3
+    assert sp.sated_s == 12 and sp.energy_max == 150.0
     assert is_map(sp.blueprint)
   end
 
@@ -91,8 +98,8 @@ defmodule Abyss.Genesis.TraitsTest do
   test "rendimento decrescente e tetos", %{cat: cat} do
     one = traits(base([part("raspador"), part("flagelo")]), cat)
     two = traits(base([part("raspador"), part("flagelo"), part("flagelo")]), cat)
-    assert_in_delta one.max_speed, 0.15 + 0.12, 1.0e-12
-    assert_in_delta two.max_speed, 0.15 + 0.12 + 0.12 * 0.7, 1.0e-12
+    assert_in_delta one.max_speed, cat.base.max_speed + 0.12, 1.0e-12
+    assert_in_delta two.max_speed, cat.base.max_speed + 0.12 + 0.12 * 0.7, 1.0e-12
 
     ocelos = traits(base([part("raspador"), part("ocelo", true), part("ocelo", true)]), cat)
     assert ocelos.perception <= 10.0

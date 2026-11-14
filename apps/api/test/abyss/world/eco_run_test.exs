@@ -31,7 +31,7 @@ defmodule Abyss.EcoRunTest do
   end
 
   test "--genesis 3 --no-test-species com ramos no CSV, repetível" do
-    args = ~w(--seed 3 --minutes 22 --genesis 3 --no-test-species --mutation-boost 12)
+    args = ~w(--seed 3 --minutes 22 --genesis 3 --no-test-species --mutation-boost 1.5)
     csv = Mix.Tasks.Abyss.Eco.csv(args)
     assert csv == Mix.Tasks.Abyss.Eco.csv(args)
 

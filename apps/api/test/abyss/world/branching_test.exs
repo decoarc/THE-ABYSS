@@ -63,6 +63,12 @@ defmodule Abyss.World.BranchingTest do
         creature_scale: 0.5,
         test_species: false,
         food: %{@food | particle_rate: 0.0},
+        # Limiar fixo (5 vivos, 3 herdados): os testes medem a regra, não a calibração.
+        ecology:
+          :abyss
+          |> Application.fetch_env!(:ecology)
+          |> Map.new()
+          |> Map.merge(%{branch_min: 5, branch_inherited: 3}),
         catalog: cat()
       })
 

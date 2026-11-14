@@ -34,6 +34,9 @@ defmodule Abyss.Genesis.MutationTest do
   end
 
   test "frequência de mutação de peça", %{cat: cat} do
+    # part_p fixo e baixo: com part_p alto, as operações recusadas pelos limites
+    # (nil) já tiram a taxa medida da tolerância.
+    cat = %{cat | mutation: %{cat.mutation | part_p: 0.06}}
     bp = planta(cat)
     m = cat.mutation
     n = 20_000
@@ -79,7 +82,16 @@ defmodule Abyss.Genesis.MutationTest do
 
   test "cada operação muda as peças em distância 1 e swap desliga espelho", %{cat: cat} do
     cat = %{cat | mutation: %{cat.mutation | part_p: 1.0, drift_p: 0.0}}
-    mouth = %{"kind" => "raspador", "at" => 0.5, "around" => 0.0, "size" => 1.0, "angle" => 0.0, "mirror" => false}
+
+    mouth = %{
+      "kind" => "raspador",
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 1.0,
+      "angle" => 0.0,
+      "mirror" => false
+    }
+
     flag = %{mouth | "kind" => "flagelo", "mirror" => true}
     bp = %{planta(cat) | "parts" => [mouth, flag, %{flag | "kind" => "ocelo"}]}
 
@@ -105,7 +117,16 @@ defmodule Abyss.Genesis.MutationTest do
             seen = MapSet.put(seen, op)
 
             nm = Enum.any?(filho["parts"], &(&1["kind"] in ["cardume", "gancho"]))
-            if nm, do: assert(Enum.all?(filho["parts"], &(&1["kind"] not in ["cardume", "gancho"] or &1["mirror"] == false)))
+
+            if nm,
+              do:
+                assert(
+                  Enum.all?(
+                    filho["parts"],
+                    &(&1["kind"] not in ["cardume", "gancho"] or &1["mirror"] == false)
+                  )
+                )
+
             if nm and op == :swap, do: MapSet.put(seen, :swap_nao_espelhavel), else: seen
           else
             assert delta == %{}

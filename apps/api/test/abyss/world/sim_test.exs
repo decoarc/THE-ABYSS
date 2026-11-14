@@ -809,7 +809,8 @@ defmodule Abyss.World.SimTest do
       prey = find(before, "CEL-0001")
       h1 = find(after_, "FIL-0001")
       gain = sim.ecology.prey_base + sim.ecology.prey_yield * prey.energy
-      assert_in_delta h1.energy, h0.energy + gain, 0.5
+      cap = Sim.traits_of(after_, h1).energy_max
+      assert_in_delta h1.energy, min(h0.energy + gain, cap), 0.5
       assert h1.target == nil and h1.sated_left > 0
     end
 
@@ -858,7 +859,8 @@ defmodule Abyss.World.SimTest do
     end
 
     test "caçador cheio não caça" do
-      sim = hunt_world([hunter(@open, energy: 80.0), young(shift(@open, -3.0))])
+      # Cheio: acima de hunt_below × energy_max durante os 3 s.
+      sim = hunt_world([hunter(@open, energy: 100.0), young(shift(@open, -3.0))])
 
       final =
         Enum.reduce(1..30, sim, fn _, s ->

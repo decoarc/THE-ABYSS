@@ -307,6 +307,57 @@ defmodule Abyss.Genesis do
     :ok
   end
 
+  @doc """
+  Só para teste e medição: grava um ramo `sp<root>.<k>` da espécie criada `root_id`, com a planta da
+  raiz mais duas peças a mais (diferença de peças >= 2, como um ramo nascido no mundo). O próximo boot
+  o carrega e o faz nascer. Devolve o registro.
+  """
+  @spec seed_branch!(pos_integer) :: BranchRecord.t()
+  def seed_branch!(root_id) do
+    root = Repo.get!(SpeciesRecord, root_id, log: false)
+    cat = Catalog.get()
+    mother = "sp#{root.id}"
+    k = Map.get(branch_seq(), mother, 0) + 1
+
+    bp =
+      cat.parts
+      |> Enum.reject(fn {_, spec} -> spec.group == "boca" end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.sort()
+      |> Enum.reduce(root.blueprint, fn kind, bp ->
+        if Blueprint.part_distance(Blueprint.part_delta(root.blueprint, bp)) >= 2,
+          do: bp,
+          else: try_add_part(bp, kind, cat)
+      end)
+
+    if Blueprint.part_distance(Blueprint.part_delta(root.blueprint, bp)) < 2,
+      do: raise("não deu para derivar um ramo da planta de #{mother}")
+
+    Repo.insert!(
+      %BranchRecord{
+        id: "#{mother}.#{k}",
+        root_species_id: root.id,
+        parent_id: mother,
+        name: "#{root.name} · Jardim",
+        code: "#{root.code}.#{k}",
+        blueprint: bp,
+        region: "jardim",
+        born_at: DateTime.utc_now()
+      },
+      log: false
+    )
+  end
+
+  defp try_add_part(bp, kind, cat) do
+    part = %{"kind" => kind, "at" => 0.5, "around" => 0.0, "size" => 0.5, "angle" => 0.0, "mirror" => false}
+    cand = %{bp | "parts" => bp["parts"] ++ [part]}
+
+    case Blueprint.validate(cand, cat, budget: false) do
+      {:ok, _} -> cand
+      _ -> bp
+    end
+  end
+
   defp publish(token) do
     hash = :crypto.hash(:sha256, token)
     now = DateTime.utc_now()

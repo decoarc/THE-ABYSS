@@ -8,7 +8,7 @@ defmodule Abyss.Genesis.Mutation do
 
   alias Abyss.Genesis.{Blueprint, Catalog}
 
-  @pi 3.14
+  @pi :math.pi()
 
   @spec child(map, Catalog.t(), :rand.state()) :: {map, boolean, :rand.state()}
   def child(bp, cat, st) do
@@ -64,12 +64,20 @@ defmodule Abyss.Genesis.Mutation do
   defp swap_mouth(bp, cat, st) do
     idx = bp["parts"] |> Enum.find_index(&(cat.parts[&1["kind"]].group == "boca"))
     current = Enum.at(bp["parts"], idx)["kind"]
-    {kind, st} = pick(st, kinds(cat, true) -- [current])
-    {finish(bp, cat, List.update_at(bp["parts"], idx, &%{&1 | "kind" => kind})), st}
+    case pick(st, kinds(cat, true) -- [current]) do
+      {nil, st} -> {nil, st}
+      {kind, st} -> {finish(bp, cat, List.update_at(bp["parts"], idx, &%{&1 | "kind" => kind})), st}
+    end
   end
 
   defp add_part(bp, cat, st) do
-    {kind, st} = pick(st, kinds(cat, false))
+    case pick(st, kinds(cat, false)) do
+      {nil, st} -> {nil, st}
+      {kind, st} -> add_part(bp, cat, kind, st)
+    end
+  end
+
+  defp add_part(bp, cat, kind, st) do
     {coin, st} = :rand.uniform_s(st)
     {at, st} = float(st, 0.0, 1.0)
     {around, st} = float(st, -@pi, @pi)
@@ -107,9 +115,15 @@ defmodule Abyss.Genesis.Mutation do
     else
       {i, st} = pick(st, idxs)
       old = Enum.at(bp["parts"], i)
-      {kind, st} = pick(st, kinds(cat, false) -- [old["kind"]])
-      mirror = old["mirror"] and cat.parts[kind].mirror
-      {finish(bp, cat, List.replace_at(bp["parts"], i, %{old | "kind" => kind, "mirror" => mirror})), st}
+      case pick(st, kinds(cat, false) -- [old["kind"]]) do
+        {nil, st} ->
+          {nil, st}
+
+        {kind, st} ->
+          mirror = old["mirror"] and cat.parts[kind].mirror
+          new = %{old | "kind" => kind, "mirror" => mirror}
+          {finish(bp, cat, List.replace_at(bp["parts"], i, new)), st}
+      end
     end
   end
 
@@ -141,7 +155,11 @@ defmodule Abyss.Genesis.Mutation do
     {u, st} = :rand.uniform_s(st)
 
     {pattern, st} =
-      if u < d.pattern_p, do: pick(st, cat.patterns -- [bp["pattern"]]), else: {bp["pattern"], st}
+      if u < d.pattern_p,
+        do: pick(st, cat.patterns -- [bp["pattern"]]),
+        else: {bp["pattern"], st}
+
+    pattern = pattern || bp["pattern"]
 
     bp = %{
       bp
@@ -243,6 +261,9 @@ defmodule Abyss.Genesis.Mutation do
   end
 
   # ---- sorteio ----
+
+  # Lista vazia (catálogo com uma só opção): nada a sortear, e o rng fica intacto.
+  defp pick(st, []), do: {nil, st}
 
   defp pick(st, list) do
     {i, st} = :rand.uniform_s(length(list), st)

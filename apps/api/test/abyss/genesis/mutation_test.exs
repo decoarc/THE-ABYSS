@@ -33,6 +33,28 @@ defmodule Abyss.Genesis.MutationTest do
     end)
   end
 
+  test "catálogo com uma só boca e um só padrão: troca vira no-op, sem quebrar", %{cat: cat} do
+    bp = planta(cat)
+    mouth = Enum.find(bp["parts"], &(cat.parts[&1["kind"]].group == "boca"))["kind"]
+    parts = Map.reject(cat.parts, fn {k, s} -> s.group == "boca" and k != mouth end)
+    m = cat.mutation
+
+    cat = %{
+      cat
+      | parts: parts,
+        patterns: [bp["pattern"]],
+        mutation: %{m | part_p: 1.0, mouth_share: 1.0, drift_p: 1.0, drift: %{m.drift | pattern_p: 1.0}}
+    }
+
+    Enum.reduce(1..50, :rand.seed_s(:exsss, {4, 5, 6}), fn _, st ->
+      {filho, mutated, st} = Mutation.child(bp, cat, st)
+      refute mutated
+      assert filho["pattern"] == bp["pattern"]
+      assert Enum.map(filho["parts"], & &1["kind"]) == Enum.map(bp["parts"], & &1["kind"])
+      st
+    end)
+  end
+
   test "frequência de mutação de peça", %{cat: cat} do
     # part_p fixo e baixo: com part_p alto, as operações recusadas pelos limites
     # (nil) já tiram a taxa medida da tolerância.

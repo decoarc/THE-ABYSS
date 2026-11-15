@@ -352,7 +352,15 @@ defmodule Abyss.Genesis do
   end
 
   defp try_add_part(bp, kind, cat) do
-    part = %{"kind" => kind, "at" => 0.5, "around" => 0.0, "size" => 0.5, "angle" => 0.0, "mirror" => false}
+    part = %{
+      "kind" => kind,
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 0.5,
+      "angle" => 0.0,
+      "mirror" => false
+    }
+
     cand = %{bp | "parts" => bp["parts"] ++ [part]}
 
     case Blueprint.validate(cand, cat, budget: false) do

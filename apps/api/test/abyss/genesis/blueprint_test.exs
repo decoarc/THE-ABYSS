@@ -20,7 +20,14 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   defp part(kind, mirror \\ false) do
-    %{"kind" => kind, "at" => 0.5, "around" => 0.0, "size" => 1.0, "angle" => 0.0, "mirror" => mirror}
+    %{
+      "kind" => kind,
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 1.0,
+      "angle" => 0.0,
+      "mirror" => mirror
+    }
   end
 
   test "fixtures: validade e custo batem", %{cat: cat} do
@@ -40,7 +47,12 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   test "espelho conta duas instâncias e custo cresce", %{cat: cat} do
-    {:ok, bp} = Blueprint.validate(base([part("raspador"), part("flagelo", true), part("flagelo", true)]), cat)
+    {:ok, bp} =
+      Blueprint.validate(
+        base([part("raspador"), part("flagelo", true), part("flagelo", true)]),
+        cat
+      )
+
     assert Blueprint.instances(bp) == %{"raspador" => 1, "flagelo" => 4}
     # flagelo: 3 + 4 + 5 + 6 = 18; raspador: 2
     assert Blueprint.parts_cost(bp, cat) - 2 == 18
@@ -93,7 +105,13 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   test "tamanho máximo", %{cat: cat} do
-    big = put_in(base([part("raspador")]), ["colors", "glow"], String.duplicate("a", cat.max_bytes + 10))
+    big =
+      put_in(
+        base([part("raspador")]),
+        ["colors", "glow"],
+        String.duplicate("a", cat.max_bytes + 10)
+      )
+
     assert byte_size(Jason.encode!(big)) > cat.max_bytes
     assert Blueprint.validate(big, cat) == {:error, ["planta grande demais"]}
   end
@@ -140,11 +158,21 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   test "budget: false aceita planta cara mas não planta quebrada", %{cat: cat} do
-    cara = base([part("mandibula"), part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+    cara =
+      base([
+        part("mandibula"),
+        part("flagelo", true),
+        part("placa", true),
+        part("aleta", true),
+        part("ocelo", true)
+      ])
+
     assert {:error, ["estoura o orçamento"]} = Blueprint.validate(cara, cat)
     assert {:ok, _} = Blueprint.validate(cara, cat, budget: false)
 
-    sem_boca = base([part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+    sem_boca =
+      base([part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+
     assert {:error, _} = Blueprint.validate(sem_boca, cat, budget: false)
   end
 end

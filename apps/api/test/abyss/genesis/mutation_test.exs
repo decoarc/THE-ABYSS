@@ -43,7 +43,13 @@ defmodule Abyss.Genesis.MutationTest do
       cat
       | parts: parts,
         patterns: [bp["pattern"]],
-        mutation: %{m | part_p: 1.0, mouth_share: 1.0, drift_p: 1.0, drift: %{m.drift | pattern_p: 1.0}}
+        mutation: %{
+          m
+          | part_p: 1.0,
+            mouth_share: 1.0,
+            drift_p: 1.0,
+            drift: %{m.drift | pattern_p: 1.0}
+        }
     }
 
     Enum.reduce(1..50, :rand.seed_s(:exsss, {4, 5, 6}), fn _, st ->

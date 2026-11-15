@@ -106,8 +106,14 @@ defmodule Abyss.Genesis.Blueprint do
       []
       |> add(not increasing, "espinha precisa de x crescente")
       |> add(increasing and List.last(xs) - hd(xs) > cat.body.length_max, "corpo comprido demais")
-      |> add(Enum.any?(pts, fn [_, y, _] -> abs(y) > cat.body.bend_max end), "espinha curva demais")
-      |> add(Enum.any?(pts, fn [_, _, r] -> r < rmin or r > rmax end), "raio da espinha fora da faixa")
+      |> add(
+        Enum.any?(pts, fn [_, y, _] -> abs(y) > cat.body.bend_max end),
+        "espinha curva demais"
+      )
+      |> add(
+        Enum.any?(pts, fn [_, _, r] -> r < rmin or r > rmax end),
+        "raio da espinha fora da faixa"
+      )
 
     if errs == [], do: {:ok, pts}, else: {:error, Enum.reverse(errs)}
   end

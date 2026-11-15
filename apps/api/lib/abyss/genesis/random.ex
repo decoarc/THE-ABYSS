@@ -33,7 +33,9 @@ defmodule Abyss.Genesis.Random do
     bp = %{"v" => 1, "body" => %{"spine" => spine}, "parts" => [mpart]}
 
     {attempts, st} = int(st, [0, cat.parts_max * 2])
-    {bp, st} = Enum.reduce(1..attempts//1, {bp, st}, fn _, {bp, st} -> try_add(bp, st, cat, others) end)
+
+    {bp, st} =
+      Enum.reduce(1..attempts//1, {bp, st}, fn _, {bp, st} -> try_add(bp, st, cat, others) end)
 
     {glow, st} = hex(st)
     {body, st} = hex(st)

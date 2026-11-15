@@ -12,7 +12,8 @@ defmodule Abyss.World.Organism do
           pitch: float,
           mode: :run | :pause,
           mode_left: float,
-          target: nil | {:flora, non_neg_integer} | {:particle, pos_integer} | {:prey, String.t()},
+          target:
+            nil | {:flora, non_neg_integer} | {:particle, pos_integer} | {:prey, String.t()},
           chase_left: float,
           gave_up: nil | {String.t(), integer},
           sated_left: float,

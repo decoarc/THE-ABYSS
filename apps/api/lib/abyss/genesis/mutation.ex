@@ -58,15 +58,19 @@ defmodule Abyss.Genesis.Mutation do
   end
 
   defp kinds(cat, mouth?) do
-    Enum.sort(for {k, s} <- cat.parts, (s.group == "boca") == mouth?, do: k)
+    Enum.sort(for {k, s} <- cat.parts, s.group == "boca" == mouth?, do: k)
   end
 
   defp swap_mouth(bp, cat, st) do
     idx = bp["parts"] |> Enum.find_index(&(cat.parts[&1["kind"]].group == "boca"))
     current = Enum.at(bp["parts"], idx)["kind"]
+
     case pick(st, kinds(cat, true) -- [current]) do
-      {nil, st} -> {nil, st}
-      {kind, st} -> {finish(bp, cat, List.update_at(bp["parts"], idx, &%{&1 | "kind" => kind})), st}
+      {nil, st} ->
+        {nil, st}
+
+      {kind, st} ->
+        {finish(bp, cat, List.update_at(bp["parts"], idx, &%{&1 | "kind" => kind})), st}
     end
   end
 
@@ -115,6 +119,7 @@ defmodule Abyss.Genesis.Mutation do
     else
       {i, st} = pick(st, idxs)
       old = Enum.at(bp["parts"], i)
+
       case pick(st, kinds(cat, false) -- [old["kind"]]) do
         {nil, st} ->
           {nil, st}
@@ -206,13 +211,21 @@ defmodule Abyss.Genesis.Mutation do
   end
 
   defp to_rgb("#" <> <<r::binary-2, g::binary-2, b::binary-2>>) do
-    {String.to_integer(r, 16) / 255, String.to_integer(g, 16) / 255, String.to_integer(b, 16) / 255}
+    {String.to_integer(r, 16) / 255, String.to_integer(g, 16) / 255,
+     String.to_integer(b, 16) / 255}
   end
 
   defp from_rgb({r, g, b}) do
     "#" <>
       Enum.map_join([r, g, b], fn c ->
-        c |> Kernel.*(255) |> round() |> max(0) |> min(255) |> Integer.to_string(16) |> String.pad_leading(2, "0") |> String.downcase()
+        c
+        |> Kernel.*(255)
+        |> round()
+        |> max(0)
+        |> min(255)
+        |> Integer.to_string(16)
+        |> String.pad_leading(2, "0")
+        |> String.downcase()
       end)
   end
 

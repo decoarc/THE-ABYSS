@@ -24,8 +24,32 @@ defmodule Abyss.Genesis.Recorder do
   @spec record_branches([Abyss.World.Species.t()]) :: :ok
   def record_branches(branches), do: GenServer.cast(__MODULE__, {:record_branches, branches})
 
+  @doc """
+  Espera o Recorder gravar tudo o que já está na fila (os casts são processados em
+  ordem). Usado no boot das espécies: se só o `World.Server` reiniciar, o boot não lê
+  o banco antes de um ramo ou uma extinção ainda na fila. Sem Recorder vivo (ou se ele
+  não responder a tempo), segue sem esperar.
+  """
+  @spec sync(timeout) :: :ok
+  def sync(timeout \\ 15_000) do
+    if Process.whereis(__MODULE__) do
+      try do
+        GenServer.call(__MODULE__, :sync, timeout)
+      catch
+        :exit, _ ->
+          Logger.error("Recorder.sync sem resposta; boot segue com o banco como está")
+          :ok
+      end
+    else
+      :ok
+    end
+  end
+
   @impl true
   def init(:ok), do: {:ok, %{}}
+
+  @impl true
+  def handle_call(:sync, _from, state), do: {:reply, :ok, state}
 
   @impl true
   def handle_cast({:record, extinct}, state) do
@@ -73,14 +97,29 @@ defmodule Abyss.Genesis.Recorder do
             born_at: DateTime.from_unix!(sp.born_ms * 1000, :microsecond)
           },
           on_conflict: :nothing,
+          conflict_target: :id,
           log: false
         )
+
+        warn_if_other_blueprint(sp)
       rescue
         e -> Logger.error("gravar ramo falhou (#{inspect(e.__struct__)}) para #{inspect(sp.id)}")
       end
     end
 
     {:noreply, state}
+  end
+
+  # Id já gravado com outra planta: o `on_conflict` manteve a linha antiga (id de ramo
+  # nunca deveria repetir; ver `branch_seq`). Fica registrado, só com o id.
+  defp warn_if_other_blueprint(sp) do
+    case Repo.get(BranchRecord, sp.id, log: false) do
+      %BranchRecord{blueprint: bp} when bp != sp.blueprint ->
+        Logger.warning("ramo #{inspect(sp.id)} já gravado com outra planta; mantida a do banco")
+
+      _ ->
+        :ok
+    end
   end
 
   defp parse_id("sp" <> n) do

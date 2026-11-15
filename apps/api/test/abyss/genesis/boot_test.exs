@@ -203,6 +203,64 @@ defmodule Abyss.Genesis.BootTest do
     assert row.extinct_at == nil
   end
 
+  test "boot espera a fila do Recorder: ramo e extinção ainda em cast entram na leitura" do
+    a = insert(1, nil)
+    b = insert_branch(a, "1", nil)
+    Repo.delete!(b, log: false)
+
+    br = %{
+      Genesis.species_from_record(a)
+      | id: b.id,
+        code: b.code,
+        name: b.name,
+        blueprint: b.blueprint,
+        parent: "sp#{a.id}",
+        root: "sp#{a.id}",
+        region: "reef",
+        born_ms: 1_700_000_000_000
+    }
+
+    # Recorder ocupado: os casts ficam na fila até o boot pedir o sync.
+    :sys.suspend(Recorder)
+    Recorder.record_branches([br])
+    Recorder.record([{"sp#{a.id}", 1_700_000_000_500}])
+    task = Task.async(fn -> Genesis.boot_species() end)
+    Process.sleep(50)
+    :sys.resume(Recorder)
+    boot = Task.await(task)
+
+    refute "sp#{a.id}" in Enum.map(boot.live, & &1.id)
+    assert boot.branch_seq == %{"sp#{a.id}" => 1}
+    assert b.id in Enum.map(boot.live, & &1.id)
+  end
+
+  test "ramo com id já gravado e outra planta: mantém a linha e registra o id" do
+    a = insert(1, nil)
+    b = insert_branch(a, "1", nil)
+
+    br = %{
+      Genesis.species_from_record(a)
+      | id: b.id,
+        code: b.code,
+        name: b.name,
+        blueprint: a.blueprint,
+        parent: "sp#{a.id}",
+        root: "sp#{a.id}",
+        region: "reef",
+        born_ms: 1_700_000_000_000
+    }
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        Recorder.record_branches([br])
+        :sys.get_state(Recorder)
+      end)
+
+    assert log =~ "ramo \"#{b.id}\" já gravado com outra planta"
+    refute log =~ "@"
+    assert Repo.get!(BranchRecord, b.id, log: false).blueprint == b.blueprint
+  end
+
   test "extinção de ramo é gravada" do
     a = insert(1, nil)
     b = insert_branch(a, "1", nil)

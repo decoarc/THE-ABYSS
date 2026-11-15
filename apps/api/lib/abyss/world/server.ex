@@ -134,6 +134,8 @@ defmodule Abyss.World.Server do
       :timer.tc(fn -> state.step.(state.sim, 1 / state.tick_hz, meta.server_ms) end)
 
     state.broadcast.(Wire.tick(sim, meta))
+    # Extinção antes de ramo no mesmo tick é seguro: um ramo nunca nasce e se extingue no
+    # mesmo passo, então nenhuma extinção deste tick se refere a um ramo ainda não gravado.
     notify_extinct(state.on_extinct, sim.life_events.extinct)
     notify_branch(state.on_branch, sim.life_events.branches)
 

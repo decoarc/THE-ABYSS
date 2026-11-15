@@ -164,6 +164,9 @@ defmodule Abyss.Genesis do
           branch_seq: %{String.t() => pos_integer}
         }
   def boot_species do
+    # Casts de ramo/extinção ainda na fila do Recorder entram no banco antes da leitura.
+    Abyss.Genesis.Recorder.sync()
+
     live_roots =
       from(s in SpeciesRecord, where: is_nil(s.extinct_at), order_by: [asc: s.id])
       |> Repo.all(log: false)

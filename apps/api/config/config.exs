@@ -29,19 +29,22 @@ config :abyss, :world,
   creature_scale: 0.5,
   # Só para medição (ABYSS_FOOD_BOOST): multiplica a velocidade da flora e a
   # taxa e o teto das partículas. 1.0 = a comida canônica, sem mudança.
-  food_boost: 1.0
+  food_boost: 1.0,
+  # Só para medição (ABYSS_MUTATION_BOOST): multiplica part_p do catálogo
+  # (teto 1). 1.0 = a mutação canônica.
+  mutation_boost: 1.0
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,
-  # Nível de 0 a 1 em 180 s, longe das fontes.
-  flora_grow_s: 180,
+  # Nível de 0 a 1 em 600 s, longe das fontes.
+  flora_grow_s: 600,
   # Crescimento × (1 + vent_boost · exp(-d²/(2·8²))), d = distância à fonte mais próxima.
   vent_boost: 2.0,
   flora_bite: 0.25,
   flora_min_edible: 0.05,
   particle_cap: 400,
   # Por segundo, divididas entre as regiões por particle_share.
-  particle_rate: 2.0,
+  particle_rate: 3.0,
   # Some nos últimos 30 s (só no visual).
   particle_life_s: 180,
   # Queda (u/s) e deriva horizontal máxima (u/s).
@@ -53,14 +56,14 @@ config :abyss, :ecology,
   # Teto de proteção de organismos.
   pop_cap: 250,
   # Gasto = metabolism × (1 + swim_cost × (|v|/max_speed)²) por s.
-  swim_cost: 1.5,
+  swim_cost: 0.8,
   flora_energy: 80,
   particle_energy: 20,
   # Ganho do caçador = prey_base + prey_yield × energia da presa.
-  prey_base: 25,
-  prey_yield: 0.5,
-  hunt_below: 0.7,
-  give_up_s: 15,
+  prey_base: 80,
+  prey_yield: 0.8,
+  hunt_below: 0.95,
+  give_up_s: 10,
   divide_s: 8.0,
   split_parent: 0.5,
   split_child: 0.35,
@@ -69,7 +72,17 @@ config :abyss, :ecology,
   school_weight: 0.3,
   corpse_particles: {3, 4.0},
   founder_energy: {0.6, 0.9},
-  founder_age: 0.5
+  founder_age: 0.5,
+  # Faminto sem comida à vista deriva rumo à região mais rica na dieta a
+  # drift_weight × max_speed.
+  drift_weight: 0.8,
+  # Varredura periódica (s do relógio do mundo): coleta de genomas sem vivos e ramos (gate S2).
+  branch_scan_s: 10,
+  # Ramo: grupo com a mesma diferença de peças (distância >= branch_diff) da planta da
+  # espécie, com >= branch_min vivos, dos quais >= branch_inherited nasceram sem mutação.
+  branch_diff: 2,
+  branch_min: 4,
+  branch_inherited: 2
 
 # Gênese de espécies (gate S1): link de verificação por e-mail.
 config :abyss, :genesis,

@@ -1,4 +1,11 @@
 defmodule Abyss.Genesis.SpeciesRecord do
+  @moduledoc """
+  Espécie criada (uma por e-mail). `extinct_at` marca o fim dos vivos DESTE nó
+  (a mãe), não da linhagem: ramos vivos em `branches` (`root_species_id`) podem
+  continuar a espécie da criadora. Quem ler `extinct_at` como "a espécie inteira
+  acabou" (e-mail à criadora, página pública; gate O) precisa olhar também os ramos.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 

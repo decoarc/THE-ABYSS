@@ -131,6 +131,53 @@ defmodule Abyss.World.ServerTest do
     assert Server.stats(pid).tick > 3
   end
 
+  # Passo injetado: o 1º tick após a injeção devolve um ramo em `life_events.branches`.
+  defp branching_step(branch) do
+    fn sim, dt, ms ->
+      sim = Abyss.World.Sim.step(sim, dt, ms)
+      %{sim | life_events: %{sim.life_events | branches: [branch]}}
+    end
+  end
+
+  test "on_branch recebe o ramo do passo" do
+    test_pid = self()
+    branch = Map.merge(made(1), %{id: "sp1.1", parent: "sp1", root: "sp1"})
+
+    start_server(
+      step: branching_step(branch),
+      on_branch: fn list -> send(test_pid, {:branch, list}) end
+    )
+
+    assert_receive {:branch, [%{id: "sp1.1", parent: "sp1"}]}, 2000
+  end
+
+  test "on_branch que explode não derruba o mundo" do
+    test_pid = self()
+    branch = Map.merge(made(1), %{id: "sp1.1", parent: "sp1", root: "sp1"})
+
+    pid =
+      start_server(
+        step: branching_step(branch),
+        on_branch: fn _ ->
+          send(test_pid, :boom)
+          raise "boom"
+        end
+      )
+
+    assert_receive :boom, 2000
+    assert_receive {:tick, _}, 2000
+    assert Process.alive?(pid)
+    assert Server.stats(pid).tick > 0
+  end
+
+  test "on_branch não é chamado sem ramos" do
+    test_pid = self()
+    start_server(on_branch: fn list -> send(test_pid, {:branch, list}) end)
+    assert_receive {:tick, _}, 2000
+    assert_receive {:tick, _}, 2000
+    refute_received {:branch, _}
+  end
+
   defp all_binary_ids? do
     receive do
       {:extinct, list} -> Enum.all?(list, fn {id, _} -> is_binary(id) end) and all_binary_ids?()

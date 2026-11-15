@@ -37,7 +37,8 @@ defmodule Abyss.World.WireTest do
                :flora,
                :particles,
                :juvenile_scale,
-               :divide_s
+               :divide_s,
+               :genomes
              ])
 
     assert length(s.organisms) == 20
@@ -53,6 +54,7 @@ defmodule Abyss.World.WireTest do
            end)
 
     assert is_list(s.particles) and Enum.all?(s.particles, &(length(&1) == 9))
+
     assert hd(s.species) == %{
              id: "membrana",
              code: "MBR",
@@ -60,13 +62,31 @@ defmodule Abyss.World.WireTest do
              body_radius: 0.55,
              diet: %{kind: "particles", prey: []},
              blueprint: nil,
-             extinct_ms: nil
+             extinct_ms: nil,
+             parent: nil,
+             root: "membrana",
+             region: nil,
+             born_ms: nil
            }
 
     assert is_number(s.juvenile_scale) and is_number(s.divide_s)
 
     o = hd(s.organisms)
-    assert o |> Map.keys() |> Enum.sort() == [:born_ms, :dividing, :e, :gen, :id, :p, :parent, :species, :stage, :v]
+
+    assert o |> Map.keys() |> Enum.sort() == [
+             :born_ms,
+             :dividing,
+             :e,
+             :g,
+             :gen,
+             :id,
+             :p,
+             :parent,
+             :species,
+             :stage,
+             :v
+           ]
+
     assert is_binary(o.species) and length(o.p) == 3 and length(o.v) == 3
     assert {:ok, _} = Jason.encode(s)
   end
@@ -76,7 +96,22 @@ defmodule Abyss.World.WireTest do
     snap = Wire.snapshot(sim, @meta)
     t = Wire.tick(sim, @meta)
 
-    assert t |> Map.keys() |> Enum.sort() == [:b, :d, :f, :o, :pr, :ps, :server_ms, :sp, :tick, :world_id, :x]
+    assert t |> Map.keys() |> Enum.sort() == [
+             :b,
+             :d,
+             :f,
+             :g,
+             :o,
+             :pr,
+             :ps,
+             :rb,
+             :server_ms,
+             :sp,
+             :tick,
+             :world_id,
+             :x
+           ]
+
     assert length(t.o) == length(snap.organisms)
 
     for {row, o} <- Enum.zip(t.o, snap.organisms) do
@@ -174,7 +209,12 @@ defmodule Abyss.World.WireTest do
     t = Wire.tick(s, @meta)
     assert Enum.at(t.o, 0) |> Enum.at(6) == 0.12
     assert Enum.at(t.o, 1) |> Enum.at(6) == 1.0
-    assert Enum.all?(t.o, fn row -> e = Enum.at(row, 6); e >= 0 and e <= 1 and e == Float.round(e, 2) end)
+
+    assert Enum.all?(t.o, fn row ->
+             e = Enum.at(row, 6)
+             e >= 0 and e <= 1 and e == Float.round(e, 2)
+           end)
+
     assert hd(Wire.snapshot(s, @meta).organisms).e == 0.12
   end
 
@@ -245,6 +285,160 @@ defmodule Abyss.World.WireTest do
       sp = made(2) |> Map.put(:email, "a@b.c")
       s = sim() |> Sim.add_species(sp, founders: 3) |> Sim.step(0.1)
 
+      refute Jason.encode!(Wire.snapshot(s, @meta)) =~ "@"
+      refute Jason.encode!(Wire.tick(s, @meta)) =~ "@"
+    end
+  end
+
+  describe "genomas e ramos" do
+    alias Abyss.Genesis.{Catalog, Random, Traits}
+
+    defp made2(i) do
+      cat = Catalog.get()
+      {bp, _} = Random.blueprint(:rand.seed_s(:exsss, i), cat)
+      Traits.species(bp, cat, %{id: "sp#{i}", code: "S#{i}", name: "G#{i}"})
+    end
+
+    defp with_genome(s, gid, bp) do
+      [o | rest] = s.organisms
+
+      %{
+        s
+        | organisms: [%{o | genome: gid} | rest],
+          genomes: Map.put(s.genomes, gid, %{bp: bp, traits: nil})
+      }
+    end
+
+    test "genoma vai uma vez" do
+      s = sim()
+      [o | rest] = s.organisms
+      bp = made2(7).blueprint
+      child = %{o | id: "filho", genome: 9}
+      traits = Enum.find(Sim.species(s), &(&1.id == o.species))
+
+      s = %{
+        s
+        | organisms: [child | rest],
+          genomes: Map.put(s.genomes, 9, %{bp: bp, traits: traits}),
+          life_events: %{
+            deaths: [],
+            births: [child],
+            extinct: [],
+            genomes: [{9, bp}],
+            branches: [],
+            rebranch: []
+          }
+      }
+
+      t = Wire.tick(s, @meta)
+      assert t.g == [[9, bp]]
+      assert [%{id: "filho", g: 9}] = t.b
+      assert Enum.all?(t.o, &(length(&1) == 8))
+      assert {:ok, _} = Jason.encode(t)
+
+      assert Wire.tick(Sim.step(s, 0.1), @meta).g == []
+    end
+
+    test "snapshot leva os genomas vivos" do
+      bp = made2(7).blueprint
+      s = with_genome(sim(), 4, bp)
+      s = %{s | genomes: Map.put(s.genomes, 5, %{bp: bp, traits: nil})}
+      snap = Wire.snapshot(s, @meta)
+      assert snap.genomes == [[4, bp]]
+      assert hd(snap.organisms).g == 4
+      assert {:ok, _} = Jason.encode(snap)
+    end
+
+    test "ramo no fio" do
+      mother = %{made2(1) | id: "sp1", diet: :predator}
+
+      branch =
+        Map.merge(made2(2), %{
+          id: "sp1.1",
+          parent: "sp1",
+          root: "sp1",
+          region: "floresta",
+          born_ms: 900
+        })
+
+      s = sim() |> Sim.add_species(mother, founders: 3) |> Sim.step(0.1)
+      [o | rest] = s.organisms
+
+      bounds = %{
+        s.bounds
+        | species: Map.put(s.bounds.species, "sp1.1", branch),
+          species_list: s.bounds.species_list ++ [branch]
+      }
+
+      s = %{
+        s
+        | bounds: bounds,
+          life_events: %{
+            deaths: [],
+            births: [],
+            extinct: [],
+            species: [branch],
+            genomes: [],
+            branches: [branch],
+            rebranch: [{o.id, "sp1.1"}]
+          },
+          organisms: [o | rest]
+      }
+
+      t = Wire.tick(s, @meta)
+      assert [%{id: "sp1.1", parent: "sp1", root: "sp1", region: "floresta", born_ms: 900}] = t.sp
+      assert t.rb == [[o.id, "sp1.1"]]
+      assert {:ok, _} = Jason.encode(t)
+    end
+
+    test "ancestral extinto vai no snapshot" do
+      base =
+        Enum.reduce(1..130, sim(), fn i, acc ->
+          sp = made2(i)
+          b = acc.bounds
+
+          b = %{
+            b
+            | species: Map.put(b.species, sp.id, sp),
+              species_list: b.species_list ++ [sp]
+          }
+
+          %{acc | bounds: b, extinct: Map.put(acc.extinct, sp.id, i * 10)}
+        end)
+
+      # sp1 (a mais antiga, fora das 100 recentes) é ancestral de um ramo vivo.
+      kid = Map.merge(made2(200), %{id: "sp1.1", parent: "sp1", root: "sp1"})
+      b = base.bounds
+
+      b = %{
+        b
+        | species: Map.put(b.species, "sp1.1", kid),
+          species_list: b.species_list ++ [kid]
+      }
+
+      s = %{base | bounds: b}
+      ids = Wire.snapshot(s, @meta).species |> Enum.map(& &1.id)
+      assert "sp1" in ids and "sp1.1" in ids
+      refute "sp2" in ids
+      assert length(ids) == 5 + 100 + 1 + 1
+    end
+
+    test "fio sem e-mail com ramos" do
+      mother = made2(2) |> Map.put(:email, "a@b.c")
+
+      branch =
+        Map.merge(made2(3), %{id: "sp2.1", parent: "sp2", root: "sp2", born_ms: 5, email: "a@b.c"})
+
+      s = sim() |> Sim.add_species(mother, founders: 3) |> Sim.step(0.1)
+      b = s.bounds
+
+      b = %{
+        b
+        | species: Map.put(b.species, "sp2.1", branch),
+          species_list: b.species_list ++ [branch]
+      }
+
+      s = %{s | bounds: b, life_events: %{s.life_events | species: [branch], branches: [branch]}}
       refute Jason.encode!(Wire.snapshot(s, @meta)) =~ "@"
       refute Jason.encode!(Wire.tick(s, @meta)) =~ "@"
     end

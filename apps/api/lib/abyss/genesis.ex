@@ -10,6 +10,7 @@ defmodule Abyss.Genesis do
 
   alias Abyss.Genesis.{
     Blueprint,
+    BranchRecord,
     Catalog,
     Creator,
     Email,
@@ -102,8 +103,9 @@ defmodule Abyss.Genesis do
     Repo.delete_all(from(t in VerificationToken, where: t.email_normalized == ^email), log: false)
     :ok
   rescue
-    e -> Logger.error("limpeza de tokens falhou (#{inspect(e.__struct__)})")
-    :ok
+    e ->
+      Logger.error("limpeza de tokens falhou (#{inspect(e.__struct__)})")
+      :ok
   catch
     :exit, _ ->
       Logger.error("limpeza de tokens falhou (exit)")
@@ -112,10 +114,18 @@ defmodule Abyss.Genesis do
 
   @spec species_from_record(SpeciesRecord.t()) :: Abyss.World.Species.t()
   def species_from_record(%SpeciesRecord{} = record) do
+    id = "sp#{record.id}"
+
     Traits.species(record.blueprint, Catalog.get(), %{
-      id: "sp#{record.id}",
+      id: id,
       code: record.code,
       name: record.name
+    })
+    |> Map.merge(%{
+      parent: nil,
+      root: id,
+      region: nil,
+      born_ms: record.published_at && DateTime.to_unix(record.published_at, :millisecond)
     })
   end
 
@@ -124,35 +134,129 @@ defmodule Abyss.Genesis do
   def code_for(id), do: "S" <> String.pad_leading(Integer.to_string(id, 36), 2, "0")
 
   @doc """
-  Espécies para o boot do mundo: as vivas (por id) e as 100 extintas mais
-  recentes (com o ms da extinção). Sem banco, devolve vazio e registra o erro.
+  Espécie (de ramo) para o `Sim`, a partir da linha do banco. A planta do ramo é
+  a planta de referência; a raiz é `"sp<N>"`.
+  """
+  @spec species_from_branch(BranchRecord.t()) :: Abyss.World.Species.t()
+  def species_from_branch(%BranchRecord{} = r) do
+    Traits.species(r.blueprint, Catalog.get(), %{id: r.id, code: r.code, name: r.name})
+    |> Map.merge(%{
+      parent: r.parent_id,
+      root: "sp#{r.root_species_id}",
+      region: r.region,
+      born_ms: DateTime.to_unix(r.born_at, :millisecond)
+    })
+  end
+
+  @max_boot_extinct 100
+
+  @doc """
+  Espécies para o boot do mundo. Vivas: raízes e ramos sem `extinct_at`. Extintas
+  (com o ms da extinção): as 100 mais recentes (raízes e ramos juntos) mais todo
+  ancestral extinto de um ramo vivo. Pais antes de filhos (raízes por id, depois
+  ramos por `born_at`, `id`). `branch_seq` traz, por mãe, o maior k já usado em
+  QUALQUER linha de `branches` (id de ramo nunca é reaproveitado). Sem banco,
+  devolve vazio e registra o erro.
   """
   @spec boot_species() :: %{
           live: [Abyss.World.Species.t()],
-          extinct: [{Abyss.World.Species.t(), integer}]
+          extinct: [{Abyss.World.Species.t(), integer}],
+          branch_seq: %{String.t() => pos_integer}
         }
   def boot_species do
-    live =
+    # Casts de ramo/extinção ainda na fila do Recorder entram no banco antes da leitura.
+    Abyss.Genesis.Recorder.sync()
+
+    live_roots =
       from(s in SpeciesRecord, where: is_nil(s.extinct_at), order_by: [asc: s.id])
       |> Repo.all(log: false)
-      |> Enum.flat_map(&safe_species/1)
 
-    extinct =
+    live_branches =
+      from(b in BranchRecord, where: is_nil(b.extinct_at), order_by: [asc: b.born_at, asc: b.id])
+      |> Repo.all(log: false)
+
+    ancestors = live_branches |> Enum.flat_map(&ancestor_ids(&1.id)) |> Enum.uniq()
+    root_ancestors = for "sp" <> n <- ancestors, {i, ""} <- [Integer.parse(n)], do: i
+
+    recent_roots =
       from(s in SpeciesRecord,
         where: not is_nil(s.extinct_at),
         order_by: [desc: s.extinct_at, desc: s.id],
-        limit: 100
+        limit: @max_boot_extinct
       )
       |> Repo.all(log: false)
-      |> Enum.flat_map(fn r ->
-        for sp <- safe_species(r), do: {sp, DateTime.to_unix(r.extinct_at, :millisecond)}
-      end)
 
-    %{live: live, extinct: extinct}
+    recent_branches =
+      from(b in BranchRecord,
+        where: not is_nil(b.extinct_at),
+        order_by: [desc: b.extinct_at, desc: b.id],
+        limit: @max_boot_extinct
+      )
+      |> Repo.all(log: false)
+
+    {top_roots, top_branches} =
+      (Enum.map(recent_roots, &{&1.extinct_at, "sp#{&1.id}", &1}) ++
+         Enum.map(recent_branches, &{&1.extinct_at, &1.id, &1}))
+      |> Enum.sort_by(fn {at, id, _} -> {DateTime.to_unix(at, :microsecond), id} end, :desc)
+      |> Enum.take(@max_boot_extinct)
+      |> Enum.map(&elem(&1, 2))
+      |> Enum.split_with(&is_struct(&1, SpeciesRecord))
+
+    anc_roots =
+      from(s in SpeciesRecord, where: not is_nil(s.extinct_at) and s.id in ^root_ancestors)
+      |> Repo.all(log: false)
+
+    anc_branches =
+      from(b in BranchRecord, where: not is_nil(b.extinct_at) and b.id in ^ancestors)
+      |> Repo.all(log: false)
+
+    extinct_roots = (top_roots ++ anc_roots) |> Enum.uniq_by(& &1.id) |> Enum.sort_by(& &1.id)
+
+    extinct_branches =
+      (top_branches ++ anc_branches)
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.sort_by(&{DateTime.to_unix(&1.born_at, :microsecond), &1.id})
+
+    %{
+      live:
+        Enum.flat_map(live_roots, &safe_species/1) ++
+          Enum.flat_map(live_branches, &safe_branch/1),
+      extinct:
+        Enum.flat_map(extinct_roots, &with_extinct_ms(&1, safe_species(&1))) ++
+          Enum.flat_map(extinct_branches, &with_extinct_ms(&1, safe_branch(&1))),
+      branch_seq: branch_seq()
+    }
   rescue
     e ->
       Logger.error("boot_species falhou (#{inspect(e.__struct__)}); mundo sem espécies criadas")
-      %{live: [], extinct: []}
+      %{live: [], extinct: [], branch_seq: %{}}
+  end
+
+  defp with_extinct_ms(record, species),
+    do: for(sp <- species, do: {sp, DateTime.to_unix(record.extinct_at, :millisecond)})
+
+  # "sp3.1.2" -> ["sp3.1", "sp3"]
+  defp ancestor_ids(id) do
+    parts = String.split(id, ".")
+
+    for n <- (length(parts) - 1)..1//-1, do: parts |> Enum.take(n) |> Enum.join(".")
+  end
+
+  # Maior k por mãe sobre TODAS as linhas (só ids): ramos podados do mundo não
+  # podem ter o id reaproveitado.
+  defp branch_seq do
+    from(b in BranchRecord, select: b.id)
+    |> Repo.all(log: false)
+    |> Enum.reduce(%{}, fn id, acc ->
+      with [k | rest] <- id |> String.split(".") |> Enum.reverse(),
+           {k, ""} when k > 0 <- Integer.parse(k),
+           [_ | _] <- rest do
+        mother = rest |> Enum.reverse() |> Enum.join(".")
+        Map.update(acc, mother, k, &max(&1, k))
+      else
+        _ -> acc
+      end
+    end)
   end
 
   # Um registro ilegível é pulado (só o id no log), sem derrubar as outras espécies.
@@ -164,12 +268,20 @@ defmodule Abyss.Genesis do
       []
   end
 
-  @doc "Apaga criadores, espécies e tokens (reinicia os ids)."
+  defp safe_branch(record) do
+    [species_from_branch(record)]
+  rescue
+    _ ->
+      Logger.error("boot_species: ramo #{record.id} ignorado (planta não processável)")
+      []
+  end
+
+  @doc "Apaga criadores, espécies, ramos e tokens (reinicia os ids)."
   @spec reset!() :: :ok
   def reset! do
     Ecto.Adapters.SQL.query!(
       Repo,
-      "TRUNCATE species, creators, verification_tokens RESTART IDENTITY",
+      "TRUNCATE branches, species, creators, verification_tokens RESTART IDENTITY",
       [],
       log: false
     )
@@ -196,6 +308,65 @@ defmodule Abyss.Genesis do
     end)
 
     :ok
+  end
+
+  @doc """
+  Só para teste e medição: grava um ramo `sp<root>.<k>` da espécie criada `root_id`, com a planta da
+  raiz mais duas peças a mais (diferença de peças >= 2, como um ramo nascido no mundo). O próximo boot
+  o carrega e o faz nascer. Devolve o registro.
+  """
+  @spec seed_branch!(pos_integer) :: BranchRecord.t()
+  def seed_branch!(root_id) do
+    root = Repo.get!(SpeciesRecord, root_id, log: false)
+    cat = Catalog.get()
+    mother = "sp#{root.id}"
+    k = Map.get(branch_seq(), mother, 0) + 1
+
+    bp =
+      cat.parts
+      |> Enum.reject(fn {_, spec} -> spec.group == "boca" end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.sort()
+      |> Enum.reduce(root.blueprint, fn kind, bp ->
+        if Blueprint.part_distance(Blueprint.part_delta(root.blueprint, bp)) >= 2,
+          do: bp,
+          else: try_add_part(bp, kind, cat)
+      end)
+
+    if Blueprint.part_distance(Blueprint.part_delta(root.blueprint, bp)) < 2,
+      do: raise("não deu para derivar um ramo da planta de #{mother}")
+
+    Repo.insert!(
+      %BranchRecord{
+        id: "#{mother}.#{k}",
+        root_species_id: root.id,
+        parent_id: mother,
+        name: "#{root.name} · Jardim",
+        code: "#{root.code}.#{k}",
+        blueprint: bp,
+        region: "jardim",
+        born_at: DateTime.utc_now()
+      },
+      log: false
+    )
+  end
+
+  defp try_add_part(bp, kind, cat) do
+    part = %{
+      "kind" => kind,
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 0.5,
+      "angle" => 0.0,
+      "mirror" => false
+    }
+
+    cand = %{bp | "parts" => bp["parts"] ++ [part]}
+
+    case Blueprint.validate(cand, cat, budget: false) do
+      {:ok, _} -> cand
+      _ -> bp
+    end
   end
 
   defp publish(token) do

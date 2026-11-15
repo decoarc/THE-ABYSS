@@ -22,7 +22,11 @@ defmodule Abyss.World.Species do
           mature_s: number,
           adult_life_s: number,
           escape: float,
-          blueprint: map | nil
+          blueprint: map | nil,
+          parent: String.t() | nil,
+          root: atom | String.t(),
+          region: String.t() | nil,
+          born_ms: integer | nil
         }
 
   @species [
@@ -47,7 +51,11 @@ defmodule Abyss.World.Species do
       mature_s: 150,
       adult_life_s: 900,
       escape: 0.0,
-      blueprint: nil
+      blueprint: nil,
+      parent: nil,
+      root: :membrana,
+      region: nil,
+      born_ms: nil
     },
     %{
       id: :filamento,
@@ -70,7 +78,11 @@ defmodule Abyss.World.Species do
       mature_s: 120,
       adult_life_s: 700,
       escape: 0.0,
-      blueprint: nil
+      blueprint: nil,
+      parent: nil,
+      root: :filamento,
+      region: nil,
+      born_ms: nil
     },
     %{
       id: :casco,
@@ -93,7 +105,11 @@ defmodule Abyss.World.Species do
       mature_s: 180,
       adult_life_s: 1200,
       escape: 0.0,
-      blueprint: nil
+      blueprint: nil,
+      parent: nil,
+      root: :casco,
+      region: nil,
+      born_ms: nil
     },
     %{
       id: :celula,
@@ -116,7 +132,11 @@ defmodule Abyss.World.Species do
       mature_s: 90,
       adult_life_s: 600,
       escape: 0.0,
-      blueprint: nil
+      blueprint: nil,
+      parent: nil,
+      root: :celula,
+      region: nil,
+      born_ms: nil
     },
     %{
       id: :poliedro,
@@ -139,7 +159,11 @@ defmodule Abyss.World.Species do
       mature_s: 200,
       adult_life_s: 2400,
       escape: 0.0,
-      blueprint: nil
+      blueprint: nil,
+      parent: nil,
+      root: :poliedro,
+      region: nil,
+      born_ms: nil
     }
   ]
 

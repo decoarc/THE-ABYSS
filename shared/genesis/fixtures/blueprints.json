@@ -38,7 +38,7 @@
     },
     "valid": true,
     "cost": 5,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.04189999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 1695.0, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "filtro",
@@ -59,7 +59,7 @@
     },
     "valid": true,
     "cost": 5,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "particles"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.04189999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 1695.0, "school": false, "shelter": false, "diet": "particles"}
   },
   {
     "name": "mandibula",
@@ -80,7 +80,7 @@
     },
     "valid": true,
     "cost": 7,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.07534999999999999, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "predator"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 9.0, "escape": 0.0, "metabolism": 0.036899999999999995, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 1695.0, "school": false, "shelter": false, "diet": "predator"}
   },
   {
     "name": "quatro flagelos",
@@ -103,7 +103,7 @@
     },
     "valid": true,
     "cost": 23,
-    "traits": {"max_speed": 0.4539599999999999, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.15535, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.55396, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.0819, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 1695.0, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "misto",
@@ -127,7 +127,7 @@
     },
     "valid": true,
     "cost": 14,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.51, "perception": 5.5, "escape": 0.0, "metabolism": 0.12034999999999998, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 760.0, "school": false, "shelter": true, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.51, "perception": 5.5, "escape": 0.0, "metabolism": 0.0644, "body_radius": 0.6499999999999999, "mature_s": 99.0, "adult_life_s": 1695.0, "school": false, "shelter": true, "diet": "flora"}
   },
   {
     "name": "espelho em cardume",
@@ -241,7 +241,7 @@
     },
     "valid": true,
     "cost": 9,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.20360000000000003, "body_radius": 1.6, "mature_s": 156.0, "adult_life_s": 1140.0, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.1274, "body_radius": 1.6, "mature_s": 156.0, "adult_life_s": 1980.0, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "corpo minusculo limitado em 0.4",
@@ -262,7 +262,7 @@
     },
     "valid": true,
     "cost": 4,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.05960000000000001, "body_radius": 0.4, "mature_s": 84.0, "adult_life_s": 660.0, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.0314, "body_radius": 0.4, "mature_s": 84.0, "adult_life_s": 1620.0, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "espinha assimetrica",
@@ -284,7 +284,7 @@
     },
     "valid": true,
     "cost": 7,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.13876714634568324, "body_radius": 1.2163274390947203, "mature_s": 132.97964634568322, "adult_life_s": 986.5309756378881, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 4.0, "escape": 0.0, "metabolism": 0.08417809756378883, "body_radius": 1.2163274390947203, "mature_s": 132.97964634568322, "adult_life_s": 1864.898231728416, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "espinha de 6 pontos",
@@ -309,7 +309,7 @@
     },
     "valid": true,
     "cost": 12,
-    "traits": {"max_speed": 0.15, "turn_rate": 0.5, "burst": 1.0, "perception": 6.55, "escape": 0.0, "metabolism": 0.15767906018734112, "body_radius": 1.2088497300281036, "mature_s": 132.5309838016862, "adult_life_s": 983.5398920112414, "school": false, "shelter": false, "diet": "flora"}
+    "traits": {"max_speed": 0.25, "turn_rate": 0.5, "burst": 1.0, "perception": 6.55, "escape": 0.0, "metabolism": 0.09345270679156076, "body_radius": 1.2088497300281036, "mature_s": 132.5309838016862, "adult_life_s": 1862.654919008431, "school": false, "shelter": false, "diet": "flora"}
   },
   {
     "name": "x repetido",

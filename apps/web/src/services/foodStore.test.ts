@@ -11,12 +11,12 @@ function snap(over: Partial<WorldSnapshot> = {}): WorldSnapshot {
     world_id: 'w', tick: 1, tick_hz: 10, server_ms: 0, map_id: 'e1', creature_scale: 0.5, juvenile_scale: 0.45, divide_s: 2,
     bounds: { y_min: 1.5, y_max: 8 }, species: [], organisms: [],
     flora: [[1, 2, 0.5], [3, 4, 0.1], [5, 6, 0]],
-    particles: [part(1), part(2)],
+    particles: [part(1), part(2)], genomes: [],
     ...over,
   };
 }
 const tick = (n: number, over: Partial<TickMessage> = {}): TickMessage => ({
-  world_id: 'w', tick: n, server_ms: n * 100, o: [], b: [], d: [], x: [], f: [], sp: [], ps: [], pr: [], ...over,
+  world_id: 'w', tick: n, server_ms: n * 100, o: [], b: [], d: [], x: [], f: [], sp: [], g: [], rb: [], ps: [], pr: [], ...over,
 });
 const ready = (): FoodStore => {
   const f = createFoodStore();

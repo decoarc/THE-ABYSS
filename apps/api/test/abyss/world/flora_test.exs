@@ -69,7 +69,8 @@ defmodule Abyss.World.FloraTest do
   test "volta a crescer" do
     {f, _} = Flora.bite(one(0.6, 20.0, 0.0), 0, 0.6)
     assert level(f) < 1.0e-9
-    {f, _} = Flora.step(f, 10.0)
+    # Um quinze avos de flora_grow_s, com o reforço da fonte, passa de 0,05.
+    {f, _} = Flora.step(f, @cfg.flora_grow_s / 15)
     assert level(f) > 0.05
   end
 

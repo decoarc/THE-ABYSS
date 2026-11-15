@@ -38,6 +38,14 @@ export interface SpeciesInfo {
   extinct_ms: number | null;
   /** Planta da espécie criada; null (ou ausente) nas de teste. */
   blueprint?: Blueprint | null;
+  /** Espécie-mãe (ramos descendem de uma espécie criada); null nas raízes. */
+  parent: string | null;
+  /** Raiz da árvore; uma espécie de teste é raiz de si mesma. */
+  root: string;
+  /** Região onde o ramo nasceu; null nas raízes. */
+  region: string | null;
+  /** Instante (ms do servidor) do nascimento do ramo; null nas de teste. */
+  born_ms: number | null;
 }
 
 export interface OrganismInfo {
@@ -53,6 +61,8 @@ export interface OrganismInfo {
   /** Geração; fundador = 1. */
   gen: number;
   parent: string | null;
+  /** Id do genoma (planta própria do organismo); null nas espécies de teste. */
+  g: number | null;
 }
 
 export interface WorldSnapshot {
@@ -71,6 +81,8 @@ export interface WorldSnapshot {
   bounds: { y_min: number; y_max: number };
   species: SpeciesInfo[];
   organisms: OrganismInfo[];
+  /** Genomas de quem vive: [id, planta]. */
+  genomes: [number, Blueprint][];
   /** Manchas de flora na ordem dos índices. */
   flora: FloraRow[];
   /** Partículas vivas, com `id` crescente. */
@@ -96,10 +108,14 @@ export interface TickMessage {
   o: TickRow[];
   /** Espécies registradas desde o tick anterior; idempotente por id e aplicado antes de `b`. */
   sp: SpeciesInfo[];
+  /** Genomas novos neste tick, inclusive os dos fundadores; aplicado antes de `b`. */
+  g: [number, Blueprint][];
   /** Nascidos neste tick, acrescentados ao fim. */
   b: OrganismInfo[];
   /** Mortos neste tick: [id, causa]. */
   d: [string, DeathCause][];
+  /** Organismos movidos para um ramo: [organismo, espécie]; aplicado depois de `b`. */
+  rb: [string, string][];
   /** Extinções: [espécie, ms do servidor]. */
   x: [string, number][];
   /** Manchas cujo nível quantizado mudou: [índice, nível]. */

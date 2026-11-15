@@ -1,0 +1,12 @@
+{
+  "gpu": "arc",
+  "renderer": "ANGLE (Intel, Intel(R) Arc(TM) Graphics (0x00007D55) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "branch": "sp2.1",
+  "mother": "sp2",
+  "depth": 1,
+  "root": "sp2",
+  "mae-arc.png": "S02-0006",
+  "ramo-arc.png": "S02-0022",
+  "arvore": "Semente 2 (criada em 13/11)\nfechar\nSemente 2\n32 vivos\n├── Semente 2 · Jardim\n6 vivos\n└── Semente 2 · Jardim 2\n4 vivos",
+  "indice": "NO TERRÁRIO · 195\nSemente 1\n60\nSemente 1 · Planície\n4\nSemente 2\n32\nSemente 2 · Jardim\n6\nSemente 2 · Jardim 2\n4\nSemente 3\n4\nSemente 4\n46\nSemente 8\n39\nSemente 5\nextinta · 13/11 22:38\nSemente 6\nextinta · 13/11 22:54\nSemente 7\nextinta · 13/11 23:17\nSemente 9\nextinta · 13/11 22:59\nSemente 10\nextinta · 13/11 23:04"
+}

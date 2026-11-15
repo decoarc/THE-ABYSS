@@ -20,7 +20,14 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   defp part(kind, mirror \\ false) do
-    %{"kind" => kind, "at" => 0.5, "around" => 0.0, "size" => 1.0, "angle" => 0.0, "mirror" => mirror}
+    %{
+      "kind" => kind,
+      "at" => 0.5,
+      "around" => 0.0,
+      "size" => 1.0,
+      "angle" => 0.0,
+      "mirror" => mirror
+    }
   end
 
   test "fixtures: validade e custo batem", %{cat: cat} do
@@ -40,7 +47,12 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   test "espelho conta duas instâncias e custo cresce", %{cat: cat} do
-    {:ok, bp} = Blueprint.validate(base([part("raspador"), part("flagelo", true), part("flagelo", true)]), cat)
+    {:ok, bp} =
+      Blueprint.validate(
+        base([part("raspador"), part("flagelo", true), part("flagelo", true)]),
+        cat
+      )
+
     assert Blueprint.instances(bp) == %{"raspador" => 1, "flagelo" => 4}
     # flagelo: 3 + 4 + 5 + 6 = 18; raspador: 2
     assert Blueprint.parts_cost(bp, cat) - 2 == 18
@@ -93,7 +105,13 @@ defmodule Abyss.Genesis.BlueprintTest do
   end
 
   test "tamanho máximo", %{cat: cat} do
-    big = put_in(base([part("raspador")]), ["colors", "glow"], String.duplicate("a", cat.max_bytes + 10))
+    big =
+      put_in(
+        base([part("raspador")]),
+        ["colors", "glow"],
+        String.duplicate("a", cat.max_bytes + 10)
+      )
+
     assert byte_size(Jason.encode!(big)) > cat.max_bytes
     assert Blueprint.validate(big, cat) == {:error, ["planta grande demais"]}
   end
@@ -110,5 +128,51 @@ defmodule Abyss.Genesis.BlueprintTest do
       8 -> {:tuple, self(), make_ref()}
       9 -> Map.new(1..:rand.uniform(30), fn i -> {"k#{i}", :rand.bytes(4)} end)
     end
+  end
+
+  test "distância de peças", %{cat: _cat} do
+    mouth = part("raspador")
+    a = base([mouth, part("flagelo")])
+
+    troca = base([mouth, part("aleta")])
+    assert Blueprint.part_delta(a, troca) == %{"flagelo" => -1, "aleta" => 1}
+    assert Blueprint.part_distance(Blueprint.part_delta(a, troca)) == 1
+
+    dois = base([mouth, part("flagelo"), part("ocelo"), part("ocelo")])
+    assert Blueprint.part_distance(Blueprint.part_delta(a, dois)) == 2
+
+    troca_mais = base([mouth, part("aleta"), part("ocelo")])
+    assert Blueprint.part_distance(Blueprint.part_delta(a, troca_mais)) == 2
+
+    assert Blueprint.part_delta(a, a) == %{}
+    assert Blueprint.part_distance(%{}) == 0
+  end
+
+  test "peça espelhada conta 1 na distância", %{cat: _cat} do
+    mouth = part("raspador")
+    a = base([mouth])
+    b = base([mouth, part("flagelo", true)])
+    assert Blueprint.part_delta(a, b) == %{"flagelo" => 1}
+    assert Blueprint.part_distance(Blueprint.part_delta(a, b)) == 1
+    assert Blueprint.part_distance(Blueprint.part_delta(b, a)) == 1
+  end
+
+  test "budget: false aceita planta cara mas não planta quebrada", %{cat: cat} do
+    cara =
+      base([
+        part("mandibula"),
+        part("flagelo", true),
+        part("placa", true),
+        part("aleta", true),
+        part("ocelo", true)
+      ])
+
+    assert {:error, ["estoura o orçamento"]} = Blueprint.validate(cara, cat)
+    assert {:ok, _} = Blueprint.validate(cara, cat, budget: false)
+
+    sem_boca =
+      base([part("flagelo", true), part("placa", true), part("aleta", true), part("ocelo", true)])
+
+    assert {:error, _} = Blueprint.validate(sem_boca, cat, budget: false)
   end
 end

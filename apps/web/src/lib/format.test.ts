@@ -5,7 +5,7 @@ it('minutos', () => expect(formatAge(14 * 60_000)).toBe('há 14 min'));
 it('horas e minutos', () => expect(formatAge(125 * 60_000)).toBe('há 2 h 5 min'));
 it('posição com uma casa decimal', () => expect(formatPosition([12.44, 3.06, -8])).toBe('12.4 · 3.1 · -8.0'));
 
-const sp = (id: string, name: string) => ({ id, code: id, name, body_radius: 1, diet: { kind: 'flora' as const, prey: [] }, extinct_ms: null });
+const sp = (id: string, name: string) => ({ id, code: id, name, body_radius: 1, diet: { kind: 'flora' as const, prey: [] }, extinct_ms: null, parent: null, root: id, region: null, born_ms: null });
 const ALL = [sp('filamento', 'Filamento'), sp('celula', 'Célula'), sp('poliedro', 'Poliedro')];
 
 it('dieta: flora e partículas', () => {

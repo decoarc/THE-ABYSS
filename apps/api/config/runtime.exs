@@ -62,6 +62,22 @@ case System.get_env("ABYSS_FOOD_BOOST") do
     config :abyss, :world, food_boost: k
 end
 
+# Só para medição (não é valor do mundo): ABYSS_MUTATION_BOOST multiplica part_p
+# do catálogo (teto 1), para ver ramos surgirem em pouco tempo. Vazia ou
+# ausente = 1.0 (mutação canônica).
+case System.get_env("ABYSS_MUTATION_BOOST") do
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
+  boost ->
+    {k, ""} = Float.parse(boost)
+    if k <= 0, do: raise("ABYSS_MUTATION_BOOST deve ser > 0: #{boost}")
+    config :abyss, :world, mutation_boost: k
+end
+
 # Espécies de teste: "false" liga o mundo vazio (só flora e partículas).
 if System.get_env("ABYSS_TEST_SPECIES") do
   config :abyss, :world, test_species: System.get_env("ABYSS_TEST_SPECIES") != "false"

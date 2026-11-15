@@ -1,7 +1,7 @@
 defmodule Abyss.Genesis.SchemaTest do
   use Abyss.DataCase, async: true
 
-  alias Abyss.Genesis.{Creator, SpeciesRecord}
+  alias Abyss.Genesis.{BranchRecord, Creator, SpeciesRecord}
 
   defp creator!(email) do
     Repo.insert!(%Creator{email_normalized: email})
@@ -20,7 +20,10 @@ defmodule Abyss.Genesis.SchemaTest do
 
   test "e-mail normalizado é único em creators" do
     creator!("a@b.com")
-    assert {:error, cs} = Repo.insert(Creator.changeset(%Creator{}, %{email_normalized: "a@b.com"}))
+
+    assert {:error, cs} =
+             Repo.insert(Creator.changeset(%Creator{}, %{email_normalized: "a@b.com"}))
+
     assert {"has already been taken", _} = cs.errors[:email_normalized]
   end
 
@@ -39,6 +42,27 @@ defmodule Abyss.Genesis.SchemaTest do
     assert {:error, cs} =
              Repo.insert(SpeciesRecord.changeset(species_attrs(creator!("z@y.com"), "AAAA"), %{}))
 
+    assert {_, opts} = cs.errors[:code]
+    assert opts[:constraint] == :unique
+  end
+
+  test "código de ramo único" do
+    sp = Repo.insert!(species_attrs(creator!("r@y.com"), "AAAA"))
+
+    attrs = fn id ->
+      %BranchRecord{
+        id: id,
+        root_species_id: sp.id,
+        parent_id: "sp#{sp.id}",
+        name: "Ramo",
+        code: "AAAA.1",
+        blueprint: %{"x" => 1},
+        born_at: DateTime.utc_now()
+      }
+    end
+
+    Repo.insert!(attrs.("sp#{sp.id}.1"))
+    assert {:error, cs} = Repo.insert(BranchRecord.changeset(attrs.("sp#{sp.id}.2"), %{}))
     assert {_, opts} = cs.errors[:code]
     assert opts[:constraint] == :unique
   end

@@ -12,7 +12,8 @@ defmodule Abyss.World.Organism do
           pitch: float,
           mode: :run | :pause,
           mode_left: float,
-          target: nil | {:flora, non_neg_integer} | {:particle, pos_integer} | {:prey, String.t()},
+          target:
+            nil | {:flora, non_neg_integer} | {:particle, pos_integer} | {:prey, String.t()},
           chase_left: float,
           gave_up: nil | {String.t(), integer},
           sated_left: float,
@@ -21,7 +22,9 @@ defmodule Abyss.World.Organism do
           stage_ms: integer,
           generation: pos_integer,
           parent_id: String.t() | nil,
-          dividing_left: float
+          dividing_left: float,
+          genome: pos_integer | nil,
+          mutated: boolean
         }
 
   @enforce_keys [:id, :species, :born_ms, :pos]
@@ -45,6 +48,10 @@ defmodule Abyss.World.Organism do
     stage_ms: 0,
     generation: 1,
     parent_id: nil,
-    dividing_left: 0.0
+    dividing_left: 0.0,
+    # Genoma (planta e características) do organismo; nil = as da espécie (as de teste).
+    genome: nil,
+    # Nasceu com mutação de peça (gate S2).
+    mutated: false
   ]
 end

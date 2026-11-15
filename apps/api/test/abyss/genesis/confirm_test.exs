@@ -184,6 +184,11 @@ defmodule Abyss.Genesis.ConfirmTest do
     rec = %SpeciesRecord{id: 7, code: "S07", name: "Lumina", blueprint: blueprint()}
     sp = Genesis.species_from_record(rec)
     assert sp.id == "sp7" and sp.code == "S07" and sp.name == "Lumina"
+    assert %{parent: nil, root: "sp7", region: nil, born_ms: nil} = sp
+
+    at = ~U[2026-11-13 12:00:00.000000Z]
+    sp = Genesis.species_from_record(%{rec | published_at: at})
+    assert sp.born_ms == DateTime.to_unix(at, :millisecond)
   end
 
   test "submit com tipos hostis nunca levanta" do

@@ -33,6 +33,13 @@ export interface Catalog {
   part_angle: number[];
   patterns: string[];
   diminish: number;
+  mutation?: {
+    part_p: number;
+    mouth_share: number;
+    ops: { add: number; remove: number; swap: number };
+    drift_p: number;
+    drift: { spine_xy: number; spine_r: number; hue: number; pattern_p: number };
+  };
   base: Record<'max_speed' | 'turn_rate' | 'burst' | 'perception' | 'wander' | 'sated_s' | 'energy_max' | 'escape', number>;
   caps: Record<'max_speed' | 'turn_rate' | 'burst' | 'perception' | 'escape', number>;
   metabolism: { base: number; per_radius2: number };

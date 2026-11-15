@@ -1,5 +1,15 @@
 defmodule Abyss.World.Wire do
-  @moduledoc "Serialização do mundo para o formato no fio (snapshot e tick)."
+  @moduledoc """
+  Serialização do mundo para o formato no fio (snapshot e tick).
+
+  O genoma (planta) vai uma vez só: no snapshot (`genomes`) ou no tick em que
+  nasce (`g`); os organismos carregam apenas o id (`g`).
+
+  Ordem de aplicação de um tick no cliente: `sp`, `g`, `b`, `rb`, `d`, `x`.
+  `rb` vem depois de `b` porque um filho nascido no mesmo passo em que o grupo
+  da mãe é re-ramificado aparece em `b` com a espécie da mãe e só então muda
+  de espécie em `rb`.
+  """
 
   alias Abyss.World.Sim
 
@@ -26,6 +36,7 @@ defmodule Abyss.World.Wire do
       juvenile_scale: sim.ecology.juvenile_scale,
       divide_s: sim.ecology.divide_s,
       organisms: Enum.map(sim.organisms, &organism(&1, emax)),
+      genomes: live_genomes(sim),
       flora:
         sim.flora.patches
         |> Tuple.to_list()
@@ -53,6 +64,8 @@ defmodule Abyss.World.Wire do
         end),
       sp: Enum.map(Map.get(ev, :species, []), &species_info(sim, &1)),
       b: Enum.map(ev.births, &organism(&1, emax)),
+      g: Enum.map(Map.get(ev, :genomes, []), fn {gid, bp} -> [gid, bp] end),
+      rb: Enum.map(Map.get(ev, :rebranch, []), fn {id, sp} -> [id, to_string(sp)] end),
       d: Enum.map(ev.deaths, fn {id, cause} -> [id, Atom.to_string(cause)] end),
       x: Enum.map(ev.extinct, fn {id, ms} -> [to_string(id), ms] end),
       f: Enum.map(sim.food_events.changed, fn {idx, level} -> [idx, level] end),
@@ -71,8 +84,49 @@ defmodule Abyss.World.Wire do
       |> Enum.take(@max_extinct)
       |> MapSet.new(&elem(&1, 1))
 
-    Enum.filter(all, fn sp ->
-      not Map.has_key?(sim.extinct, sp.id) or MapSet.member?(kept, sp.id)
+    base =
+      Enum.filter(all, fn sp ->
+        not Map.has_key?(sim.extinct, sp.id) or MapSet.member?(kept, sp.id)
+      end)
+
+    # Ancestrais (extintos) de espécies presentes ficam, para a árvore fechar.
+    present = MapSet.new(base, &to_string(&1.id))
+
+    ancestors =
+      base
+      |> Enum.flat_map(&ancestor_ids(to_string(&1.id)))
+      |> MapSet.new()
+      |> MapSet.difference(present)
+
+    if MapSet.size(ancestors) == 0 do
+      base
+    else
+      Enum.filter(all, fn sp ->
+        to_string(sp.id) in present or MapSet.member?(ancestors, to_string(sp.id))
+      end)
+    end
+  end
+
+  # "sp1.2.1" -> ["sp1.2", "sp1"]
+  defp ancestor_ids(id) do
+    case String.split(id, ".") do
+      [_] -> []
+      parts -> for n <- (length(parts) - 1)..1//-1, do: parts |> Enum.take(n) |> Enum.join(".")
+    end
+  end
+
+  # [[gid, planta]] dos genomas referenciados por organismos vivos.
+  defp live_genomes(sim) do
+    sim.organisms
+    |> Enum.map(& &1.genome)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+    |> Enum.sort()
+    |> Enum.flat_map(fn gid ->
+      case Sim.genome(sim, gid) do
+        nil -> []
+        bp -> [[gid, bp]]
+      end
     end)
   end
 
@@ -85,7 +139,11 @@ defmodule Abyss.World.Wire do
       body_radius: Sim.body_radius(sim, sp.id),
       diet: diet(sp.diet),
       blueprint: sp.blueprint,
-      extinct_ms: Map.get(sim.extinct, sp.id)
+      extinct_ms: Map.get(sim.extinct, sp.id),
+      parent: Map.get(sp, :parent) && to_string(sp.parent),
+      root: to_string(Map.get(sp, :root, sp.id)),
+      region: Map.get(sp, :region),
+      born_ms: Map.get(sp, :born_ms)
     }
   end
 
@@ -100,7 +158,8 @@ defmodule Abyss.World.Wire do
       stage: Atom.to_string(o.stage),
       dividing: o.dividing_left > 0,
       gen: o.generation,
-      parent: o.parent_id
+      parent: o.parent_id,
+      g: o.genome
     }
   end
 

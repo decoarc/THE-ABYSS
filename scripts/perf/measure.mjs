@@ -1,7 +1,7 @@
 // Medição de desempenho, 1920×1080. Roda cada cenário em navegador novo, sequencialmente,
 // para não competir por GPU.
 //
-// Uso: node scripts/perf/measure.mjs <url-base> [outDir] [--suite e1|e2|s1|gate-i] [--only <trecho do rótulo>] [--programs-only]
+// Uso: node scripts/perf/measure.mjs <url-base> [outDir] [--suite e1|e2|s1|s2|gate-i] [--only <trecho do rótulo>] [--programs-only]
 //   e1 (padrão): mapa grande do gate E1, dois cenários repetíveis em cada GPU e perfil:
 //     - "percurso": `?flypath=1` leva a câmera livre pelas três regiões (duas voltas; mede cada volta);
 //     - "floresta": câmera parada no pior quadro da Floresta (5 s de aquecimento, 10 s medidos).
@@ -14,6 +14,10 @@
 //     cenário registra quantas espécies criadas e quantos organismos delas a aba via; grava em <outDir>/perf.json
 //     (padrão docs/captures/s1/perf). `--programs-only` roda só a contagem de programas (2 min de nascimentos
 //     e o resync forçado), em <outDir>/programs.json, para comparar mundos (sem e com as criadas).
+//   s2: o mesmo do s1 para o gate S2 (evolução): mundo com `ABYSS_MUTATION_BOOST` alto, onde os filhos mutam e o
+//     mundo tem muitos genomas distintos. Cada cenário registra também quantos genomas distintos a aba via, e a contagem
+//     de programas conta os genomas novos vistos nos 2 min de nascimentos. Grava em <outDir>/perf.json
+//     (padrão docs/captures/s2/perf). Não exige as 50 criadas vivas (a pressão da mutação extingue algumas).
 //   gate-i: os cenários parados do gate I (`?perf=1`), em <outDir>/perf-60-organismos.json.
 //
 // Além de p50/p95, cada janela conta quadros > 33 ms e > 50 ms, tarefas longas e quantos
@@ -202,6 +206,7 @@ function worldMix() {
     createdSpeciesAlive: new Set(createdOrgs.map((o) => o.species)).size,
     organisms: orgs.length,
     createdOrganisms: createdOrgs.length,
+    distinctGenomes: new Set(orgs.map((o) => o.g).filter((g) => g !== null)).size,
   };
 }
 
@@ -274,7 +279,15 @@ async function programsOverBirths(gpuArgs) {
     await page.waitForFunction((end) => window.__abyss.camera().pathS >= end, lapS + 0.5, { timeout: (lapS + 60) * 1000, polling: 500 });
     const before = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats(), world: await page.evaluate(worldMix) };
     const sampler = samplePopulation();
+    // Genomas vistos durante os nascimentos (sondagem de 1 s no roster da aba).
+    await page.evaluate(() => {
+      window.__gSeen = new Set();
+      const scan = () => window.__abyss.organisms().forEach((o) => o.g !== null && window.__gSeen.add(o.g));
+      scan();
+      setInterval(scan, 1000);
+    });
     await page.waitForTimeout(120_000);
+    const genomesSeen = await page.evaluate(() => window.__gSeen.size);
     const after = { programs: await page.evaluate(() => window.__abyss.programs()), api: await apiStats() };
     const popBirths = await sampler.stop();
     // Ressincronização forçada: todos os organismos desmontam e remontam juntos (aba voltando do segundo plano).
@@ -289,7 +302,7 @@ async function programsOverBirths(gpuArgs) {
     const resync = { removed, rosterAfterRemove, before: beforeResync, after: afterResync, links: await page.evaluate(() => window.__perfRec.links.map(([t, sig]) => ({ t: Math.round(t), sig })).slice(-20)) };
     const stats = await (await fetch('http://localhost:4000/api/stats')).json();
     const births = (after.api?.births_total ?? stats.births_total) - (before.api?.births_total ?? 0);
-    return { renderer: await page.evaluate(rendererName), world: await page.evaluate(worldMix), before, after, populationDuringBirths: popBirths, resync, birthsDuring: births, birthsTotal: stats.births_total, deathsTotal: stats.deaths_total };
+    return { renderer: await page.evaluate(rendererName), world: await page.evaluate(worldMix), before, after, populationDuringBirths: popBirths, resync, genomesSeen, birthsDuring: births, birthsTotal: stats.births_total, deathsTotal: stats.deaths_total };
   } finally {
     await browser.close();
   }
@@ -365,10 +378,10 @@ async function e1(outDir) {
   }
   await mkdir(outDir, { recursive: true });
   const out = join(outDir, 'perf.json');
-  const programsRun = (opts.suite === 'e2' || opts.suite === 's1') && !opts.only ? await programsOverBirths(HP_ARGS) : null;
+  const programsRun = (opts.suite === 'e2' || opts.suite === 's1' || opts.suite === 's2') && !opts.only ? await programsOverBirths(HP_ARGS) : null;
   if (programsRun) {
     const grew = programsRun.after.programs > programsRun.before.programs || programsRun.resync.after.programs > programsRun.resync.before.programs;
-    console.log(`resync: ${programsRun.resync.removed} removidos, programas ${programsRun.resync.before.programs} -> ${programsRun.resync.after.programs}; população nos nascimentos ${programsRun.populationDuringBirths.min}..${programsRun.populationDuringBirths.max}`);
+    console.log(`genomas novos vistos em 2 min: ${programsRun.genomesSeen}; resync: ${programsRun.resync.removed} removidos, programas ${programsRun.resync.before.programs} -> ${programsRun.resync.after.programs}; população nos nascimentos ${programsRun.populationDuringBirths.min}..${programsRun.populationDuringBirths.max}`);
     targets.push({ name: 'programas de shader não crescem em 2 min de nascimentos nem após ressincronização forçada', value: `${programsRun.before.programs} -> ${programsRun.after.programs} (nascimentos ${programsRun.birthsDuring})`, pass: !grew });
     console.log(`${grew ? 'FAIL' : 'PASS'} programas ${programsRun.before.programs} -> ${programsRun.after.programs}, nascimentos ${programsRun.birthsDuring}`);
   }
@@ -379,7 +392,7 @@ async function e1(outDir) {
 }
 
 // Depois das constantes acima (o await no topo roda antes das declarações que vêm depois dele).
-const DEFAULT_OUT = { e1: 'docs/captures/e1', e2: 'docs/captures/e2/parada-2', s1: 'docs/captures/s1/perf' };
+const DEFAULT_OUT = { e1: 'docs/captures/e1', e2: 'docs/captures/e2/parada-2', s1: 'docs/captures/s1/perf', s2: 'docs/captures/s2/perf' };
 
 /** Só a contagem de programas (para comparar o mesmo cliente em mundos diferentes). */
 async function programsOnly(outDir) {

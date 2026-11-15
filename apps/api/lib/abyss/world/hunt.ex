@@ -5,8 +5,9 @@ defmodule Abyss.World.Hunt do
   porte (raio efetivo); nenhuma regra testa o id ou o nome de uma espécie.
 
   A grade de organismos (`Abyss.World.Grid`) é a do passo, com itens
-  `{i, id, pos, r, species_id, vel, energy}` tirados do começo do passo (`i` é
-  a ordem da lista, usada no desempate).
+  `{i, id, pos, r, traits, vel, energy}` tirados do começo do passo (`i` é
+  a ordem da lista, usada no desempate; `traits` são as características do
+  organismo, do genoma ou da espécie, sempre com `id` = a espécie).
   """
 
   alias Abyss.World.Grid
@@ -43,10 +44,11 @@ defmodule Abyss.World.Hunt do
 
   @doc """
   Posição do caçador mais próximo, dentro de `perception` (que a cobertura não
-  reduz), que poderia comer `o`; `nil` se não há nenhum.
+  reduz), que poderia comer `o`; `nil` se não há nenhum. As características
+  do caçador vêm do item da grade; `bounds` não é mais consultado.
   """
   @spec threat(map, map, number, Grid.t(), map) :: {float, float, float} | nil
-  def threat(o, sp, r, grid, bounds) do
+  def threat(o, sp, r, grid, _bounds) do
     {x, _, z} = o.pos
     range = sp.perception
 
@@ -56,7 +58,7 @@ defmodule Abyss.World.Hunt do
       d = dist(o.pos, pos)
 
       if id != o.id and d <= range and closer?(d, i, best) and
-           can_eat?(Map.fetch!(bounds.species, hsp), hr, sp, r),
+           can_eat?(hsp, hr, sp, r),
          do: {d, i, pos},
          else: best
     end)
@@ -109,7 +111,7 @@ defmodule Abyss.World.Hunt do
       |> Grid.near(x, z, range)
       |> Enum.sort()
       |> Enum.reduce({0, @zero, @zero}, fn {_i, id, pos, _r, s, vel, _e}, {n, ps, vs} = acc ->
-        if id != o.id and s == o.species and dist(o.pos, pos) <= range,
+        if id != o.id and s.id == o.species and dist(o.pos, pos) <= range,
           do: {n + 1, add(ps, pos), add(vs, vel)},
           else: acc
       end)

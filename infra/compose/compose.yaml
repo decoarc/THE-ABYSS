@@ -31,6 +31,8 @@ services:
       - ABYSS_SEED=${ABYSS_SEED:-}
       # Só para medição: multiplica a comida (vazia = 1.0, a canônica).
       - ABYSS_FOOD_BOOST=${ABYSS_FOOD_BOOST:-}
+      # Só para medição: multiplica part_p (teto 1) para ver ramos em pouco tempo (1 = canônico).
+      - ABYSS_MUTATION_BOOST=${ABYSS_MUTATION_BOOST:-1}
     ports:
       - "4000:4000"
     volumes:

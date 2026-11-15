@@ -13,6 +13,7 @@ import type { Blueprint } from '../services/wire';
 import type { NucleusConfig } from './creatureConfig';
 import { requestCreatureGlow } from './creatureGlow';
 import { phaseOf } from './instancePhase';
+import { pickBlueprint } from './pickBlueprint';
 import { Nucleus } from './Nucleus';
 import { useOrganismPose } from './useOrganismPose';
 import { useSelectable } from './useSelectable';
@@ -106,11 +107,8 @@ export const CRIADA_PULSE = { min: PULSE_MIN, max: PULSE_MAX } as const;
 /** Espécie criada: desenhada da sua planta, com o mesmo programa de shader para toda planta. */
 export function Criada({ id }: { id: string }) {
   const { store } = useWorld();
-  // Planta e espécie de um organismo não mudam: basta ler uma vez.
-  const bp = useMemo(() => {
-    const org = store.roster().find((o) => o.id === id);
-    return store.species().find((s) => s.id === org?.species)?.blueprint ?? null;
-  }, [store, id]);
+  // O genoma de um organismo não muda (só a espécie, por `rb`): basta escolher a planta uma vez.
+  const bp = useMemo(() => pickBlueprint(store, id), [store, id]);
   return bp ? <CriadaBody id={id} bp={bp} /> : null;
 }
 

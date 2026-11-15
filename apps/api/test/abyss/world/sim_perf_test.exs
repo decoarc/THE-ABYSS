@@ -163,4 +163,56 @@ defmodule Abyss.World.SimPerfTest do
     assert at_floor >= @steps * 0.9
     assert max <= @max_step_us
   end
+
+  test "S2: 250 organismos com 250 genomas diferentes: p99 do passo <= 20 ms" do
+    cat = Catalog.get()
+
+    base = %{
+      population: @population,
+      seed: @seed,
+      now_ms: 0,
+      map: @map,
+      creature_scale: 0.5,
+      test_species: false,
+      food: Sim.boost_food(@food, @boost),
+      ecology: @ecology,
+      catalog: cat
+    }
+
+    filled = Enum.reduce(1..(@fill_s * 2), Sim.new(base), fn _, s -> Sim.step(s, 0.5) end)
+
+    # Uma espécie criada por organismo: 250 plantas, 250 genomas.
+    rng = :rand.seed_s(:exsss, {@seed, 2, 2})
+
+    {sim, _} =
+      Enum.reduce(1..@population, {filled, rng}, fn i, {sim, rng} ->
+        {bp, rng} = Random.blueprint(rng, cat)
+        sp = Traits.species(bp, cat, %{id: "sp#{i}", code: Genesis.code_for(i), name: "G#{i}"})
+        {Sim.add_species(sim, sp, founders: 1), rng}
+      end)
+
+    sim = Sim.step(sim, 0.1)
+    assert length(sim.organisms) == @population
+    assert map_size(sim.genomes) == @population
+    assert sim.organisms |> Enum.map(& &1.genome) |> Enum.uniq() |> length() == @population
+
+    {final, times, pops} = measure(sim)
+    births = Sim.eco_stats(final).births_total
+    genomes_end = map_size(final.genomes)
+
+    sorted = Enum.sort(times)
+    max = List.last(sorted)
+    p99 = Enum.at(sorted, ceil(@steps * 0.99) - 1)
+    mean = div(Enum.sum(sorted), @steps)
+
+    IO.puts(
+      "\n[sim perf S2] #{@steps} ticks, 250 genomas, boost #{@boost}: " <>
+        "média #{mean} us, p99 #{p99} us, máx #{max} us; nascimentos #{births}, " <>
+        "genomas no fim #{genomes_end}; população mín #{Enum.min(pops)}, final #{length(final.organisms)}"
+    )
+
+    assert births > 0
+    assert Enum.max(pops) <= @population
+    assert p99 <= @max_step_us
+  end
 end

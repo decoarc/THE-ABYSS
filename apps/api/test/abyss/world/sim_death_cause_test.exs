@@ -56,6 +56,21 @@ defmodule Abyss.World.SimDeathCauseTest do
     assert sim.eco_totals.deaths == %{celula: %{old_age: 1}}
   end
 
+  test "extinção por predação guarda o predador certo" do
+    hunter = org("FIL-0001", :filamento, @open, energy: 30.0)
+    prey = org("CEL-0001", :celula, shift(@open, -3.0), stage: :juvenile, energy: 50.0)
+    sim = world([hunter, prey])
+    sim = %{sim | next_seq: Map.put(sim.next_seq, :celula, 2)}
+
+    causes =
+      Enum.reduce_while(1..150, sim, fn _, s ->
+        s = Sim.step(s, 0.1)
+        if s.life_events.extinct_causes == %{}, do: {:cont, s}, else: {:halt, s}
+      end).life_events.extinct_causes
+
+    assert causes == %{celula: {:predation, :filamento}}
+  end
+
   test "extinção guarda a última morte" do
     sim = world([org("CEL-0001", :celula, {3.0, 4.0, 0.0}, energy: 0.0)])
     sim = %{sim | next_seq: Map.put(sim.next_seq, :celula, 2)}

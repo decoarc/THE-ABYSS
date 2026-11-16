@@ -17,6 +17,7 @@ import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
 import { CreateButton } from './ui/CreateButton';
 import { LineageButton } from './ui/LineageButton';
+import { SpeciesSearch } from './ui/SpeciesSearch';
 import { GenesisNotice } from './ui/GenesisNotice';
 import { CreationScreen, initialDraft, type Draft, type PreviewProps } from './genesis/CreationScreen';
 import { EditorPreview } from './genesis/EditorPreview';
@@ -209,6 +210,7 @@ export function App({
             <Scene onFail={() => setFailed(true)} />
           )}
           <DemoBadge />
+          <SpeciesSearch />
           <SpeciesIndex />
           <InspectPanel />
           <ConnectionNotice />

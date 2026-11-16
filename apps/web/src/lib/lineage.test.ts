@@ -1,4 +1,4 @@
-import { buildLineage, firstLiving, rootOf } from './lineage';
+import { buildLineage, firstLiving, nearestLiving, rootOf } from './lineage';
 import { createWorldStore } from '../services/worldStore';
 import type { OrganismInfo, SpeciesInfo } from '../services/wire';
 
@@ -78,4 +78,29 @@ it('firstLiving: o vivo de menor id do ramo, sem fantasmas, pelo sufixo numéric
   expect(store.roster().some((r) => r.id === 'X-0002')).toBe(true);
   expect(firstLiving(store, 'x')).toBe('X-9999');
   expect(firstLiving(store, 'z')).toBeNull();
+});
+
+it('nearestLiving escolhe o mais perto e ignora fantasmas', () => {
+  const store = createWorldStore();
+  const at = (id: string, species: string, p: [number, number, number]): OrganismInfo => ({ ...org(id, species), p });
+  store.applySnapshot(
+    {
+      world_id: 'w', tick: 1, tick_hz: 10, server_ms: 1_000_000, map_id: 'e1', creature_scale: 0.5,
+      juvenile_scale: 0.45, divide_s: 2, bounds: { y_min: 1.5, y_max: 8 },
+      species: [sp('sp1', null, 0), sp('sp1.1', 'sp1', 10), sp('sp2', null, 0)],
+      organisms: [at('A-1', 'sp1', [10, 4, 0]), at('A-2', 'sp1', [3, 4, 0]), at('B-1', 'sp1.1', [1, 4, 0]), at('C-1', 'sp2', [0, 4, 0])],
+      flora: [], particles: [], genomes: [],
+    },
+    1_000_000,
+  );
+  expect(nearestLiving(store, new Set(['sp1']), [0, 4, 0], 1_000_000)).toBe('A-2');
+  expect(nearestLiving(store, new Set(['sp1', 'sp1.1']), [0, 4, 0], 1_000_000)).toBe('B-1');
+  expect(nearestLiving(store, new Set(['sp9']), [0, 4, 0], 1_000_000)).toBeNull();
+
+  // A-2 morre de fome: vira fantasma e deixa de contar.
+  store.applyTick(
+    { world_id: 'w', tick: 2, server_ms: 1_000_100, o: [[10, 4, 0, 0, 0, 0, 0.8, 0], [1, 4, 0, 0, 0, 0, 0.8, 0], [0, 4, 0, 0, 0, 0, 0.8, 0]], sp: [], b: [], g: [], rb: [], d: [['A-2', 'starvation']], x: [], f: [], ps: [], pr: [] },
+    1_000_100,
+  );
+  expect(nearestLiving(store, new Set(['sp1']), [0, 4, 0], 1_000_100)).toBe('A-1');
 });

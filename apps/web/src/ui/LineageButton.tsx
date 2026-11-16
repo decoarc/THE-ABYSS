@@ -1,17 +1,17 @@
-import { useState } from 'react';
 import { PALETTE } from '../lib/palette';
+import { lineageUi, useLineageUi } from '../services/lineageUi';
 import { LineageTree } from './LineageTree';
 
-/** Botão minimizado (só o ícone de árvore) que abre o fluxograma da espécie. */
+/** Botão minimizado (só o ícone de árvore) que abre o fluxograma da espécie; o buscador também a abre. */
 export function LineageButton() {
-  const [open, setOpen] = useState(false);
+  const { open } = useLineageUi();
   return (
     <>
       <button
         type="button"
         aria-label="Árvore da espécie"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={lineageUi.toggle}
         style={{
           position: 'fixed',
           right: 16,
@@ -34,7 +34,7 @@ export function LineageButton() {
           <circle cx="14" cy="2.5" r="1.2" />
         </svg>
       </button>
-      {open && <LineageTree onClose={() => setOpen(false)} />}
+      {open && <LineageTree onClose={lineageUi.close} />}
     </>
   );
 }

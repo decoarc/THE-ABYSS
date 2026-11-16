@@ -284,11 +284,12 @@ defmodule Abyss.World.Sim do
     }
   end
 
-  # Só para medição (ABYSS_MUTATION_BOOST): part_p × k, no máximo 1.
-  defp boost_mutation(nil, _k), do: nil
-  defp boost_mutation(cat, k) when k == 1, do: cat
+  @doc "Catálogo com `part_p` × `k`, no máximo 1 (só para medição, `ABYSS_MUTATION_BOOST`)."
+  @spec boost_mutation(map | nil, number) :: map | nil
+  def boost_mutation(nil, _k), do: nil
+  def boost_mutation(cat, k) when k == 1, do: cat
 
-  defp boost_mutation(cat, k) when k > 0,
+  def boost_mutation(cat, k) when k > 0,
     do: put_in(cat, [:mutation, :part_p], min(cat.mutation.part_p * k, 1.0))
 
   defp scan_ms(ecology), do: round(Map.get(ecology, :branch_scan_s, 10) * 1000)

@@ -78,6 +78,17 @@ defmodule Abyss.World.SaverTest do
     assert r.format_version == 1 and r.rules_version == 1
   end
 
+  test "stats mede o custo da fotografia no processo do mundo" do
+    saver = start_saver()
+    server = start_server(saver, snapshot_s: 0.2)
+    assert Server.stats(server).snapshot_us_max == 0
+    Process.sleep(700)
+    st = Server.stats(server)
+    assert st.snapshot_us_max > 0 and st.snapshots == 3
+    GenServer.stop(server, :normal)
+    wait_until(fn -> not :sys.get_state(saver).busy end)
+  end
+
   test "gravação ocupada descarta a próxima" do
     test_pid = self()
 

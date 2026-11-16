@@ -10,6 +10,8 @@ export interface AbyssDebug {
   status(): ConnectionStatus;
   worldId(): string | null;
   lastTick(): number;
+  /** Relógio do mundo agora (ms do servidor, estimado pelo cliente): idade = serverNow − born_ms. */
+  serverNow(): number;
   roster(): string[];
   positionsAt(tick: number): Record<string, Vec3> | null;
   selection(): SelectionState;
@@ -65,6 +67,7 @@ export function installDebugBridge(
     status: () => store.status(),
     worldId: () => store.worldId(),
     lastTick: () => store.lastTick(),
+    serverNow: () => store.serverNow(performance.now()),
     roster: () => store.roster().map((o) => o.id),
     positionsAt: (tick) => store.positionsAt(tick),
     selection: () => selection.get(),

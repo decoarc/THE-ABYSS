@@ -124,7 +124,9 @@ defmodule Abyss.World.Server do
       started_ms: real_ms,
       n: 0,
       jitters: [],
-      step_us_max: 0
+      step_us_max: 0,
+      snapshot_us_max: 0,
+      snapshots: 0
     }
 
     {:ok, state |> schedule() |> schedule_snapshot()}
@@ -164,6 +166,8 @@ defmodule Abyss.World.Server do
         jitter_ms_p50: percentile(sorted, 0.50),
         jitter_ms_p99: percentile(sorted, 0.99),
         step_us_max: state.step_us_max,
+        snapshot_us_max: state.snapshot_us_max,
+        snapshots: state.snapshots,
         observers: Observers.count()
       })
 
@@ -198,21 +202,34 @@ defmodule Abyss.World.Server do
 
   # A cada intervalo: mortes acumuladas primeiro (a fronteira da contagem fica exata),
   # depois a fotografia. Nada aqui espera o banco; uma falha não derruba o mundo.
+  # O tempo gasto aqui (`snapshot_us_max` em stats) é o que a fotografia custa ao tick.
   def handle_info(:snapshot, state) do
-    try do
-      state.persist.flush.()
+    {us, :ok} = :timer.tc(fn -> take_snapshot(state) end)
 
-      if state.persist.save.(payload(state)) == :busy,
-        do: Logger.warning("fotografia do tick #{state.sim.tick} descartada: gravação em curso")
-    catch
-      kind, _ -> Logger.error("fotografia do tick #{state.sim.tick} falhou (#{kind})")
-    end
+    state = %{
+      state
+      | snapshot_us_max: max(state.snapshot_us_max, us),
+        snapshots: state.snapshots + 1
+    }
 
     {:noreply, schedule_snapshot(state)}
   end
 
   # Com `trap_exit`, saídas de processos ligados (fora o pai) são ignoradas.
   def handle_info({:EXIT, _pid, _reason}, state), do: {:noreply, state}
+
+  defp take_snapshot(state) do
+    state.persist.flush.()
+
+    if state.persist.save.(payload(state)) == :busy,
+      do: Logger.warning("fotografia do tick #{state.sim.tick} descartada: gravação em curso")
+
+    :ok
+  catch
+    kind, _ ->
+      Logger.error("fotografia do tick #{state.sim.tick} falhou (#{kind})")
+      :ok
+  end
 
   @impl true
   def terminate(_reason, %{persist: %{} = persist} = state) do

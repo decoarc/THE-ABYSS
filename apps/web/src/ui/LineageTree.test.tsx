@@ -2,6 +2,14 @@ import { act, fireEvent, screen } from '@testing-library/react';
 import { LineageButton } from './LineageButton';
 import { renderWithWorld } from '../test-utils/world';
 import type { OrganismInfo, SpeciesInfo } from '../services/wire';
+import type { HistoryNode, HistoryTree } from '../services/speciesApi';
+import { lineageUi } from '../services/lineageUi';
+
+// Sem história por padrão (404): a árvore funciona como antes do gate P.
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 404 })));
+});
+afterEach(() => vi.unstubAllGlobals());
 
 const BORN = new Date(2026, 10, 3, 10, 0).getTime();
 const sp = (id: string, name: string, parent: string | null, born_ms: number | null, over: Partial<SpeciesInfo> = {}): SpeciesInfo => ({
@@ -93,4 +101,94 @@ it('atualiza quando um vivo morre', () => {
     );
   });
   expect(screen.getByRole('button', { name: /^Lumina · Abismo/ })).toBeDisabled();
+});
+
+describe('com história', () => {
+  const iso = (d: Date) => d.toISOString();
+  const node = (id: string, name: string, over: Partial<HistoryNode> = {}): HistoryNode => ({
+    id, name, born_at: iso(new Date(2026, 10, 3, 10, 0)), region: null, diff: {}, extinct: null, children: [], ...over,
+  });
+
+  function serve(tree: HistoryTree | 'down') {
+    const fetch = vi.fn(async (_url: string) => {
+      if (tree === 'down') throw new TypeError('network');
+      return new Response(JSON.stringify(tree), { status: 200 });
+    });
+    vi.stubGlobal('fetch', fetch);
+    return fetch;
+  }
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  const HIST: HistoryTree = {
+    root: node('sp1', 'Lumina', {
+      children: [
+        node('sp1.1', 'Lumina · Floresta', { born_at: iso(new Date(2026, 10, 6, 15, 30)), diff: { flagelo: 1, placa: -1 } }),
+        node('sp1.2', 'Lumina · Abismo', {
+          born_at: iso(new Date(2026, 10, 7, 8, 0)),
+          extinct: {
+            at: iso(new Date(2026, 10, 14, 19, 40)),
+            cause: 'predation',
+            predator: { id: 'sp7', name: 'Garra' },
+            final: [
+              { cause: 'predation', predator_name: 'Garra', share: 0.7 },
+              { cause: 'starvation', predator_name: null, share: 0.3 },
+            ],
+          },
+        }),
+        node('sp1.3', 'Lumina · Recife', {
+          extinct: { at: iso(new Date(2026, 10, 9, 22, 3)), cause: null, predator: null, final: [] },
+        }),
+      ],
+    }),
+    restarts: [iso(new Date(2026, 10, 12, 4, 0))],
+  };
+
+  it('nó extinto mostra causa e reta final', async () => {
+    const fetch = serve(HIST);
+    renderWithWorld(<LineageButton />, { species: SPECIES.slice(0, 3), organisms: ORGS.slice(0, 4), selectId: 'A-0001' });
+    open();
+    const dialog = screen.getByRole('dialog');
+    expect(await screen.findByText('última morte: predação por Garra')).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('últimos 30 min: 70% predação por Garra, 30% fome');
+    expect(screen.getByRole('button', { name: /Lumina · Abismo/ })).toHaveTextContent('✕ extinta 14/11 19:40');
+    expect(String(fetch.mock.calls[0][0])).toMatch(/\/api\/species\/sp1\/history$/);
+  });
+
+  it('ramo mostra nascimento e diferenças', async () => {
+    serve(HIST);
+    renderWithWorld(<LineageButton />, { species: SPECIES.slice(0, 3), organisms: ORGS.slice(0, 4), selectId: 'A-0001' });
+    open();
+    expect(await screen.findByText('nasceu 06/11 · +flagelo −placa')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Lumina · Floresta\s+2 vivos$/ })).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent('mundo recomeçado em 12/11');
+  });
+
+  it('extinção antiga mostra causa não registrada', async () => {
+    serve(HIST);
+    renderWithWorld(<LineageButton />, { species: SPECIES.slice(0, 3), organisms: ORGS.slice(0, 4), selectId: 'A-0001' });
+    open();
+    expect(await screen.findByText('última morte: causa não registrada')).toBeInTheDocument();
+    // Ramo que só a história conhece (podado da store) aparece mesmo assim, sem clique.
+    expect(screen.getByRole('button', { name: /Lumina · Recife/ })).toBeDisabled();
+  });
+
+  it('sem história mostra a árvore de hoje', async () => {
+    const fetch = serve('down');
+    renderWithWorld(<LineageButton />, { species: SPECIES, organisms: ORGS, selectId: 'D-0001' });
+    open();
+    await act(async () => {});
+    expect(fetch).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: /^Lumina · Floresta · Raso\s+1 vivo$/ })).toBeInTheDocument();
+    expect(screen.queryByText(/última morte/)).toBeNull();
+  });
+
+  it('abre pela raiz pedida no lineageUi', async () => {
+    serve({ root: node('sp9', 'Antiga', { extinct: { at: iso(new Date(2026, 10, 1, 8, 0)), cause: 'starvation', predator: null, final: [{ cause: 'starvation', predator_name: null, share: 1 }] } }), restarts: [] });
+    renderWithWorld(<LineageButton />, { species: SPECIES, organisms: ORGS, selectId: 'A-0001' });
+    act(() => lineageUi.open('sp9'));
+    expect(await screen.findByText('última morte: fome')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toHaveTextContent('Antiga');
+    expect(screen.getByRole('dialog')).toHaveTextContent('últimos 30 min: 100% fome');
+  });
 });

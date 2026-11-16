@@ -1,4 +1,4 @@
-import { formatAge, formatDiet, formatExtinctDate, formatPosition } from './format';
+import { formatAge, formatCause, formatDiet, formatDiff, formatExtinctDate, formatPosition, formatShares } from './format';
 
 it('menos de um minuto', () => expect(formatAge(30_000)).toBe('há menos de 1 min'));
 it('minutos', () => expect(formatAge(14 * 60_000)).toBe('há 14 min'));
@@ -20,4 +20,30 @@ it('dieta: presas pelo nome, com " e "', () => {
 });
 it('data de extinção dd/mm hh:mm em hora local', () => {
   expect(formatExtinctDate(new Date(2026, 10, 5, 9, 7).getTime())).toBe('05/11 09:07');
+});
+
+it('diferença de peças em ordem alfabética, com sinal de menos U+2212', () => {
+  expect(formatDiff({ placa: -1, flagelo: 1 })).toBe('+flagelo −placa');
+  expect(formatDiff({ ocelo: 2 })).toBe('+2 ocelo');
+  expect(formatDiff({ espinho: -3 })).toBe('−3 espinho');
+  expect(formatDiff({})).toBe('');
+});
+
+it('causa da morte para as 5 causas', () => {
+  expect(formatCause('starvation')).toBe('fome');
+  expect(formatCause('old_age')).toBe('velhice');
+  expect(formatCause('predation', 'Garra')).toBe('predação por Garra');
+  expect(formatCause('predation', null)).toBe('predação');
+  expect(formatCause('branched')).toBe('todos passaram para ramos');
+  expect(formatCause(null)).toBe('causa não registrada');
+});
+
+it('divisão da reta final em porcentagem', () => {
+  expect(
+    formatShares([
+      { cause: 'predation', predator_name: 'Garra', share: 0.5 },
+      { cause: 'starvation', predator_name: null, share: 0.3 },
+      { cause: 'predation', predator_name: 'Lumina · Floresta', share: 0.2 },
+    ]),
+  ).toBe('50% predação por Garra, 30% fome, 20% predação por Lumina · Floresta');
 });

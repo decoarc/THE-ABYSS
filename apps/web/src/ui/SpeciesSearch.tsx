@@ -114,7 +114,7 @@ export function SpeciesSearch() {
         }}
       />
       {found.kind === 'results' && (
-        <div style={{ maxHeight: '40vh', overflowY: 'auto', marginTop: 4 }}>
+        <div className="abyss-scroll" style={{ maxHeight: '40vh', overflowY: 'auto', marginTop: 4 }}>
           {found.list.map((r) => (
             <button key={r.id} type="button" onClick={() => choose(r)} style={row}>
               <span>{r.name}</span>

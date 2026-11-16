@@ -121,3 +121,10 @@ it('1 letra não busca e só busca depois de 250 ms parado', async () => {
   });
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+
+it('a lista de resultados rola com a barra do tema', async () => {
+  replyWith([{ id: 'sp1', name: 'Lumina', root: 'sp1', alive: true }]);
+  renderWithWorld(<SpeciesSearch />, { species: SPECIES, organisms: ORGS });
+  await type('Lum');
+  expect(screen.getByRole('button', { name: 'Lumina' }).parentElement).toHaveClass('abyss-scroll');
+});

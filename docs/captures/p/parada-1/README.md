@@ -48,6 +48,8 @@ que combine com a interface. As imagens acima já são as de depois dos ajustes.
    mouse), sem trilho e sem setas (classe `abyss-scroll`, em `apps/web/index.html`); no Firefox, a barra fina padrão
    na mesma cor (`arvore-rolagem.png`: a árvore de `Semente 8` rolada até o meio).
 
+Depois, a pedido do autor, a lista de resultados da busca passou a usar a mesma barra (`busca-resultados.png`).
+
 A árvore longa (29 ramos diretos) fica como está neste gate.
 
 ## Ver ao vivo

@@ -223,7 +223,7 @@ defmodule Abyss.Genesis.BootTest do
     # Recorder ocupado: os casts ficam na fila até o boot pedir o sync.
     :sys.suspend(Recorder)
     Recorder.record_branches([br])
-    Recorder.record([{"sp#{a.id}", 1_700_000_000_500}])
+    Recorder.record([%{id: "sp#{a.id}", at_ms: 1_700_000_000_500}])
     task = Task.async(fn -> Genesis.boot_species() end)
     Process.sleep(50)
     :sys.resume(Recorder)
@@ -264,12 +264,12 @@ defmodule Abyss.Genesis.BootTest do
   test "extinção de ramo é gravada" do
     a = insert(1, nil)
     b = insert_branch(a, "1", nil)
-    Recorder.record([{b.id, 1_700_000_000_000}])
+    Recorder.record([%{id: b.id, at_ms: 1_700_000_000_000}])
     :sys.get_state(Recorder)
     first = Repo.get!(BranchRecord, b.id, log: false).extinct_at
     assert DateTime.to_unix(first, :millisecond) == 1_700_000_000_000
 
-    Recorder.record([{b.id, 1_800_000_000_000}])
+    Recorder.record([%{id: b.id, at_ms: 1_800_000_000_000}])
     :sys.get_state(Recorder)
     assert Repo.get!(BranchRecord, b.id, log: false).extinct_at == first
   end
@@ -306,12 +306,12 @@ defmodule Abyss.Genesis.BootTest do
   test "extinção é gravada" do
     r = insert(1, nil)
     id = "sp#{r.id}"
-    Recorder.record([{id, 1_700_000_000_000}, {"lixo", 5}])
+    Recorder.record([%{id: id, at_ms: 1_700_000_000_000}, %{id: "lixo", at_ms: 5}])
     :sys.get_state(Recorder)
     first = Repo.get!(SpeciesRecord, r.id, log: false).extinct_at
     assert DateTime.to_unix(first, :millisecond) == 1_700_000_000_000
 
-    Recorder.record([{id, 1_800_000_000_000}])
+    Recorder.record([%{id: id, at_ms: 1_800_000_000_000}])
     :sys.get_state(Recorder)
     assert Repo.get!(SpeciesRecord, r.id, log: false).extinct_at == first
   end

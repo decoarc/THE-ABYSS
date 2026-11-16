@@ -17,7 +17,17 @@ defmodule Abyss.Genesis.Recorder do
   def start_link(opts) when is_list(opts),
     do: GenServer.start_link(__MODULE__, :ok, Keyword.put_new(opts, :name, __MODULE__))
 
-  @spec record([{String.t(), integer}]) :: :ok
+  @typedoc "Extinção de espécie criada; `at_ms` em hora real (os demais campos entram na Task 3 do gate P)."
+  @type extinction :: %{
+          required(:id) => String.t(),
+          required(:at_ms) => integer,
+          optional(:world_ms) => integer,
+          optional(:epoch) => pos_integer,
+          optional(:cause) => atom | nil,
+          optional(:predator) => String.t() | atom | nil
+        }
+
+  @spec record([extinction]) :: :ok
   def record(extinct), do: GenServer.cast(__MODULE__, {:record, extinct})
 
   @doc "Grava o nascimento de ramos (idempotente: id repetido não duplica)."
@@ -53,7 +63,7 @@ defmodule Abyss.Genesis.Recorder do
 
   @impl true
   def handle_cast({:record, extinct}, state) do
-    for {id, ms} <- extinct, is_binary(id), is_integer(ms) do
+    for %{id: id, at_ms: ms} <- extinct, is_binary(id), is_integer(ms) do
       try do
         at = DateTime.from_unix!(ms * 1000, :microsecond)
 

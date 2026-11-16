@@ -17,7 +17,14 @@ defmodule Abyss.World.Server do
 
   # --- API ---
 
-  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}], branch_seq: %{mãe => k}})`, chamado no init; `branch_seq` é opcional) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo), `step` (`(Sim.t, dt, ms -> Sim.t)`, padrão `Sim.step/3`; injeção para testes) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo)."
+  @doc "opts: população/seed/tick_hz, `creature_scale`, `test_species`, `food_boost` e `mutation_boost` (medição), `catalog` (padrão `Catalog.get/0`), `map_path` (padrão: config :map_path), `name` (nil = anônimo), `broadcast`, `species_loader` (`(-> %{live: [Species.t], extinct: [{Species.t, ms}], branch_seq: %{mãe => k}})`, chamado no init; `branch_seq` é opcional) e `on_extinct` (`([{String.t, ms}] -> any)`, extinções de espécies criadas após cada passo), `step` (`(Sim.t, dt, ms -> Sim.t)`, padrão `Sim.step/3`; injeção para testes) e `on_branch` (`([Species.t] -> any)`, ramos nascidos no passo, `born_ms` em hora real).
+
+  Relógio do mundo (gate P): `world_ms = hora real − clock_offset_ms` (padrão 0). Tudo no `Sim`
+  usa o relógio do mundo; datas que saem para o banco e para o fio (nascimento de espécie e
+  ramo, extinção) são convertidas para hora real aqui e no `Wire`. `epoch` (padrão 1) numera o
+  mundo desde o último recomeço. `on_extinct` recebe `[%{id, at_ms, world_ms, epoch, cause,
+  predator}]` (só criadas); `on_deaths` (`([{id, causa, predador | nil}], world_ms, tick, epoch
+  -> any)`) recebe as mortes de criadas do passo, quando há alguma."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -34,13 +41,24 @@ defmodule Abyss.World.Server do
   @spec add_species(GenServer.server(), Abyss.World.Species.t()) :: :ok
   def add_species(server, sp), do: GenServer.call(server, {:add_species, sp})
 
+  @doc "Relógio do mundo, deslocamento, epoch e tick atuais."
+  @spec clock(GenServer.server()) :: %{
+          world_ms: integer,
+          offset_ms: integer,
+          epoch: pos_integer,
+          tick: non_neg_integer
+        }
+  def clock(server \\ __MODULE__), do: GenServer.call(server, :clock)
+
   # --- Callbacks ---
 
   @impl true
   def init(opts) do
     tick_hz = Keyword.fetch!(opts, :tick_hz)
     seed = Keyword.get(opts, :seed) || :rand.uniform(2_000_000_000)
-    now_ms = System.system_time(:millisecond)
+    offset = Keyword.get(opts, :clock_offset_ms, 0)
+    real_ms = System.system_time(:millisecond)
+    now_ms = real_ms - offset
 
     map_path =
       Keyword.get_lazy(opts, :map_path, fn -> Application.fetch_env!(:abyss, :map_path) end)
@@ -68,11 +86,11 @@ defmodule Abyss.World.Server do
 
     loader = Keyword.get(opts, :species_loader, fn -> %{live: [], extinct: []} end)
     %{live: live, extinct: extinct} = loaded = loader.()
-    sim = Enum.reduce(live, sim, &Sim.add_species(&2, &1, founders: 3))
+    sim = Enum.reduce(live, sim, &Sim.add_species(&2, to_world(&1, offset), founders: 3))
 
     sim =
       Enum.reduce(extinct, sim, fn {sp, ms}, acc ->
-        Sim.add_species(acc, sp, founders: 0, extinct_ms: ms)
+        Sim.add_species(acc, to_world(sp, offset), founders: 0, extinct_ms: ms - offset)
       end)
 
     # Contadores de ramos não carregados: id de ramo nunca é reaproveitado.
@@ -82,13 +100,16 @@ defmodule Abyss.World.Server do
       sim: sim,
       on_extinct: Keyword.get(opts, :on_extinct, fn _ -> :ok end),
       on_branch: Keyword.get(opts, :on_branch, fn _ -> :ok end),
+      on_deaths: Keyword.get(opts, :on_deaths, fn _, _, _, _ -> :ok end),
+      offset_ms: offset,
+      epoch: Keyword.get(opts, :epoch, 1),
       step: Keyword.get(opts, :step, &Sim.step/3),
       world_id: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
       tick_hz: tick_hz,
       broadcast: Keyword.get(opts, :broadcast, fn _ -> :ok end),
       interval_us: 1_000_000 / tick_hz,
       start_us: mono_us(),
-      started_ms: now_ms,
+      started_ms: real_ms,
       n: 0,
       jitters: [],
       step_us_max: 0
@@ -101,7 +122,19 @@ defmodule Abyss.World.Server do
   def handle_call(:snapshot, _from, state), do: {:reply, wire_snapshot(state), state}
 
   def handle_call({:add_species, sp}, _from, state) do
+    sp = to_world(sp, state.offset_ms)
     {:reply, :ok, %{state | sim: Sim.add_species(state.sim, sp, founders: 3)}}
+  end
+
+  def handle_call(:clock, _from, state) do
+    reply = %{
+      world_ms: world_ms(state),
+      offset_ms: state.offset_ms,
+      epoch: state.epoch,
+      tick: state.sim.tick
+    }
+
+    {:reply, reply, state}
   end
 
   def handle_call(:stats, _from, state) do
@@ -136,8 +169,10 @@ defmodule Abyss.World.Server do
     state.broadcast.(Wire.tick(sim, meta))
     # Extinção antes de ramo no mesmo tick é seguro: um ramo nunca nasce e se extingue no
     # mesmo passo, então nenhuma extinção deste tick se refere a um ramo ainda não gravado.
-    notify_extinct(state.on_extinct, sim.life_events.extinct)
-    notify_branch(state.on_branch, sim.life_events.branches)
+    ev = sim.life_events
+    notify_extinct(state, ev.extinct, Map.get(ev, :extinct_causes, %{}))
+    notify_branch(state.on_branch, Enum.map(ev.branches, &to_real(&1, state.offset_ms)))
+    notify_deaths(state, Map.get(ev, :dead_by, []), meta.server_ms, sim.tick)
 
     state = %{
       state
@@ -152,21 +187,59 @@ defmodule Abyss.World.Server do
   # --- Internos ---
 
   # Só espécies criadas (id string); uma falha do callback não derruba o mundo.
-  defp notify_extinct(callback, extinct) do
-    case for({id, ms} <- extinct, is_binary(id), do: {id, ms}) do
+  defp notify_extinct(state, extinct, causes) do
+    created =
+      for {id, ms} <- extinct, is_binary(id) do
+        {cause, predator} = Map.get(causes, id, {nil, nil})
+
+        %{
+          id: id,
+          at_ms: ms + state.offset_ms,
+          world_ms: ms,
+          epoch: state.epoch,
+          cause: cause,
+          predator: predator
+        }
+      end
+
+    case created do
       [] ->
         :ok
 
       created ->
         try do
-          callback.(created)
+          state.on_extinct.(created)
         rescue
           e ->
-            ids = Enum.map_join(created, ",", &elem(&1, 0))
+            ids = Enum.map_join(created, ",", & &1.id)
             Logger.error("on_extinct falhou (#{inspect(e.__struct__)}) para #{ids}")
         end
     end
   end
+
+  # Mortes de criadas do passo; uma falha do callback não derruba o mundo.
+  defp notify_deaths(state, dead_by, world_ms, tick) do
+    case for({sp, _, _} = d <- dead_by, is_binary(sp), do: d) do
+      [] ->
+        :ok
+
+      created ->
+        try do
+          state.on_deaths.(created, world_ms, tick, state.epoch)
+        rescue
+          e -> Logger.error("on_deaths falhou (#{inspect(e.__struct__)}) no tick #{tick}")
+        end
+    end
+  end
+
+  # `born_ms` de espécie: hora real fora do Server, relógio do mundo dentro do Sim.
+  defp to_world(sp, offset), do: shift_born(sp, -offset)
+  defp to_real(sp, offset), do: shift_born(sp, offset)
+
+  defp shift_born(%{born_ms: ms} = sp, d) when is_integer(ms), do: %{sp | born_ms: ms + d}
+  defp shift_born(sp, _d), do: sp
+
+  defp world_ms(state), do: System.system_time(:millisecond) - state.offset_ms
 
   # Ramos novos; uma falha do callback não derruba o mundo.
   defp notify_branch(_callback, []), do: :ok
@@ -195,7 +268,8 @@ defmodule Abyss.World.Server do
     %{
       world_id: state.world_id,
       tick_hz: state.tick_hz,
-      server_ms: System.system_time(:millisecond)
+      server_ms: world_ms(state),
+      offset_ms: state.offset_ms
     }
   end
 

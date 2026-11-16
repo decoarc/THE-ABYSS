@@ -45,6 +45,12 @@ it('abre e fecha pelo botão', () => {
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
+it('a árvore rola com a barra do tema', () => {
+  renderWithWorld(<LineageButton />, { species: SPECIES, organisms: ORGS });
+  open();
+  expect(screen.getByRole('dialog')).toHaveClass('abyss-scroll');
+});
+
 it('mostra a árvore da espécie selecionada', () => {
   renderWithWorld(<LineageButton />, { species: SPECIES, organisms: ORGS, selectId: 'D-0001' });
   open();
@@ -153,6 +159,15 @@ describe('com história', () => {
     expect(dialog).toHaveTextContent('últimos 30 min: 70% predação por Garra, 30% fome');
     expect(screen.getByRole('button', { name: /Lumina · Abismo/ })).toHaveTextContent('✕ extinta 14/11 19:40');
     expect(String(fetch.mock.calls[0][0])).toMatch(/\/api\/species\/sp1\/history$/);
+  });
+
+  it('linha secundária longa quebra sob o texto, sem passar do painel', async () => {
+    serve(HIST);
+    renderWithWorld(<LineageButton />, { species: SPECIES.slice(0, 3), organisms: ORGS.slice(0, 4), selectId: 'A-0001' });
+    open();
+    const text = await screen.findByText('últimos 30 min: 70% predação por Garra, 30% fome');
+    expect(text).toHaveStyle({ whiteSpace: 'normal' });
+    expect(text.parentElement).toHaveStyle({ display: 'flex' });
   });
 
   it('ramo mostra nascimento e diferenças', async () => {

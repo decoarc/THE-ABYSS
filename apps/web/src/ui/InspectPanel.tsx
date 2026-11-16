@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { formatAge, formatDiet, formatPosition } from '../lib/format';
 import { PALETTE } from '../lib/palette';
+import { useLineageUi } from '../services/lineageUi';
 import { useRoster, useSelection, useWorld } from '../services/WorldProvider';
 import type { Vitals } from '../services/worldStore';
 import type { Vec3 } from '../services/wire';
@@ -49,14 +50,16 @@ const button: CSSProperties = {
   cursor: 'pointer',
 };
 
-/** Painel do organismo selecionado, à direita. Não aparece sem seleção. */
+/** Painel do organismo selecionado, à direita. Não aparece sem seleção nem com a árvore aberta. */
 export function InspectPanel() {
   const { id, following } = useSelection();
   const roster = useRoster();
   const { store, selection } = useWorld();
   const org = id === null ? undefined : roster.find((o) => o.id === id);
   const sampled = useSampled(org ? org.id : null);
-  if (!org) return null;
+  // A árvore abre no mesmo lado da tela: o painel sai da frente enquanto ela está aberta (a seleção fica).
+  const { open: treeOpen } = useLineageUi();
+  if (!org || treeOpen) return null;
 
   const species = store.species().find((s) => s.id === org.species);
   const age = formatAge(store.serverNow(performance.now()) - org.born_ms);

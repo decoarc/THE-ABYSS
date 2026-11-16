@@ -27,12 +27,15 @@ const ALERT = '#e6b8a0';
 const vivos = (n: number) => `${n} ${n === 1 ? 'vivo' : 'vivos'}`;
 const note: CSSProperties = { font: `12px/1.5 ${MONO}`, color: PALETTE.fg, opacity: 0.6, whiteSpace: 'pre' };
 
-/** Linha secundária de um nó (nascimento, causa, reta final), alinhada sob o nome. */
+/**
+ * Linha secundária de um nó (nascimento, causa, reta final), alinhada sob o nome. O texto longo quebra
+ * dentro do painel, recuado sob o próprio começo; o prefixo da árvore fica na primeira linha.
+ */
 function Note({ prefix, children }: { prefix: string; children: string }) {
   return (
-    <div style={note}>
-      <span aria-hidden="true" style={{ opacity: 0.6 }}>{prefix}</span>
-      <span>{children}</span>
+    <div style={{ ...note, display: 'flex' }}>
+      <span aria-hidden="true" style={{ opacity: 0.6, flex: 'none' }}>{prefix}</span>
+      <span style={{ whiteSpace: 'normal' }}>{children}</span>
     </div>
   );
 }
@@ -205,6 +208,7 @@ export function LineageTree({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-label="Árvore da espécie"
+      className="abyss-scroll"
       style={{
         position: 'fixed',
         right: 16,

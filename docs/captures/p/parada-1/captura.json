@@ -1,0 +1,30 @@
+{
+  "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Laptop GPU (0x00002860) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "gpu": "rtx",
+  "resultados": "Semente 3\nSemente 3 · Floresta\nSemente 3 · Jardim\nSemente 3 · Jardim 10\nSemente 3 · Jardim 11\nSemente 3 · Jardim 3\nSemente 3 · Jardim 4\nSemente 3 · Jardim 5\nSemente 3 · Jardim 6\nSemente 3 · Jardim 8\nSemente 3 · Jardim 9\nSemente 3 · Planície\nSemente 3 · Planície 3\nSemente 4\nSemente 4 · Floresta\nSemente 4 · Planície\nSemente 8\nSemente 8 · Floresta\nSemente 1\nextinta\nSemente 10\nextinta",
+  "inexistente": "Nenhuma espécie com esse nome",
+  "segue": {
+    "species": "sp3.1",
+    "name": "Semente 3 · Floresta",
+    "selection": {
+      "id": "S03.1-0092",
+      "following": true
+    }
+  },
+  "arvore": {
+    "root": "sp8",
+    "texto": "Semente 8 (criada em 16/11)\nfechar\nSemente 8\n48 vivos\n├── Semente 8 · Planície\n✕ extinta 16/11 13:03\n│       \nnasceu 16/11 · +cilios +placa\n│       \núltima morte: fome\n│       \núltimos 30 min: 50% velhice, 50% fome\n├── Semente 8 · Planície 2\n6 vivos\n│       \nnasceu 16/11 · −cardume +cilios +gancho\n├── Semente 8 · Planície 3\n4 vivos\n│       \nnasceu 16/11 · −flagelo −ocelo\n├── Semente 8 · Jardim\n1 vivo\n│   │   \nnasceu 16/11 · +2 aleta −ocelo\n│   └── Semente 8 · Planície 6\n6 vivos\n│           \nnasceu 16/11 · −aleta +cilios −flagelo\n├── Semente 8 · Jardim 2\n✕ extinta 16/11 18:11\n│       \nnasceu 16/11 · +cilios +ocelo\n│       \núltima morte: fome\n│       \núltimos 30 min: 67% velhice, 33% fome\n├── Semente 8 · Planície 4\n1 vivo\n│       \nnasceu 16/11 · +gancho +placa\n├── Semente 8 · Planície 5\n8 vivos\n│       \nnasceu 16/11 · +2 aleta −flagelo\n├── Semente 8 · Jardim 3\n3 vivos\n│       \nnasceu 16/11 · +aleta −ocelo +placa\n├── Semente 8 · Planície 7\n3 vivos\n│       \nnasceu 16/11 · −cardume −flagelo\n├── Semente 8 · Planície 8\n13 vivos\n│   │   \nnasceu 16/11 · +aleta +cilios −ocelo\n│   └── Semente 8 · Floresta\n1 vivo\n│           \nnasceu 16/11 · +aleta −cardume −cilios\n├── Semente 8 · Jardim 4\n3 vivos\n│       \nnasceu 16/11 · +aleta −cardume +gancho\n├── Semente 8 · Planície 9\n✕ extinta 16/11 16:16\n│       \nnasceu 16/11 · +aleta +cilios\n│       \núltima morte: fome\n│       \núltimos 30 min: 67% fome, 33% velhice\n├── Semente 8 · Planície 10\n✕ extinta 16/11 18:03\n│       \nnasceu 16/11 · +cilios −ocelo +placa\n│       \núltima morte: fome\n│       \núltimos 30 min: 50% velhice, 50% fome\n├── Semente 8 · Planície 11\n✕ extinta 16/11 15:35\n│       \nnasceu 16/11 · +cilios +ocelo\n│       \núltima morte: fome\n│       \núltimos 30 min: 67% fome, 33% velhice\n├── Semente 8 · Planície 12\n2 vivos\n│       \nnasceu 16/11 · +aleta −flagelo +placa\n├── Semente 8 · Jardim 5\n2 vivos\n│       \nnasceu 16/11 · +aleta −cardume −filtro −flagelo +gancho −ocelo +raspador\n├── Semente 8 · Planície 13\n2 vivos\n│       \nnasceu 16/11 · +aleta −cardume −flagelo\n├── Semente 8 · Planície 14\n1 vivo\n│       \nnasceu 16/11 · −cardume +gancho +ocelo\n├── Semente 8 · Planície 15\n3 vivos\n│       \nnasceu 16/11 · −cardume +2 placa\n├── Semente 8 · Planície 16\n5 vivos\n│       \nnasceu 16/11 · +aleta −cardume −ocelo\n├── Semente 8 · Planície 17\n2 vivos\n│       \nnasceu 16/11 · −flagelo +gancho −ocelo\n├── Semente 8 · Planície 18\n5 vivos\n│       \nnasceu 16/11 · +aleta −cardume +cilios −ocelo\n├── Semente 8 · Planície 19\n8 vivos\n│       \nnasceu 16/11 · −cardume −flagelo −ocelo\n├── Semente 8 · Jardim 6\n2 vivos\n│       \nnasceu 16/11 · +aleta −flagelo +gancho\n├── Semente 8 · Planície 20\n3 vivos\n│       \nnasceu 16/11 · −cardume +cilios +gancho −ocelo +placa\n├── Semente 8 · Planície 21\n4 vivos\n│       \nnasceu 16/11 · −cardume −flagelo\n├── Semente 8 · Planície 22\n3 vivos\n│       \nnasceu 16/11 · −flagelo −ocelo\n├── Semente 8 · Planície 23\n3 vivos\n│       \nnasceu 16/11 · −cardume −ocelo\n└── Semente 8 · Planície 24\n3 vivos\n        \nnasceu 16/11 · −cardume −flagelo −ocelo"
+  },
+  "extintaComDescendente": {
+    "nenhuma": true
+  },
+  "extintaSemDescendente": {
+    "root": "sp1",
+    "name": "Semente 1",
+    "selection": {
+      "id": "S08-1612",
+      "following": true
+    },
+    "arvore": "Semente 1 (criada em 16/11)\nfechar\nSemente 1\n✕ extinta 16/11 10:45\n    \núltima morte: velhice\n    \núltimos 30 min: 79% velhice, 14% fome, 7% predação por Semente 8"
+  }
+}

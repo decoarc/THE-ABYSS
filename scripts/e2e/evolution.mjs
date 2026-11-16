@@ -123,6 +123,9 @@ await withPreview(async (browser) => {
       return { id, species: a.organisms().find((o) => o.id === id)?.species ?? null, following: a.selection().following };
     });
     expectOk(sel.species === 'sp1.1', `seleção fora do ramo: ${JSON.stringify(sel)}`);
+    // O painel do indivíduo sai da frente enquanto a árvore está aberta e volta, com a escolha, ao fechá-la.
+    assert.equal(await page.getByText(`INDIVÍDUO · ${sel.id}`).count(), 0, 'painel escondido com a árvore aberta');
+    await dialog.getByRole('button', { name: 'fechar', exact: true }).click();
     await page.getByText(`INDIVÍDUO · ${sel.id}`).waitFor({ timeout: 5000 });
     await page.close();
   });

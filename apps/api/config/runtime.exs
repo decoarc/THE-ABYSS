@@ -38,6 +38,20 @@ if population = System.get_env("ABYSS_POPULATION") do
   config :abyss, :world, population: n
 end
 
+# Intervalo da fotografia do mundo em segundos (padrão 60 em config.exs).
+case System.get_env("ABYSS_SNAPSHOT_S") do
+  nil ->
+    :ok
+
+  "" ->
+    :ok
+
+  s ->
+    {v, ""} = Float.parse(s)
+    if v <= 0, do: raise("ABYSS_SNAPSHOT_S deve ser positivo: #{s}")
+    config :abyss, :world, snapshot_s: v
+end
+
 # Semente do mundo: um inteiro deixa o mundo repetível (medições de desempenho);
 # sem ela (ou vazia), a semente do config.exs (nil = aleatória na partida).
 case System.get_env("ABYSS_SEED") do

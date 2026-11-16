@@ -32,7 +32,11 @@ config :abyss, :world,
   food_boost: 1.0,
   # Só para medição (ABYSS_MUTATION_BOOST): multiplica part_p do catálogo
   # (teto 1). 1.0 = a mutação canônica.
-  mutation_boost: 1.0
+  mutation_boost: 1.0,
+  # Fotografia do mundo a cada snapshot_s (gate P) e espera máxima da gravação no
+  # desligamento.
+  snapshot_s: 60,
+  shutdown_save_ms: 10_000
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,

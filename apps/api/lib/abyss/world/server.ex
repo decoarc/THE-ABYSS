@@ -24,7 +24,13 @@ defmodule Abyss.World.Server do
   ramo, extinção) são convertidas para hora real aqui e no `Wire`. `epoch` (padrão 1) numera o
   mundo desde o último recomeço. `on_extinct` recebe `[%{id, at_ms, world_ms, epoch, cause,
   predator}]` (só criadas); `on_deaths` (`([{id, causa, predador | nil}], world_ms, tick, epoch
-  -> any)`) recebe as mortes de criadas do passo, quando há alguma."
+  -> any)`) recebe as mortes de criadas do passo, quando há alguma.
+
+  Fotografia (gate P): `persist` (`%{save: (payload -> :ok | :busy), save_sync: (payload,
+  timeout -> any), flush: (-> any), sync: (-> any)}`, padrão nil = sem fotografia) e
+  `snapshot_s` (intervalo; nil = só no desligamento). A cada intervalo: `flush` (mortes
+  acumuladas do Recorder) e depois `save`. No desligamento (`terminate/2`, com `trap_exit`):
+  `flush`, `sync` e `save_sync` com até `shutdown_save_ms` (padrão 10 000)."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -54,6 +60,9 @@ defmodule Abyss.World.Server do
 
   @impl true
   def init(opts) do
+    persist = Keyword.get(opts, :persist)
+    # Com fotografia, o desligamento do supervisor passa por `terminate/2`.
+    if persist, do: Process.flag(:trap_exit, true)
     tick_hz = Keyword.fetch!(opts, :tick_hz)
     seed = Keyword.get(opts, :seed) || :rand.uniform(2_000_000_000)
     offset = Keyword.get(opts, :clock_offset_ms, 0)
@@ -103,6 +112,9 @@ defmodule Abyss.World.Server do
       on_deaths: Keyword.get(opts, :on_deaths, fn _, _, _, _ -> :ok end),
       offset_ms: offset,
       epoch: Keyword.get(opts, :epoch, 1),
+      persist: persist,
+      snapshot_ms: snapshot_ms(Keyword.get(opts, :snapshot_s)),
+      shutdown_save_ms: Keyword.get(opts, :shutdown_save_ms, 10_000),
       step: Keyword.get(opts, :step, &Sim.step/3),
       world_id: Base.encode16(:crypto.strong_rand_bytes(16), case: :lower),
       tick_hz: tick_hz,
@@ -115,7 +127,7 @@ defmodule Abyss.World.Server do
       step_us_max: 0
     }
 
-    {:ok, schedule(state)}
+    {:ok, state |> schedule() |> schedule_snapshot()}
   end
 
   @impl true
@@ -184,6 +196,39 @@ defmodule Abyss.World.Server do
     {:noreply, schedule(state)}
   end
 
+  # A cada intervalo: mortes acumuladas primeiro (a fronteira da contagem fica exata),
+  # depois a fotografia. Nada aqui espera o banco; uma falha não derruba o mundo.
+  def handle_info(:snapshot, state) do
+    try do
+      state.persist.flush.()
+
+      if state.persist.save.(payload(state)) == :busy,
+        do: Logger.warning("fotografia do tick #{state.sim.tick} descartada: gravação em curso")
+    catch
+      kind, _ -> Logger.error("fotografia do tick #{state.sim.tick} falhou (#{kind})")
+    end
+
+    {:noreply, schedule_snapshot(state)}
+  end
+
+  # Com `trap_exit`, saídas de processos ligados (fora o pai) são ignoradas.
+  def handle_info({:EXIT, _pid, _reason}, state), do: {:noreply, state}
+
+  @impl true
+  def terminate(_reason, %{persist: %{} = persist} = state) do
+    persist.flush.()
+    persist.sync.()
+
+    case persist.save_sync.(payload(state), state.shutdown_save_ms) do
+      :ok -> Logger.info("fotografia de desligamento gravada no tick #{state.sim.tick}")
+      _ -> Logger.error("fotografia de desligamento falhou no tick #{state.sim.tick}")
+    end
+  catch
+    kind, _ -> Logger.error("fotografia de desligamento falhou (#{kind})")
+  end
+
+  def terminate(_reason, _state), do: :ok
+
   # --- Internos ---
 
   # Só espécies criadas (id string); uma falha do callback não derruba o mundo.
@@ -251,6 +296,25 @@ defmodule Abyss.World.Server do
       ids = Enum.map_join(branches, ",", &to_string(&1.id))
       Logger.error("on_branch falhou (#{inspect(e.__struct__)}) para #{ids}")
   end
+
+  defp payload(state) do
+    %{
+      sim: state.sim,
+      epoch: state.epoch,
+      world_ms: state.sim.now_ms,
+      saved_at: DateTime.utc_now()
+    }
+  end
+
+  defp snapshot_ms(nil), do: nil
+  defp snapshot_ms(s) when is_number(s) and s > 0, do: round(s * 1000)
+
+  defp schedule_snapshot(%{persist: %{}, snapshot_ms: ms} = state) when is_integer(ms) do
+    Process.send_after(self(), :snapshot, ms)
+    state
+  end
+
+  defp schedule_snapshot(state), do: state
 
   # Agenda o tick n+1 contra o relógio de partida (sem acumular deriva).
   defp schedule(state) do

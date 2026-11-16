@@ -17,8 +17,11 @@ services:
       dockerfile: Dockerfile.dev
     # MIX_ENV is deliberately unset: dev is the mix default, and an explicit
     # MIX_ENV=dev would also force `mix test` into dev (no test/support compiled).
-    # Cria e migra o banco de dev antes de subir o servidor (idempotente).
-    command: sh -c "mix ecto.create && mix ecto.migrate && mix phx.server"
+    # Cria e migra o banco de dev antes de subir o servidor (idempotente). `exec` faz o
+    # SIGTERM do `docker compose stop` chegar à VM, que grava a fotografia do mundo ao
+    # desligar (gate P); `stop_grace_period` dá tempo para a gravação.
+    command: sh -c "mix ecto.create && mix ecto.migrate && exec mix phx.server"
+    stop_grace_period: 30s
     depends_on:
       db:
         condition: service_healthy
@@ -33,6 +36,8 @@ services:
       - ABYSS_FOOD_BOOST=${ABYSS_FOOD_BOOST:-}
       # Só para medição: multiplica part_p (teto 1) para ver ramos em pouco tempo (1 = canônico).
       - ABYSS_MUTATION_BOOST=${ABYSS_MUTATION_BOOST:-1}
+      # Intervalo da fotografia do mundo em segundos (vazio = 60).
+      - ABYSS_SNAPSHOT_S=${ABYSS_SNAPSHOT_S:-}
     ports:
       - "4000:4000"
     volumes:

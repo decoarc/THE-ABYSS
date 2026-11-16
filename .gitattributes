@@ -1,0 +1,2 @@
+# Scripts de shell rodam dentro de contêineres Linux: sempre LF, mesmo com core.autocrlf no Windows.
+*.sh text eol=lf

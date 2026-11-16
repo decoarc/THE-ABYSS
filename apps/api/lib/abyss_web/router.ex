@@ -14,6 +14,9 @@ defmodule AbyssWeb.Router do
     get "/genesis/catalog", GenesisController, :catalog
     post "/genesis/submit", GenesisController, :submit
     post "/genesis/confirm", GenesisController, :confirm
+
+    get "/species/search", SpeciesController, :search
+    get "/species/:root_id/history", SpeciesController, :history
   end
 
   # Caixa de e-mail de desenvolvimento (Swoosh.Adapters.Local); só com dev_routes.

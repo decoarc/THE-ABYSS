@@ -92,7 +92,13 @@ config :abyss, :ecology,
 config :abyss, :genesis,
   token_ttl_s: 1800,
   web_url: "http://localhost:5173",
-  limits: [submit_ip: {10, 600}, submit_email: {3, 3600}, confirm_ip: {20, 600}]
+  limits: [
+    submit_ip: {10, 600},
+    submit_email: {3, 3600},
+    confirm_ip: {20, 600},
+    # Buscador de espécies (gate P): 60 por minuto por IP.
+    search_ip: {60, 60}
+  ]
 
 # Origens do cliente web autorizadas no CORS.
 config :abyss, :web_origins, [

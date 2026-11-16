@@ -36,6 +36,7 @@ defmodule Abyss.Application do
              species_loader: &Abyss.Genesis.boot_species/0,
              on_extinct: &Abyss.Genesis.Recorder.record/1,
              on_branch: &Abyss.Genesis.Recorder.record_branches/1,
+             on_deaths: &Abyss.Genesis.Recorder.record_deaths/4,
              broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)
            ]}
       ]

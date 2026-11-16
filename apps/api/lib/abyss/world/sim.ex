@@ -449,6 +449,23 @@ defmodule Abyss.World.Sim do
   defp bump_branch_seq(seq, _sp), do: seq
 
   @doc """
+  Marca uma espécie registrada como extinta em `ms` (relógio do mundo) e retira as
+  criaturas dela, inclusive fundadoras ainda não entregues. Serve para a reconciliação
+  na volta de uma fotografia (extinção gravada no banco depois dela); não entra em
+  `life_events` (não é extinção nova do mundo).
+  """
+  @spec force_extinct(t, atom | String.t(), integer) :: t
+  def force_extinct(%__MODULE__{} = sim, id, ms) do
+    %{
+      sim
+      | organisms: Enum.reject(sim.organisms, &(&1.species == id)),
+        pending_founders: Enum.reject(sim.pending_founders, &(&1.species == id)),
+        extinct: Map.put(sim.extinct, id, ms)
+    }
+    |> prune_extinct()
+  end
+
+  @doc """
   Reserva números de ramo: `seqs` é `%{id da mãe => último k usado}`, mesclado
   pelo máximo em `branch_seq`. O próximo ramo da mãe será `"<mãe>.<k + 1>"`.
   Serve para o boot restaurar contadores de ramos que não são carregados

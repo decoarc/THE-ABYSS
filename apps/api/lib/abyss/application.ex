@@ -35,6 +35,7 @@ defmodule Abyss.Application do
            [
              name: Abyss.World.Server,
              species_loader: &Abyss.Genesis.boot_species/0,
+             boot: &Abyss.World.Boot.load/1,
              on_extinct: &Abyss.Genesis.Recorder.record/1,
              on_branch: &Abyss.Genesis.Recorder.record_branches/1,
              on_deaths: &Abyss.Genesis.Recorder.record_deaths/4,

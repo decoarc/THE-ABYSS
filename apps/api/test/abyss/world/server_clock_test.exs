@@ -112,6 +112,57 @@ defmodule Abyss.World.ServerClockTest do
     assert_in_delta sp.born_ms, System.system_time(:millisecond), 1_000
   end
 
+  defp saved_sim(now_ms) do
+    Sim.new(%{
+      population: 10,
+      seed: 9,
+      now_ms: now_ms,
+      map: Abyss.World.Map.load!("/shared/world/map-e1.json"),
+      creature_scale: 0.5,
+      test_species: true,
+      food: Application.fetch_env!(:abyss, :food) |> Map.new(),
+      catalog: Abyss.Genesis.Catalog.get()
+    })
+    |> then(&Enum.reduce(1..40, &1, fn _, s -> Sim.step(s, 0.1) end))
+  end
+
+  test "boot restaurado continua o mundo e reconcilia com o banco" do
+    s = saved_sim(System.system_time(:millisecond) - @hour)
+    offset = System.system_time(:millisecond) - s.now_ms
+    real = System.system_time(:millisecond)
+    newer = Map.merge(made(4), %{parent: nil, root: "sp4", born_ms: real - 1_000})
+
+    boot = fn ctx ->
+      assert ctx.map.id == s.bounds.map.id
+      {:restored, %{sim: s, offset_ms: offset, epoch: 3, snapshot_tick: s.tick, saved_at_ms: 0}}
+    end
+
+    pid =
+      start_server(
+        boot: boot,
+        population: 5,
+        species_loader: fn -> %{live: [newer], extinct: []} end
+      )
+
+    clock = Server.clock(pid)
+    assert clock.epoch == 3 and clock.offset_ms == offset and clock.tick >= s.tick
+
+    # As fundadoras da espécie nova entram no passo seguinte.
+    assert_receive {:tick, _}, 2000
+    snap = Server.snapshot(pid)
+    ids = MapSet.new(snap.organisms, & &1.id)
+    assert Enum.all?(s.organisms, &MapSet.member?(ids, &1.id))
+    assert Enum.find(snap.species, &(&1.id == "sp4")).born_ms == real - 1_000
+    assert Enum.count(snap.organisms, &(&1.species == "sp4")) == 3
+  end
+
+  test "boot sem fotografia recomeça com o epoch dado" do
+    pid = start_server(boot: fn _ -> {:fresh, %{epoch: 7, reason: :rules}} end)
+    clock = Server.clock(pid)
+    assert clock.epoch == 7 and clock.offset_ms == 0
+    assert length(Server.snapshot(pid).organisms) == 10
+  end
+
   test "on_deaths só com criadas" do
     test_pid = self()
 

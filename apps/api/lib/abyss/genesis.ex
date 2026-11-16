@@ -281,7 +281,7 @@ defmodule Abyss.Genesis do
   def reset! do
     Ecto.Adapters.SQL.query!(
       Repo,
-      "TRUNCATE world_snapshots, death_counts, branches, species, creators, verification_tokens RESTART IDENTITY",
+      "TRUNCATE world_events, world_snapshots, death_counts, branches, species, creators, verification_tokens RESTART IDENTITY",
       [],
       log: false
     )

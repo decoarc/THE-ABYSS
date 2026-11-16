@@ -9,7 +9,7 @@ defmodule Abyss.World.Server do
 
   alias Abyss.Genesis.Catalog
   alias Abyss.World.Map, as: WMap
-  alias Abyss.World.{Observers, Sim, Wire}
+  alias Abyss.World.{Observers, Reconcile, Sim, Wire}
 
   require Logger
 
@@ -30,7 +30,13 @@ defmodule Abyss.World.Server do
   timeout -> any), flush: (-> any), sync: (-> any)}`, padrão nil = sem fotografia) e
   `snapshot_s` (intervalo; nil = só no desligamento). A cada intervalo: `flush` (mortes
   acumuladas do Recorder) e depois `save`. No desligamento (`terminate/2`, com `trap_exit`):
-  `flush`, `sync` e `save_sync` com até `shutdown_save_ms` (padrão 10 000)."
+  `flush`, `sync` e `save_sync` com até `shutdown_save_ms` (padrão 10 000).
+
+  Volta (gate P): `boot` (`(%{map, catalog, mutation_boost} -> {:restored, %{sim, offset_ms,
+  epoch, …}} | {:fresh, %{epoch, …}})`, padrão nil = sempre mundo novo). Restaurado: o `Sim`
+  da fotografia, reconciliado com o `species_loader` (`Abyss.World.Reconcile`), com o
+  relógio e o epoch dela. Novo: o mundo de hoje (espécies do banco com 3 fundadoras), com o
+  epoch dado."
   def start_link(opts) do
     {name, opts} = Keyword.pop(opts, :name, __MODULE__)
     gen_opts = if name, do: [name: name], else: []
@@ -64,46 +70,40 @@ defmodule Abyss.World.Server do
     # Com fotografia, o desligamento do supervisor passa por `terminate/2`.
     if persist, do: Process.flag(:trap_exit, true)
     tick_hz = Keyword.fetch!(opts, :tick_hz)
-    seed = Keyword.get(opts, :seed) || :rand.uniform(2_000_000_000)
-    offset = Keyword.get(opts, :clock_offset_ms, 0)
     real_ms = System.system_time(:millisecond)
-    now_ms = real_ms - offset
 
     map_path =
       Keyword.get_lazy(opts, :map_path, fn -> Application.fetch_env!(:abyss, :map_path) end)
 
-    map = WMap.load!(map_path)
-
-    sim =
-      Sim.new(%{
-        population: Keyword.fetch!(opts, :population),
-        seed: seed,
-        now_ms: now_ms,
-        map: map,
-        creature_scale: Keyword.get(opts, :creature_scale, 0.5),
-        test_species: Keyword.get(opts, :test_species, true),
-        food:
-          Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
-          |> Map.new()
-          |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0)),
-        ecology:
-          Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
-          |> Map.new(),
-        catalog: Keyword.get_lazy(opts, :catalog, &Catalog.get/0),
-        mutation_boost: Keyword.get(opts, :mutation_boost, 1.0)
-      })
+    ctx = %{
+      map: WMap.load!(map_path),
+      catalog: Keyword.get_lazy(opts, :catalog, &Catalog.get/0),
+      mutation_boost: Keyword.get(opts, :mutation_boost, 1.0)
+    }
 
     loader = Keyword.get(opts, :species_loader, fn -> %{live: [], extinct: []} end)
-    %{live: live, extinct: extinct} = loaded = loader.()
-    sim = Enum.reduce(live, sim, &Sim.add_species(&2, to_world(&1, offset), founders: 3))
 
-    sim =
-      Enum.reduce(extinct, sim, fn {sp, ms}, acc ->
-        Sim.add_species(acc, to_world(sp, offset), founders: 0, extinct_ms: ms - offset)
-      end)
+    {sim, offset, epoch} =
+      case Keyword.get(opts, :boot) do
+        nil ->
+          offset = Keyword.get(opts, :clock_offset_ms, 0)
 
-    # Contadores de ramos não carregados: id de ramo nunca é reaproveitado.
-    sim = Sim.reserve_branch_seq(sim, Map.get(loaded, :branch_seq, %{}))
+          {fresh_sim(opts, ctx, real_ms - offset, loader.(), offset), offset,
+           Keyword.get(opts, :epoch, 1)}
+
+        boot ->
+          case boot.(ctx) do
+            {:restored, r} ->
+              Logger.info(
+                "mundo restaurado da fotografia do tick #{r.sim.tick} (epoch #{r.epoch})"
+              )
+
+              {Reconcile.apply(r.sim, loader.(), r.offset_ms), r.offset_ms, r.epoch}
+
+            {:fresh, f} ->
+              {fresh_sim(opts, ctx, real_ms, loader.(), 0), 0, f.epoch}
+          end
+      end
 
     state = %{
       sim: sim,
@@ -111,7 +111,7 @@ defmodule Abyss.World.Server do
       on_branch: Keyword.get(opts, :on_branch, fn _ -> :ok end),
       on_deaths: Keyword.get(opts, :on_deaths, fn _, _, _, _ -> :ok end),
       offset_ms: offset,
-      epoch: Keyword.get(opts, :epoch, 1),
+      epoch: epoch,
       persist: persist,
       snapshot_ms: snapshot_ms(Keyword.get(opts, :snapshot_s)),
       shutdown_save_ms: Keyword.get(opts, :shutdown_save_ms, 10_000),
@@ -230,6 +230,38 @@ defmodule Abyss.World.Server do
   def terminate(_reason, _state), do: :ok
 
   # --- Internos ---
+
+  # Mundo novo: espécies do banco vivas com 3 fundadoras e extintas sem organismos.
+  defp fresh_sim(opts, ctx, now_ms, loaded, offset) do
+    sim =
+      Sim.new(%{
+        population: Keyword.fetch!(opts, :population),
+        seed: Keyword.get(opts, :seed) || :rand.uniform(2_000_000_000),
+        now_ms: now_ms,
+        map: ctx.map,
+        creature_scale: Keyword.get(opts, :creature_scale, 0.5),
+        test_species: Keyword.get(opts, :test_species, true),
+        food:
+          Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
+          |> Map.new()
+          |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0)),
+        ecology:
+          Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
+          |> Map.new(),
+        catalog: ctx.catalog,
+        mutation_boost: ctx.mutation_boost
+      })
+
+    sim = Enum.reduce(loaded.live, sim, &Sim.add_species(&2, to_world(&1, offset), founders: 3))
+
+    sim =
+      Enum.reduce(loaded.extinct, sim, fn {sp, ms}, acc ->
+        Sim.add_species(acc, to_world(sp, offset), founders: 0, extinct_ms: ms - offset)
+      end)
+
+    # Contadores de ramos não carregados: id de ramo nunca é reaproveitado.
+    Sim.reserve_branch_seq(sim, Map.get(loaded, :branch_seq, %{}))
+  end
 
   # Só espécies criadas (id string); uma falha do callback não derruba o mundo.
   defp notify_extinct(state, extinct, causes) do

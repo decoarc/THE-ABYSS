@@ -15,7 +15,12 @@ mkdir -p "$DIR"
 backup_once() {
   f="$DIR/abyss-$(date -u +%Y%m%dT%H%M%SZ).dump"
   # Escreve num temporário e renomeia: um backup cortado no meio nunca parece completo.
-  pg_dump -Fc -f "$f.tmp"
+  # Falhas checadas à mão: `set -e` não vale dentro de uma função chamada à esquerda de `||`
+  # (o laço abaixo). Sem dump válido, nada é publicado e a rotação não apaga os bons.
+  if ! pg_dump -Fc -f "$f.tmp" || ! pg_restore -l "$f.tmp" > /dev/null; then
+    rm -f "$f.tmp"
+    return 1
+  fi
   mv "$f.tmp" "$f"
   # Do mais novo ao mais velho; apaga do (KEEP+1)-ésimo em diante.
   ls -1t "$DIR"/abyss-*.dump | tail -n +"$((KEEP + 1))" | xargs -r rm -f

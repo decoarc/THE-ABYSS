@@ -121,6 +121,39 @@ defmodule Abyss.World.SaverTest do
     assert r.tick >= tick and r.epoch == 2
   end
 
+  test "o desligamento do supervisor espera a fotografia (mais que o padrão de 5 s)" do
+    assert Server.child_spec([]).shutdown == 28_000
+  end
+
+  test "queda do mundo não grava fotografia" do
+    test_pid = self()
+
+    log =
+      capture_log(fn ->
+        {:ok, pid} =
+          Server.start_link(
+            name: nil,
+            population: 5,
+            tick_hz: 50,
+            seed: 1,
+            step: fn _, _, _ -> raise "bug no passo" end,
+            persist: %{
+              save: fn _ -> :ok end,
+              save_sync: fn _, _ -> send(test_pid, :saved) end,
+              flush: fn -> :ok end,
+              sync: fn -> :ok end
+            }
+          )
+
+        Process.unlink(pid)
+        ref = Process.monitor(pid)
+        assert_receive {:DOWN, ^ref, :process, ^pid, _}, 2_000
+      end)
+
+    refute_received :saved
+    assert log =~ "bug no passo"
+  end
+
   test "banco fora não derruba o mundo" do
     saver = start_saver(writer: fn _ -> raise DBConnection.ConnectionError, "banco fora" end)
 

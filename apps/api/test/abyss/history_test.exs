@@ -87,6 +87,20 @@ defmodule Abyss.HistoryTest do
       assert root_id == "sp#{a.id}"
     end
 
+    test "busca não deixa de fora uma viva quando há mais de 20 nomes" do
+      for i <- 1..21,
+          do:
+            root(100 + i, "Abismo A#{String.pad_leading("#{i}", 2, "0")}",
+              extinct_at: t(1_800_200_000)
+            )
+
+      root(200, "Abismo Z")
+
+      names = History.search("abismo") |> Enum.map(& &1.name)
+      assert length(names) == 20
+      assert hd(names) == "Abismo Z"
+    end
+
     test "busca escapa curingas e ignora acento" do
       root(3, "Lumina")
       root(4, "Garra_50%")

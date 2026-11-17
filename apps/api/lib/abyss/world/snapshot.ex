@@ -17,6 +17,13 @@ defmodule Abyss.World.Snapshot do
 
   Na dúvida entre as duas, suba a de regras: recomeçar é seguro; continuar com um campo
   de significado trocado não é.
+
+  ## O que a configuração muda num mundo restaurado
+
+  Valem os de agora: catálogo e `mutation_boost` (`decode/2`), `:ecology` e `:food` (com
+  `ABYSS_FOOD_BOOST`), reaplicados pelo `Server` na volta. Ficam os da fotografia: população
+  (`ABYSS_POPULATION`), `creature_scale`, `ABYSS_TEST_SPECIES` e as espécies de teste (em
+  `bounds`). Para mudar esses num mundo em curso, suba `@rules_version` (recomeço).
   """
 
   alias Abyss.World.{Organism, Sim}

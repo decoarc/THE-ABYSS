@@ -156,6 +156,24 @@ defmodule Abyss.World.ServerClockTest do
     assert Enum.count(snap.organisms, &(&1.species == "sp4")) == 3
   end
 
+  test "boot restaurado usa a ecologia e a comida da configuração de agora" do
+    s = saved_sim(System.system_time(:millisecond) - @hour)
+    s = %{s | ecology: Map.delete(s.ecology, :branch_scan_s), food_cfg: %{}}
+    offset = System.system_time(:millisecond) - s.now_ms
+
+    boot = fn _ ->
+      {:restored, %{sim: s, offset_ms: offset, epoch: 3, snapshot_tick: s.tick, saved_at_ms: 0}}
+    end
+
+    pid = start_server(boot: boot, population: 5, food_boost: 2.0)
+    sim = :sys.get_state(pid).sim
+
+    assert sim.ecology == Map.new(Application.fetch_env!(:abyss, :ecology))
+
+    assert sim.food_cfg ==
+             Application.fetch_env!(:abyss, :food) |> Map.new() |> Sim.boost_food(2.0)
+  end
+
   test "boot sem fotografia recomeça com o epoch dado" do
     pid = start_server(boot: fn _ -> {:fresh, %{epoch: 7, reason: :rules}} end)
     clock = Server.clock(pid)

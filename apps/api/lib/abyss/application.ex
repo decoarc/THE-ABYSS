@@ -43,7 +43,8 @@ defmodule Abyss.Application do
                save: &Abyss.World.Saver.save/1,
                save_sync: &Abyss.World.Saver.save_sync/2,
                flush: &Abyss.Genesis.Recorder.flush_deaths/0,
-               sync: &Abyss.Genesis.Recorder.sync/0
+               # Limitado: o desligamento inteiro cabe no `shutdown` do Server.
+               sync: fn -> Abyss.Genesis.Recorder.sync(5_000) end
              },
              broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)
            ]}

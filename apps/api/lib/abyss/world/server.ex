@@ -5,7 +5,9 @@ defmodule Abyss.World.Server do
   transmite cada tick e mede jitter.
   """
 
-  use GenServer
+  # O supervisor espera o `terminate/2` (sync do Recorder até 5 s + fotografia até
+  # `shutdown_save_ms`, 10 s) antes de matar; o compose dá 30 s (`stop_grace_period`).
+  use GenServer, shutdown: 28_000
 
   alias Abyss.Genesis.Catalog
   alias Abyss.World.Map, as: WMap
@@ -98,7 +100,10 @@ defmodule Abyss.World.Server do
                 "mundo restaurado da fotografia do tick #{r.sim.tick} (epoch #{r.epoch})"
               )
 
-              {Reconcile.apply(r.sim, loader.(), r.offset_ms), r.offset_ms, r.epoch}
+              # Ecologia e comida vêm da configuração de agora (um deploy que muda valores
+              # ou acrescenta chaves vale no mundo restaurado); o resto do Sim é o da fotografia.
+              sim = %{r.sim | ecology: current_ecology(opts), food_cfg: current_food(opts)}
+              {Reconcile.apply(sim, loader.(), r.offset_ms), r.offset_ms, r.epoch}
 
             {:fresh, f} ->
               {fresh_sim(opts, ctx, real_ms, loader.(), 0), 0, f.epoch}
@@ -232,7 +237,11 @@ defmodule Abyss.World.Server do
   end
 
   @impl true
-  def terminate(_reason, %{persist: %{} = persist} = state) do
+  # Só no desligamento normal: uma queda do próprio mundo não vira a fotografia mais nova,
+  # senão a volta repetiria o mesmo passo que derrubou o processo.
+  def terminate(reason, %{persist: %{} = persist} = state)
+      when reason in [:normal, :shutdown] or
+             (is_tuple(reason) and tuple_size(reason) == 2 and elem(reason, 0) == :shutdown) do
     persist.flush.()
     persist.sync.()
 
@@ -248,6 +257,17 @@ defmodule Abyss.World.Server do
 
   # --- Internos ---
 
+  defp current_food(opts) do
+    Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
+    |> Map.new()
+    |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0))
+  end
+
+  defp current_ecology(opts) do
+    Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
+    |> Map.new()
+  end
+
   # Mundo novo: espécies do banco vivas com 3 fundadoras e extintas sem organismos.
   defp fresh_sim(opts, ctx, now_ms, loaded, offset) do
     sim =
@@ -258,13 +278,8 @@ defmodule Abyss.World.Server do
         map: ctx.map,
         creature_scale: Keyword.get(opts, :creature_scale, 0.5),
         test_species: Keyword.get(opts, :test_species, true),
-        food:
-          Keyword.get_lazy(opts, :food, fn -> Application.fetch_env!(:abyss, :food) end)
-          |> Map.new()
-          |> Sim.boost_food(Keyword.get(opts, :food_boost, 1.0)),
-        ecology:
-          Keyword.get_lazy(opts, :ecology, fn -> Application.fetch_env!(:abyss, :ecology) end)
-          |> Map.new(),
+        food: current_food(opts),
+        ecology: current_ecology(opts),
         catalog: ctx.catalog,
         mutation_boost: ctx.mutation_boost
       })

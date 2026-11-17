@@ -37,7 +37,8 @@ defmodule Abyss.History do
         from(s in SpeciesRecord,
           where:
             fragment("unaccent(lower(?)) LIKE unaccent(lower(?)) ESCAPE '\\'", s.name, ^pattern),
-          order_by: [asc: s.name, asc: s.id],
+          # Vivas primeiro já no banco: o limite não corta uma viva para mostrar extintas.
+          order_by: [asc: fragment("? IS NOT NULL", s.extinct_at), asc: s.name, asc: s.id],
           limit: @limit,
           select: %{id: s.id, name: s.name, extinct_at: s.extinct_at}
         )
@@ -50,7 +51,7 @@ defmodule Abyss.History do
         from(b in BranchRecord,
           where:
             fragment("unaccent(lower(?)) LIKE unaccent(lower(?)) ESCAPE '\\'", b.name, ^pattern),
-          order_by: [asc: b.name, asc: b.id],
+          order_by: [asc: fragment("? IS NOT NULL", b.extinct_at), asc: b.name, asc: b.id],
           limit: @limit,
           select: %{id: b.id, name: b.name, root: b.root_species_id, extinct_at: b.extinct_at}
         )

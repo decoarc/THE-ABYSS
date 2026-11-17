@@ -128,9 +128,44 @@ O mundo vivo com 250 organismos e ~50 ramos dá 132 kB em média nas 3 guardadas
 - **M2:** `traits_of` cria um mapa novo a cada chamada para membros de ramo (custo à toa no caminho quente, dentro
   do orçamento).
 
+## Revisão final
+
+Um revisor que não tinha visto o código leu a branch inteira (`687de37..7d0eb6c`) e checou um a um os cinco pontos
+de risco do plano. Resultado: **nenhum crítico**, 4 importantes, 10 menores. Veredito: "pronto com correções". Um dos
+menores (#5) foi reclassificado para importante pelo efeito em quem usa a busca. As cinco correções estão em
+`402be8a`, cada uma com um teste que falhou antes e passou depois:
+
+1. **O desligamento cortava a fotografia aos 5 s** (padrão do OTP), apesar dos 10 s configurados. Agora o Server
+   tem `shutdown: 28_000`, e a espera do Recorder ficou limitada a 5 s, para o total caber nos 30 s do compose.
+2. **Uma queda do próprio mundo virava a fotografia mais nova.** Na volta, o mesmo passo se repetiria e derrubaria o
+   mundo de novo. Agora o `terminate` só grava no desligamento normal (`:normal`, `:shutdown`).
+3. **A configuração ficava congelada na fotografia.** Na volta, `:ecology` e `:food` (com `ABYSS_FOOD_BOOST`) vêm da
+   configuração de agora. População, `creature_scale` e espécies de teste continuam os da fotografia. Para mudá-los
+   num mundo em curso é preciso subir `@rules_version`, o que está documentado em `snapshot.ex`.
+4. **Um backup que falhava publicava um arquivo vazio, e a rotação apagava um backup bom.** Agora, sem dump válido
+   (`pg_dump` mais `pg_restore -l`), nada é publicado e nada é apagado. Isso foi provado num contêiner com o banco
+   fora do ar, que antes falhava e agora passa, e o caminho normal continua funcionando.
+5. **A busca podia cortar espécies vivas** quando havia mais de 20 nomes. Agora as vivas vêm primeiro já no banco.
+   Ao vivo, "semente" passou a trazer 20 vivas.
+
+Depois das correções: `mix test` **329 testes, exit 0**; `mix format --check-formatted` exit 0. Ao vivo, o reinício
+gravou a fotografia de desligamento do tick 397 831 e voltou dela.
+
+**Menores que ficam** (no ledger, para um gate futuro):
+- o teste não prova que `%` é tratado como texto na busca;
+- o histórico faz ~2N consultas e não tem limite por IP;
+- o epoch pode se repetir se o mundo cair antes da 1ª fotografia;
+- o descarte de contagens roda antes de esperar o Recorder, no reinício só do Server;
+- uma extinção que falhou ao gravar fica viva no banco;
+- o boot depende do banco sem fallback;
+- a regra de campo novo de espécie (ler com `Map.get` e padrão) não está escrita no `Snapshot`;
+- `restore.sh` para o api antes de checar o arquivo e não faz cópia de segurança antes do `--clean`;
+- `binary_to_term` sem `[:safe]`.
+
 ## Aceite do autor
 
 - **Parada 1** (buscador e árvore com história, 2026-11-16): aprovada depois de três ajustes (painel do indivíduo
   sai da frente da árvore, linhas que quebram, barra de rolagem do tema na árvore e na busca).
-- **Parada 2** (este pacote): **aprovado pelo autor em 2026-11-16.** A demonstração ao vivo de reinício e queda não foi
+- **Parada 2** (este pacote): **aprovado pelo autor em 2026-11-16**, antes da revisão final; as correções da revisão
+  estão na seção acima. A demonstração ao vivo de reinício e queda não foi
   pedida; as execuções do e2e `persistence.mjs` registradas acima fazem esse papel. A aprovação cobre os desvios listados.

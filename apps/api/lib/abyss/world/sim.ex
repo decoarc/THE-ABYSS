@@ -41,7 +41,9 @@ defmodule Abyss.World.Sim do
     species: [],
     genomes: [],
     branches: [],
-    rebranch: []
+    rebranch: [],
+    dead_by: [],
+    extinct_causes: %{}
   }
   @no_eco %{
     births: %{},
@@ -106,7 +108,11 @@ defmodule Abyss.World.Sim do
             species: [Species.t()],
             genomes: [{pos_integer, map}],
             branches: [Species.t()],
-            rebranch: [{String.t(), String.t()}]
+            rebranch: [{String.t(), String.t()}],
+            dead_by: [
+              {atom | String.t(), :starvation | :old_age | :predation, atom | String.t() | nil}
+            ],
+            extinct_causes: %{(atom | String.t()) => {atom, atom | String.t() | nil}}
           },
           eco_totals: map,
           extinct: %{atom => integer},
@@ -278,11 +284,12 @@ defmodule Abyss.World.Sim do
     }
   end
 
-  # Só para medição (ABYSS_MUTATION_BOOST): part_p × k, no máximo 1.
-  defp boost_mutation(nil, _k), do: nil
-  defp boost_mutation(cat, k) when k == 1, do: cat
+  @doc "Catálogo com `part_p` × `k`, no máximo 1 (só para medição, `ABYSS_MUTATION_BOOST`)."
+  @spec boost_mutation(map | nil, number) :: map | nil
+  def boost_mutation(nil, _k), do: nil
+  def boost_mutation(cat, k) when k == 1, do: cat
 
-  defp boost_mutation(cat, k) when k > 0,
+  def boost_mutation(cat, k) when k > 0,
     do: put_in(cat, [:mutation, :part_p], min(cat.mutation.part_p * k, 1.0))
 
   defp scan_ms(ecology), do: round(Map.get(ecology, :branch_scan_s, 10) * 1000)
@@ -442,6 +449,23 @@ defmodule Abyss.World.Sim do
   defp bump_branch_seq(seq, _sp), do: seq
 
   @doc """
+  Marca uma espécie registrada como extinta em `ms` (relógio do mundo) e retira as
+  criaturas dela, inclusive fundadoras ainda não entregues. Serve para a reconciliação
+  na volta de uma fotografia (extinção gravada no banco depois dela); não entra em
+  `life_events` (não é extinção nova do mundo).
+  """
+  @spec force_extinct(t, atom | String.t(), integer) :: t
+  def force_extinct(%__MODULE__{} = sim, id, ms) do
+    %{
+      sim
+      | organisms: Enum.reject(sim.organisms, &(&1.species == id)),
+        pending_founders: Enum.reject(sim.pending_founders, &(&1.species == id)),
+        extinct: Map.put(sim.extinct, id, ms)
+    }
+    |> prune_extinct()
+  end
+
+  @doc """
   Reserva números de ramo: `seqs` é `%{id da mãe => último k usado}`, mesclado
   pelo máximo em `branch_seq`. O próximo ramo da mãe será `"<mãe>.<k + 1>"`.
   Serve para o boot restaurar contadores de ramos que não são carregados
@@ -577,8 +601,8 @@ defmodule Abyss.World.Sim do
       grid: nil
     }
 
-    # `prey_eaten`: ids comidos neste passo (cada presa uma vez; quem processa
-    # primeiro, na ordem da lista, fica com ela).
+    # `prey_eaten`: ids comidos neste passo => espécie de quem comeu (cada presa
+    # uma vez; quem processa primeiro, na ordem da lista, fica com ela).
     food = %{
       flora: flora,
       particles: particles,
@@ -586,7 +610,7 @@ defmodule Abyss.World.Sim do
       bites: 0,
       takes: 0,
       wants: [],
-      prey_eaten: MapSet.new(),
+      prey_eaten: %{},
       hunts_ok: 0,
       hunts_abandoned: 0,
       hunts_escaped: 0
@@ -611,7 +635,7 @@ defmodule Abyss.World.Sim do
     # a divisão (então não a conclui) e não pode ser comido de novo.
     {new_orgs, {rng, food}} =
       Enum.map_reduce(orgs, {rng, food}, fn o, {rng, food} ->
-        if MapSet.member?(food.prey_eaten, o.id) do
+        if Map.has_key?(food.prey_eaten, o.id) do
           {o, {rng, food}}
         else
           {o, rng, food} = step_one(o, snapshot, env, dt, rng, food)
@@ -620,7 +644,7 @@ defmodule Abyss.World.Sim do
       end)
 
     eaten = food.prey_eaten
-    food = %{food | wants: Enum.reject(food.wants, &MapSet.member?(eaten, &1))}
+    food = %{food | wants: Enum.reject(food.wants, &Map.has_key?(eaten, &1))}
 
     # Divisões: concluem (nascidos no fim da lista) antes de remover os mortos,
     # então o filho de um pai que morre neste passo nasce mesmo assim — também o
@@ -633,7 +657,7 @@ defmodule Abyss.World.Sim do
     # Remoção única no fim: comidos (:predation, sem corpo), fome e velhice.
     {survivors, dead} =
       Enum.split_with(new_orgs, fn o ->
-        not MapSet.member?(eaten, o.id) and
+        not Map.has_key?(eaten, o.id) and
           Life.death_cause(o, traits_of(sim, o), now_ms) == nil
       end)
 
@@ -692,7 +716,9 @@ defmodule Abyss.World.Sim do
             species: sim.pending_species,
             genomes: new_genomes,
             branches: branches,
-            rebranch: rebranch
+            rebranch: rebranch,
+            dead_by: corpse_events.dead_by,
+            extinct_causes: extinct_causes(new_extinct, corpse_events.dead_by)
         },
         # Fundadoras não são nascimentos da ecologia: só as divisões contam.
         eco_totals:
@@ -707,6 +733,17 @@ defmodule Abyss.World.Sim do
     }
     |> prune_extinct()
     |> scan(now_ms)
+  end
+
+  # Causa de cada extinção do passo: a última morte da espécie no passo, ou
+  # `:branched` quando ninguém dela morreu (todos passaram para ramos).
+  defp extinct_causes([], _dead_by), do: %{}
+
+  defp extinct_causes(new_extinct, dead_by) do
+    last =
+      Enum.reduce(dead_by, %{}, fn {sp, cause, pred}, acc -> Map.put(acc, sp, {cause, pred}) end)
+
+    Map.new(new_extinct, fn {id, _ms} -> {id, Map.get(last, id, {:branched, nil})} end)
   end
 
   # Espécie que já teve indivíduos (`next_seq` > 1, ou povoada por um ramo) e
@@ -846,7 +883,8 @@ defmodule Abyss.World.Sim do
     {food, events, rng} =
       Enum.reduce(dead, acc0, fn o, {food, ev, rng} ->
         sp = traits_of(sim, o)
-        predation? = MapSet.member?(eaten, o.id)
+        predator = Map.get(eaten, o.id)
+        predation? = predator != nil
         cause = if predation?, do: :predation, else: Life.death_cause(o, sp, now_ms)
         r = Life.radius(o, sp, sim.bounds.creature_scale, sim.ecology)
         n = if predation?, do: 0, else: round(base + per_r * r)
@@ -861,16 +899,17 @@ defmodule Abyss.World.Sim do
            ev
            | deaths: [{o.id, cause} | ev.deaths],
              spawned: ev.spawned ++ born,
-             dead_by: [{o.species, cause} | ev.dead_by]
+             dead_by: [{o.species, cause, predator} | ev.dead_by]
          }, rng}
       end)
 
-    {food, %{events | deaths: Enum.reverse(events.deaths)}, rng}
+    {food, %{events | deaths: Enum.reverse(events.deaths), dead_by: Enum.reverse(events.dead_by)},
+     rng}
   end
 
   defp count_deaths(eco_totals, dead_by) do
     deaths =
-      Enum.reduce(dead_by, eco_totals.deaths, fn {sp, cause}, acc ->
+      Enum.reduce(dead_by, eco_totals.deaths, fn {sp, cause, _pred}, acc ->
         Map.update(acc, sp, %{cause => 1}, &Map.update(&1, cause, 1, fn n -> n + 1 end))
       end)
 
@@ -1210,7 +1249,7 @@ defmodule Abyss.World.Sim do
       |> Enum.reduce(nil, fn {i, id, pos, pr, psp, _v, _e} = item, best ->
         d = dist(o.pos, pos)
 
-        if id != o.id and not MapSet.member?(food.prey_eaten, id) and
+        if id != o.id and not Map.has_key?(food.prey_eaten, id) and
              not ignored?(o.gave_up, id, env.now_ms) and closer?(d, i, best) and
              Hunt.can_eat?(sp, r, psp, pr) and
              d <= Hunt.perceived_range(sp.perception, Hunt.cover_at(env.bounds, pos)),
@@ -1250,7 +1289,7 @@ defmodule Abyss.World.Sim do
   defp chased(o, id, sp, r, env, food) do
     {x, _, z} = o.pos
 
-    if not MapSet.member?(food.prey_eaten, id) do
+    if not Map.has_key?(food.prey_eaten, id) do
       env.grid
       |> Grid.near(x, z, sp.perception * 1.2)
       |> Enum.find(fn {_, pid, pos, pr, psp, _, _} ->
@@ -1286,7 +1325,7 @@ defmodule Abyss.World.Sim do
     o = Life.gain(o, sp, env.eco.prey_base + env.eco.prey_yield * pe)
 
     {%{o | target: nil, chase_left: 0.0, sated_left: sp.sated_s * 1.0}, @zero,
-     %{food | prey_eaten: MapSet.put(food.prey_eaten, id), hunts_ok: food.hunts_ok + 1}}
+     %{food | prey_eaten: Map.put(food.prey_eaten, id, o.species), hunts_ok: food.hunts_ok + 1}}
   end
 
   # Só quem alguma espécie caça procura ameaça (atalho; a regra é a de Hunt.threat).

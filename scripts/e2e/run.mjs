@@ -82,8 +82,10 @@ await withPreview(async (browser) => {
   await scenario('selecionar pelo índice seleciona o certo', async () => {
     const page = await openWorld(context);
     await page.getByRole('button', { name: /NO TERRÁRIO/ }).click();
-    await page.getByRole('button', { name: /Membrana\s+\d+/ }).click();
-    const pick = page.getByRole('button', { name: /^MBR-\d{4}$/ }).first();
+    // Qualquer espécie viva (com ou sem as espécies de teste): o nome termina na contagem de vivos.
+    const index = page.getByRole('navigation', { name: 'Índice do terrário' });
+    await index.getByRole('button', { name: /^(?!NO TERRÁRIO).*\s\d+$/ }).first().click();
+    const pick = index.getByRole('button', { name: /^[A-Z0-9]+-\d{4}$/ }).first();
     const id = (await pick.innerText()).trim();
     await pick.click();
     await delay(300);
@@ -199,6 +201,43 @@ await withPreview(async (browser) => {
     await delay(1500);
     if (NEGATE) assert.ok(errors.length > 0, 'NEGATE: esperava erros no console (deve falhar)');
     else assert.deepEqual(errors, [], 'erros no console');
+    await page.close();
+  });
+
+  // Gate P: precisa de ao menos uma espécie criada viva no mundo (as de teste não estão no banco).
+  await scenario('buscar uma espécie viva segue uma criatura dela; nome inexistente avisa', async () => {
+    const page = await openWorld(context);
+    await delay(1500);
+    const target = await page.evaluate(() => {
+      const a = window.__abyss;
+      const living = new Set();
+      for (const o of a.organisms()) {
+        const v = a.vitals(o.id);
+        if (v && v.dyingSinceMs === null) living.add(o.species);
+      }
+      const sp = a.species().find((s) => s.id.startsWith('sp') && living.has(s.id) && !(s.id in a.extinct()));
+      return sp ? { id: sp.id, name: sp.name } : null;
+    });
+    assert.ok(target, 'o mundo precisa de ao menos uma espécie criada viva');
+    const input = page.getByLabel('Buscar espécie');
+    await input.fill(target.name);
+    const box = page.getByRole('search');
+    await box.getByRole('button', { name: target.name, exact: true }).first().click({ timeout: 5000 });
+    const sel = await page.waitForFunction(
+      (spId) => {
+        const a = window.__abyss;
+        const s = a.selection();
+        const o = s.id && a.organisms().find((x) => x.id === s.id);
+        return o && s.following && o.species === spId ? s : null;
+      },
+      target.id,
+      { timeout: 5000 },
+    ).then((h) => h.jsonValue(), () => null);
+    if (NEGATE) assert.ok(!sel, 'NEGATE: esperava não seguir (deve falhar)');
+    else assert.ok(sel, `seguindo uma criatura de ${target.id}`);
+
+    await input.fill('Nome que não existe 0x');
+    await box.getByText('Nenhuma espécie com esse nome').waitFor({ timeout: 5000 });
     await page.close();
   });
 

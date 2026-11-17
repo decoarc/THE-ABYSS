@@ -110,7 +110,7 @@ defmodule Abyss.World.ServerTest do
     # uma criada com 3 fundadoras que morrem de fome, uma de teste extinta
     sp = %{made(1) | energy_max: 0.001}
     start_server(on_extinct: cb, species_loader: fn -> %{live: [sp], extinct: []} end)
-    assert_receive {:extinct, [{"sp1", ms}]}, 5000
+    assert_receive {:extinct, [%{id: "sp1", at_ms: ms}]}, 5000
     assert is_integer(ms)
     Process.sleep(300)
     assert all_binary_ids?()
@@ -180,7 +180,7 @@ defmodule Abyss.World.ServerTest do
 
   defp all_binary_ids? do
     receive do
-      {:extinct, list} -> Enum.all?(list, fn {id, _} -> is_binary(id) end) and all_binary_ids?()
+      {:extinct, list} -> Enum.all?(list, &is_binary(&1.id)) and all_binary_ids?()
     after
       0 -> true
     end

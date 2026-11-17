@@ -1,4 +1,4 @@
-import type { SpeciesInfo } from '../services/wire';
+import type { SpeciesInfo, Vec3 } from '../services/wire';
 import type { Vitals, WorldStore } from '../services/worldStore';
 
 export interface LineageNode {
@@ -69,6 +69,31 @@ export function firstLiving(store: Pick<WorldStore, 'roster' | 'vitals'>, specie
     if (o.species !== speciesId) continue;
     if (!store.vitals(o.id, probe) || probe.dyingSinceMs !== null) continue;
     if (best === null || idBefore(o.id, best) < 0) best = o.id;
+  }
+  return best;
+}
+
+const samplePos: Vec3 = [0, 0, 0];
+const sampleVel: Vec3 = [0, 0, 0];
+
+/** O vivo (sem os fantasmas) mais próximo de `from` entre as espécies dadas; null se não há. */
+export function nearestLiving(
+  store: Pick<WorldStore, 'roster' | 'vitals' | 'sample'>,
+  speciesIds: ReadonlySet<string>,
+  from: Vec3,
+  localMs: number,
+): string | null {
+  let best: string | null = null;
+  let bestD = Infinity;
+  for (const o of store.roster()) {
+    if (!speciesIds.has(o.species)) continue;
+    if (!store.vitals(o.id, probe) || probe.dyingSinceMs !== null) continue;
+    if (!store.sample(o.id, localMs, samplePos, sampleVel)) continue;
+    const d = Math.hypot(samplePos[0] - from[0], samplePos[1] - from[1], samplePos[2] - from[2]);
+    if (d < bestD || (d === bestD && best !== null && idBefore(o.id, best) < 0)) {
+      best = o.id;
+      bestD = d;
+    }
   }
   return best;
 }

@@ -17,6 +17,10 @@ defmodule Abyss.Genesis.SpeciesRecord do
     field :ruleset, :string, default: "s1"
     field :published_at, :utc_datetime_usec
     field :extinct_at, :utc_datetime_usec
+    field :extinct_cause, :string
+    field :extinct_predator_id, :string
+    field :extinct_world_ms, :integer
+    field :extinct_epoch, :integer
   end
 
   def changeset(record, attrs) do

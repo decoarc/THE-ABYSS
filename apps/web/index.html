@@ -6,6 +6,16 @@
     <title>The Abyss</title>
     <style>
       html, body, #root { margin: 0; height: 100%; background: #020A10; overflow: hidden; }
+      /* Barra de rolagem dos painéis: polegar reto de 6 px na cor das bordas, sem trilho e sem setas.
+         Chromium e Safari usam as regras -webkit- (só valem sem scrollbar-color/width); o Firefox, as padrão. */
+      .abyss-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+      .abyss-scroll::-webkit-scrollbar-track { background: transparent; }
+      .abyss-scroll::-webkit-scrollbar-button { display: none; }
+      .abyss-scroll::-webkit-scrollbar-thumb { background: rgba(220, 235, 232, 0.3); }
+      .abyss-scroll::-webkit-scrollbar-thumb:hover { background: rgba(220, 235, 232, 0.5); }
+      @supports (-moz-appearance: none) {
+        .abyss-scroll { scrollbar-width: thin; scrollbar-color: rgba(220, 235, 232, 0.3) transparent; }
+      }
     </style>
   </head>
   <body>

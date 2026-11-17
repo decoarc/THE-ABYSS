@@ -18,7 +18,14 @@ defmodule Abyss.World.Wire do
   # Extintas que o snapshot carrega (as mais recentes).
   @max_extinct 100
 
-  @type meta :: %{world_id: String.t(), tick_hz: pos_integer, server_ms: integer}
+  # `server_ms` está no relógio do mundo; `offset_ms` (opcional, padrão 0) converte as datas
+  # de espécie (`born_ms`, `extinct_ms`) e as extinções do tick (`x`) para hora real.
+  @type meta :: %{
+          required(:world_id) => String.t(),
+          required(:tick_hz) => pos_integer,
+          required(:server_ms) => integer,
+          optional(:offset_ms) => integer
+        }
 
   @spec snapshot(Sim.t(), meta) :: map
   def snapshot(%Sim{} = sim, meta) do
@@ -32,7 +39,7 @@ defmodule Abyss.World.Wire do
       map_id: sim.bounds.map.id,
       creature_scale: sim.bounds.creature_scale,
       bounds: Map.take(sim.bounds, [:y_min, :y_max]),
-      species: Enum.map(snapshot_species(sim), &species_info(sim, &1)),
+      species: Enum.map(snapshot_species(sim), &species_info(sim, &1, offset(meta))),
       juvenile_scale: sim.ecology.juvenile_scale,
       divide_s: sim.ecology.divide_s,
       organisms: Enum.map(sim.organisms, &organism(&1, emax)),
@@ -62,12 +69,12 @@ defmodule Abyss.World.Wire do
         Enum.map(sim.organisms, fn o ->
           vec(o.pos) ++ vec(o.vel) ++ [energy(o, emax), flags(o)]
         end),
-      sp: Enum.map(Map.get(ev, :species, []), &species_info(sim, &1)),
+      sp: Enum.map(Map.get(ev, :species, []), &species_info(sim, &1, offset(meta))),
       b: Enum.map(ev.births, &organism(&1, emax)),
       g: Enum.map(Map.get(ev, :genomes, []), fn {gid, bp} -> [gid, bp] end),
       rb: Enum.map(Map.get(ev, :rebranch, []), fn {id, sp} -> [id, to_string(sp)] end),
       d: Enum.map(ev.deaths, fn {id, cause} -> [id, Atom.to_string(cause)] end),
-      x: Enum.map(ev.extinct, fn {id, ms} -> [to_string(id), ms] end),
+      x: Enum.map(ev.extinct, fn {id, ms} -> [to_string(id), ms + offset(meta)] end),
       f: Enum.map(sim.food_events.changed, fn {idx, level} -> [idx, level] end),
       ps: Enum.map(sim.food_events.spawned, &particle/1),
       pr: sim.food_events.removed
@@ -131,7 +138,9 @@ defmodule Abyss.World.Wire do
   end
 
   # Whitelist: nunca serializa o mapa da espécie inteiro.
-  defp species_info(sim, sp) do
+  defp offset(meta), do: Map.get(meta, :offset_ms, 0)
+
+  defp species_info(sim, sp, offset) do
     %{
       id: to_string(sp.id),
       code: sp.code,
@@ -139,13 +148,16 @@ defmodule Abyss.World.Wire do
       body_radius: Sim.body_radius(sim, sp.id),
       diet: diet(sp.diet),
       blueprint: sp.blueprint,
-      extinct_ms: Map.get(sim.extinct, sp.id),
+      extinct_ms: real(Map.get(sim.extinct, sp.id), offset),
       parent: Map.get(sp, :parent) && to_string(sp.parent),
       root: to_string(Map.get(sp, :root, sp.id)),
       region: Map.get(sp, :region),
-      born_ms: Map.get(sp, :born_ms)
+      born_ms: real(Map.get(sp, :born_ms), offset)
     }
   end
+
+  defp real(nil, _offset), do: nil
+  defp real(ms, offset), do: ms + offset
 
   defp organism(o, emax) do
     %{

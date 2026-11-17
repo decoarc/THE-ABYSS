@@ -416,7 +416,9 @@ defmodule Abyss.World.SimTest do
                species: [],
                genomes: [],
                branches: [],
-               rebranch: []
+               rebranch: [],
+               dead_by: [],
+               extinct_causes: %{}
              }
     end
 

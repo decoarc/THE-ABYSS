@@ -32,7 +32,11 @@ config :abyss, :world,
   food_boost: 1.0,
   # Só para medição (ABYSS_MUTATION_BOOST): multiplica part_p do catálogo
   # (teto 1). 1.0 = a mutação canônica.
-  mutation_boost: 1.0
+  mutation_boost: 1.0,
+  # Fotografia do mundo a cada snapshot_s (gate P) e espera máxima da gravação no
+  # desligamento.
+  snapshot_s: 60,
+  shutdown_save_ms: 10_000
 
 # Comida canônica (flora e partículas), ver Abyss.World.Flora e Particles.
 config :abyss, :food,
@@ -88,7 +92,13 @@ config :abyss, :ecology,
 config :abyss, :genesis,
   token_ttl_s: 1800,
   web_url: "http://localhost:5173",
-  limits: [submit_ip: {10, 600}, submit_email: {3, 3600}, confirm_ip: {20, 600}]
+  limits: [
+    submit_ip: {10, 600},
+    submit_email: {3, 3600},
+    confirm_ip: {20, 600},
+    # Buscador de espécies (gate P): 60 por minuto por IP.
+    search_ip: {60, 60}
+  ]
 
 # Origens do cliente web autorizadas no CORS.
 config :abyss, :web_origins, [

@@ -13,6 +13,7 @@ defmodule Abyss.Application do
         Abyss.Repo,
         Abyss.Genesis.RateLimit,
         Abyss.Genesis.Recorder,
+        Abyss.World.Saver,
         {DNSCluster, query: Application.get_env(:abyss, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Abyss.PubSub},
         Abyss.World.Observers,
@@ -34,8 +35,17 @@ defmodule Abyss.Application do
            [
              name: Abyss.World.Server,
              species_loader: &Abyss.Genesis.boot_species/0,
+             boot: &Abyss.World.Boot.load/1,
              on_extinct: &Abyss.Genesis.Recorder.record/1,
              on_branch: &Abyss.Genesis.Recorder.record_branches/1,
+             on_deaths: &Abyss.Genesis.Recorder.record_deaths/4,
+             persist: %{
+               save: &Abyss.World.Saver.save/1,
+               save_sync: &Abyss.World.Saver.save_sync/2,
+               flush: &Abyss.Genesis.Recorder.flush_deaths/0,
+               # Limitado: o desligamento inteiro cabe no `shutdown` do Server.
+               sync: fn -> Abyss.Genesis.Recorder.sync(5_000) end
+             },
              broadcast: &AbyssWeb.Endpoint.broadcast!("world:main", "tick", &1)
            ]}
       ]

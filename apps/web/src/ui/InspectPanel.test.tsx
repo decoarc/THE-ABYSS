@@ -1,6 +1,8 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { InspectPanel } from './InspectPanel';
+import { act } from 'react';
 import { membranas, renderWithWorld } from '../test-utils/world';
+import { lineageUi } from '../services/lineageUi';
 
 it('sem seleção não renderiza nada', () => {
   const { container } = renderWithWorld(<InspectPanel />, { organisms: membranas(3) });
@@ -48,4 +50,13 @@ it('fundador adulto: fase adulto e nasceu de —', () => {
   expect(screen.getByText('FASE').nextElementSibling?.textContent).toBe('adulto');
   expect(screen.getByText('ENERGIA').nextElementSibling?.textContent).toBe('80%');
   expect(screen.getByText('NASCEU DE').nextElementSibling?.textContent).toBe('—');
+});
+
+it('some enquanto a árvore está aberta e volta ao fechá-la, sem perder a seleção', () => {
+  const { selection } = renderWithWorld(<InspectPanel />, { organisms: membranas(42), selectId: 'MBR-0042' });
+  act(() => lineageUi.open(null));
+  expect(screen.queryByText('INDIVÍDUO · MBR-0042')).toBeNull();
+  expect(selection.get().id).toBe('MBR-0042');
+  act(() => lineageUi.close());
+  expect(screen.getByText('INDIVÍDUO · MBR-0042')).toBeInTheDocument();
 });

@@ -391,6 +391,31 @@ defmodule Abyss.World.WireTest do
       assert {:ok, _} = Jason.encode(t)
     end
 
+    test "datas de espécie e extinção saem em hora real com offset" do
+      branch =
+        Map.merge(made2(2), %{id: "sp1.1", parent: "sp1", root: "sp1", region: nil, born_ms: 900})
+
+      s =
+        sim()
+        |> Sim.add_species(%{made2(1) | id: "sp1"}, founders: 3)
+        |> Sim.add_species(branch, founders: 0, extinct_ms: 950)
+        |> Sim.step(0.1)
+
+      s = %{s | life_events: %{s.life_events | extinct: [{"sp1.1", 950}], species: [branch]}}
+      meta = Map.put(@meta, :offset_ms, 10_000)
+
+      snap = Wire.snapshot(s, meta)
+      info = Enum.find(snap.species, &(&1.id == "sp1.1"))
+      assert info.born_ms == 10_900 and info.extinct_ms == 10_950
+      assert Enum.find(snap.species, &(&1.id == "celula")).born_ms == nil
+      assert snap.server_ms == @meta.server_ms
+
+      t = Wire.tick(s, meta)
+      assert t.x == [["sp1.1", 10_950]]
+      assert [%{born_ms: 10_900, extinct_ms: 10_950}] = t.sp
+      assert t.server_ms == @meta.server_ms
+    end
+
     test "ancestral extinto vai no snapshot" do
       base =
         Enum.reduce(1..130, sim(), fn i, acc ->

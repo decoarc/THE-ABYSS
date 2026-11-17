@@ -4,6 +4,7 @@ import { WorldContext } from '../services/WorldProvider';
 import { createSelection, type Selection } from '../services/selection';
 import { createWorldStore, type WorldStore } from '../services/worldStore';
 import type { OrganismInfo, SpeciesInfo, WorldSnapshot } from '../services/wire';
+import { lineageUi } from '../services/lineageUi';
 
 export const SPECIES: SpeciesInfo[] = [
   { id: 'membrana', code: 'MBR', name: 'Membrana', body_radius: 1.1, diet: { kind: 'particles', prey: [] }, extinct_ms: null, parent: null, root: 'membrana', region: null, born_ms: null },
@@ -15,6 +16,8 @@ export function renderWithWorld(
   ui: ReactElement,
   options: { organisms?: OrganismInfo[]; live?: boolean; selectId?: string; following?: boolean; species?: SpeciesInfo[] } = {},
 ) {
+  // A árvore aberta é estado de módulo: cada teste começa com ela fechada.
+  lineageUi.close();
   const store: WorldStore = createWorldStore();
   const selection: Selection = createSelection();
   const snapshot: WorldSnapshot = {

@@ -1,5 +1,6 @@
 .superpowers/
 node_modules/
+.pnpm-store/
 dist/
 /captures/
 apps/api/_build/
@@ -11,3 +12,6 @@ docs/captures/**/*.webm
 
 # segredos da VPS (gate O)
 infra/compose/.env.prod
+
+# build do site para o domínio público (fora do git)
+apps/web/.env.*.local

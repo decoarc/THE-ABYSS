@@ -1,4 +1,14 @@
-# Site e API na mesma origem (gate O). HTTPS entra quando houver domínio: trocar ":80" pelo nome.
+{
+	servers {
+		# Atrás do cloudflared (rede Docker privada) o X-Forwarded-Proto chega como https.
+		# Sem confiar nele, o Caddy mandaria "http" e o force_ssl da API redirecionaria em loop.
+		trusted_proxies static private_ranges
+		# IP real do visitante (vem da Cloudflare), para os logs.
+		client_ip_headers Cf-Connecting-IP X-Forwarded-For
+	}
+}
+
+# Site e API na mesma origem (gate O). O HTTPS público fica na Cloudflare (túnel); aqui é HTTP.
 :80 {
 	encode zstd gzip
 

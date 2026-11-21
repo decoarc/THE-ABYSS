@@ -1,0 +1,18 @@
+# Site e API na mesma origem (gate O). HTTPS entra quando houver domínio: trocar ":80" pelo nome.
+:80 {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+
+	handle /socket/* {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

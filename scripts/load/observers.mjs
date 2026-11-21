@@ -16,7 +16,9 @@ const require = createRequire(new URL('../../apps/web/package.json', import.meta
 const { Socket, Serializer } = require('phoenix');
 
 const exec = promisify(execFile);
-const COMPOSE = fileURLToPath(new URL('../../infra/compose/compose.yaml', import.meta.url));
+// ABYSS_COMPOSE aponta outro compose (ex.: compose.prod.yaml, na medição da VPS).
+const COMPOSE =
+  process.env.ABYSS_COMPOSE ?? fileURLToPath(new URL('../../infra/compose/compose.yaml', import.meta.url));
 const TICK_MS = 100;
 const STATS_EVERY_MS = 10_000;
 const FIRST_MINUTES_MS = 10 * 60_000;

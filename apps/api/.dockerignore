@@ -1,0 +1,7 @@
+_build
+deps
+tmp
+_calib
+test
+.elixir_ls
+erl_crash.dump

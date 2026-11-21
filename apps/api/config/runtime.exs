@@ -27,6 +27,21 @@ if map_path = System.get_env("ABYSS_MAP_PATH") do
   config :abyss, :map_path, map_path
 end
 
+# Origens do cliente web (CORS), separadas por vírgula; vazia = as do config.exs (gate O).
+case System.get_env("ABYSS_WEB_ORIGINS") do
+  nil -> :ok
+  "" -> :ok
+  origins -> config :abyss, :web_origins, origins |> String.split(",") |> Enum.map(&String.trim/1)
+end
+
+# Endereço do site no link de verificação por e-mail (padrão no config.exs).
+case System.get_env("ABYSS_WEB_URL") do
+  nil -> :ok
+  "" -> :ok
+  # O Config junta listas de chaves: só web_url muda, os limites do config.exs ficam.
+  url -> config :abyss, :genesis, web_url: url
+end
+
 # População do mundo: padrão em config.exs (150); faixa aceita 5–400 (gate E1).
 if population = System.get_env("ABYSS_POPULATION") do
   n = String.to_integer(population)

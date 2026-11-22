@@ -131,6 +131,23 @@ if config_env() == :prod do
 
   config :abyss, Abyss.Repo, url: database_url
 
+  # E-mail de verdade pelo Resend quando há chave; sem ela fica o Local (caixa em
+  # memória, nada é entregue), como antes do gate O.
+  case System.get_env("RESEND_API_KEY") do
+    key when key in [nil, ""] ->
+      :ok
+
+    key ->
+      config :abyss, Abyss.Mailer, adapter: Swoosh.Adapters.Resend, api_key: key
+      config :swoosh, :api_client, Swoosh.ApiClient.Req
+      config :swoosh, local: false
+  end
+
+  case System.get_env("ABYSS_MAIL_FROM") do
+    from when from in [nil, ""] -> :ok
+    from -> config :abyss, :mail_from, from
+  end
+
   host = System.get_env("PHX_HOST") || "example.com"
 
   config :abyss, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")

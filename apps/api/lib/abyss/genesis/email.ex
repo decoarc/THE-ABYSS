@@ -3,13 +3,14 @@ defmodule Abyss.Genesis.Email do
 
   import Swoosh.Email
 
-  @from {"The Abyss", "nao-responda@the-abyss.local"}
+  # Remetente: ABYSS_MAIL_FROM no runtime.exs (prod); o padrão vale para dev e teste.
+  @default_from "nao-responda@the-abyss.local"
   @subject "Confirme a sua espécie no The Abyss"
 
   def verify(to, url) do
     new()
     |> to(to)
-    |> from(@from)
+    |> from(sender())
     |> subject(@subject)
     |> text_body("""
     Olá!
@@ -33,10 +34,12 @@ defmodule Abyss.Genesis.Email do
     """)
   end
 
+  defp sender, do: {"The Abyss", Application.get_env(:abyss, :mail_from, @default_from)}
+
   def already_used(to) do
     new()
     |> to(to)
-    |> from(@from)
+    |> from(sender())
     |> subject(@subject)
     |> text_body("""
     Olá!

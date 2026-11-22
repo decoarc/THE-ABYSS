@@ -47,7 +47,9 @@ defmodule Abyss.MixProject do
       {:bandit, "~> 1.5"},
       {:ecto_sql, "~> 3.13"},
       {:postgrex, ">= 0.0.0"},
-      {:swoosh, "~> 1.19"}
+      {:swoosh, "~> 1.19"},
+      # Cliente HTTP do adaptador do Resend (gate O).
+      {:req, "~> 0.5"}
     ]
   end
 

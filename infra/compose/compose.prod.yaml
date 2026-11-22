@@ -77,6 +77,9 @@ services:
       # Em prod o padrão é o mundo vazio; a medição liga as espécies de teste para ter carga real.
       - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-false}
       - ABYSS_SEED=${ABYSS_SEED:-}
+      # E-mail: sem RESEND_API_KEY os e-mails não saem (adaptador Local).
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - ABYSS_MAIL_FROM=${ABYSS_MAIL_FROM:-}
     mem_limit: 1g
     cpus: 1.5
     healthcheck:

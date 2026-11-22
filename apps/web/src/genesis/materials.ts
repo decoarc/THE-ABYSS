@@ -80,7 +80,8 @@ void main() {
 
 const partsVertex = /* glsl */ `
 uniform float uTime;
-uniform float uSwim;
+// Fases da batida (flagelo, cílios, aleta), integradas na CPU: a frequência muda com o nado.
+uniform vec3 uBeat;
 attribute float aKind;
 attribute float aT;
 attribute float aPhase;
@@ -96,11 +97,11 @@ void main() {
   float t = aT;
   float w = 0.0;
   // Flagelo: onda da raiz à ponta, mais rápida nadando.
-  w += isKind(${K('flagelo')}) * sin(uTime * (3.5 + 8.0 * uSwim) - t * 7.0 + aPhase) * t;
+  w += isKind(${K('flagelo')}) * sin(uBeat.x - t * 7.0 + aPhase) * t;
   // Cílios: a fase anda pela fileira.
-  w += isKind(${K('cilios')}) * sin(uTime * (4.0 + 5.0 * uSwim) - aPhase) * t;
+  w += isKind(${K('cilios')}) * sin(uBeat.y - aPhase) * t;
   // Aleta: bate.
-  w += isKind(${K('aleta')}) * sin(uTime * (1.5 + 2.5 * uSwim) + aPhase) * t * t;
+  w += isKind(${K('aleta')}) * sin(uBeat.z + aPhase) * t * t;
   // Mandíbula: abre e fecha devagar.
   w += isKind(${K('mandibula')}) * (0.5 + 0.5 * sin(uTime * 0.7 + aPhase)) * t;
   // Filtro e cardume: balanço lento.
@@ -166,12 +167,26 @@ export function createPartsMaterial(): THREE.ShaderMaterial {
     side: THREE.DoubleSide,
     uniforms: {
       uTime: { value: 0 },
-      uSwim: { value: 0 },
+      uBeat: { value: new THREE.Vector3() },
       uGlow: { value: new THREE.Color() },
       uSkin: { value: new THREE.Color() },
       uFade: { value: 1 },
     },
   });
+}
+
+const TAU = Math.PI * 2;
+
+/**
+ * Avança as fases da batida (x flagelo, y cílios, z aleta) por `dt` segundos com nado `swim` (0..1).
+ * A fase é a integral da frequência: escrever `uTime * f(nado)` no shader fazia cada variação de
+ * velocidade saltar a fase em proporção ao tempo acumulado (centenas de segundos), e as peças batiam
+ * freneticamente. Fica em [0, 2π) para não perder precisão no float32 do shader.
+ */
+export function advanceBeat(beat: THREE.Vector3, dt: number, swim: number): void {
+  beat.x = (beat.x + dt * (3.5 + 8.0 * swim)) % TAU;
+  beat.y = (beat.y + dt * (4.0 + 5.0 * swim)) % TAU;
+  beat.z = (beat.z + dt * (1.5 + 2.5 * swim)) % TAU;
 }
 
 /** Põe as cores e o padrão da planta nos uniforms (`uGlow` aqui é a cor base, sem a energia). */

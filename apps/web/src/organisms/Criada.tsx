@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { previewTraits } from '../genesis/blueprint';
 import { geometryCache, nucleusAnchor, type CreatureGeometry } from '../genesis/geometry';
-import { applyBlueprint, createBodyMaterial, createPartsMaterial } from '../genesis/materials';
+import { advanceBeat, applyBlueprint, createBodyMaterial, createPartsMaterial } from '../genesis/materials';
 import { clampDelta } from '../lib/motion';
 import { CREATURE_GLOW_RADIUS, glowOf } from '../scene/floorGlow';
 import { useCreatureCull } from '../scene/cull';
@@ -156,8 +156,14 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
     return s;
   }, [phase]);
 
+  // Cada instância começa a batida numa fase própria, para os cardumes não baterem em uníssono.
+  useLayoutEffect(() => {
+    if (res) (res.parts.uniforms.uBeat.value as THREE.Vector3).setScalar(offset % (Math.PI * 2));
+  }, [res, offset]);
+
   useFrame((_, dt) => {
-    time.current += clampDelta(dt) * motion;
+    const step = clampDelta(dt) * motion;
+    time.current += step;
     const g = group.current;
     if (!g || !shown.current || !res) return;
     const materials = res;
@@ -182,7 +188,7 @@ function CriadaBody({ id, bp }: { id: string; bp: Blueprint }) {
     (bu.uGlow.value as THREE.Color).copy(look.glow).multiplyScalar(glow);
     const pu = materials.parts.uniforms;
     pu.uTime.value = time.current;
-    pu.uSwim.value = look.maxSpeed > 0 ? Math.min(speed / look.maxSpeed, 1) : 0;
+    advanceBeat(pu.uBeat.value as THREE.Vector3, step, look.maxSpeed > 0 ? Math.min(speed / look.maxSpeed, 1) : 0);
     pu.uFade.value = fade;
     (pu.uGlow.value as THREE.Color).copy(look.glow).multiplyScalar(glow * (0.8 + 0.4 * breath));
 

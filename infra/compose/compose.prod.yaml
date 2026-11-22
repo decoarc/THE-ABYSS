@@ -126,6 +126,30 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ../../apps/web/dist:/srv:ro
       - caddy_data:/data
+    networks:
+      - default
+      - edge
+
+  # Acesso público pela Cloudflare Tunnel: só conexão de saída, nenhuma porta aberta na VPS.
+  # Fica só na rede `edge`, onde o único outro serviço é o Caddy (não alcança api nem db).
+  # No painel, a rota pública aponta para http://caddy:80.
+  tunnel:
+    image: cloudflare/cloudflared:2026.11.1
+    <<: *logs
+    restart: unless-stopped
+    depends_on:
+      - caddy
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:?defina TUNNEL_TOKEN no .env.prod}
+    mem_limit: 64m
+    cpus: 0.25
+    networks:
+      - edge
+
+networks:
+  default:
+  edge:
 
 volumes:
   db_data:

@@ -16,9 +16,9 @@ import { parseArgs, promisify } from 'node:util';
 const exec = promisify(execFile);
 const COMPOSE = fileURLToPath(new URL('../../infra/compose/compose.prod.yaml', import.meta.url));
 const ENV_FILE = fileURLToPath(new URL('../../infra/compose/.env.prod', import.meta.url));
-const SERVICES = ['api', 'db', 'backup', 'caddy'];
+const SERVICES = ['api', 'db', 'backup', 'caddy', 'tunnel'];
 // Limites do compose.prod.yaml (MiB) e orçamento do passo (tick de 100 ms).
-const MEM_LIMIT_MIB = { api: 1024, db: 768, backup: 256, caddy: 128 };
+const MEM_LIMIT_MIB = { api: 1024, db: 768, backup: 256, caddy: 128, tunnel: 64 };
 const STEP_BUDGET_US = 20_000;
 const DISK_BUDGET_GB = 30;
 // Fora do banco e dos backups: imagens, WAL e logs (estimativa, ver compose.prod.yaml).

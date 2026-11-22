@@ -2,6 +2,9 @@
 node_modules/
 .pnpm-store/
 dist/
+apps/web/dist.*/
+# estado do deploy automático (scripts/vps/deploy.sh)
+.deploy/
 /captures/
 apps/api/_build/
 apps/api/deps/

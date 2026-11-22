@@ -16,7 +16,11 @@
     "api:restore": "sh scripts/backup/restore.sh",
     "e2e": "pnpm build && node scripts/e2e/run.mjs && node scripts/e2e/evolution.mjs && node scripts/e2e/persistence.mjs",
     "e2e:genesis": "pnpm build && node scripts/e2e/genesis.mjs",
-    "load": "node scripts/load/observers.mjs"
+    "load": "node scripts/load/observers.mjs",
+    "vps:web": "pnpm --filter @abyss/web build --mode vps",
+    "vps:up": "docker compose -f infra/compose/compose.prod.yaml --env-file infra/compose/.env.prod up -d --build",
+    "vps:down": "docker compose -f infra/compose/compose.prod.yaml --env-file infra/compose/.env.prod down",
+    "vps:medir": "node scripts/vps/medir.mjs"
   },
   "devDependencies": {
     "playwright": "^1.64.1"

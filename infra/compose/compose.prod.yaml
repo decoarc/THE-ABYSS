@@ -1,0 +1,157 @@
+# Produção na VPS (gate O): orçamento de 3 GB de RAM e 30 GB de disco (decisão do autor, 2026-11-21).
+# Limites por serviço somam ~2,2 GB; o resto fica para o sistema da VPS.
+#
+#   cp infra/compose/.env.prod.example infra/compose/.env.prod   # e troque os segredos
+#   pnpm vps:web                                                  # site com as URLs do proxy
+#   docker compose -f infra/compose/compose.prod.yaml --env-file infra/compose/.env.prod up -d --build
+#
+# O Caddy publica SITE_PORT (padrão 8080); a API só no 127.0.0.1; o banco não sai da rede interna.
+
+# Projeto próprio: sem isso o nome seria "compose" (a pasta) e ele recriaria os contêineres e
+# reusaria o volume do banco de dev.
+name: abyss-prod
+
+x-logs: &logs
+  # Sem rotação os logs do Docker crescem até encher o disco.
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  db:
+    image: postgres:17-alpine
+    <<: *logs
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=abyss
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env.prod}
+      - POSTGRES_DB=abyss
+    # Ajuste para 768 MB: cache de 256 MB, poucas conexões (pool da API = 10) e WAL até 1 GB.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=512MB
+      - -c
+      - work_mem=4MB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - max_connections=20
+      - -c
+      - max_wal_size=1GB
+    mem_limit: 768m
+    cpus: 0.5
+    shm_size: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abyss -d abyss"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ../../apps/api
+      dockerfile: Dockerfile
+      additional_contexts:
+        shared: ../../shared
+    <<: *logs
+    restart: unless-stopped
+    # Tempo para gravar a fotografia do mundo no desligamento (gate P).
+    stop_grace_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=ecto://abyss:${POSTGRES_PASSWORD}@db/abyss
+      - SECRET_KEY_BASE=${SECRET_KEY_BASE:?defina SECRET_KEY_BASE no .env.prod}
+      - PHX_HOST=${PHX_HOST:-localhost}
+      - ABYSS_WEB_ORIGINS=${ABYSS_WEB_ORIGINS:-}
+      - ABYSS_WEB_URL=${ABYSS_WEB_URL:-}
+      - ABYSS_POPULATION=${ABYSS_POPULATION:-150}
+      # Em prod o padrão é o mundo vazio; a medição liga as espécies de teste para ter carga real.
+      - ABYSS_TEST_SPECIES=${ABYSS_TEST_SPECIES:-false}
+      - ABYSS_SEED=${ABYSS_SEED:-}
+    mem_limit: 1g
+    cpus: 1.5
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:4000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Só no 127.0.0.1 da máquina (medição e /api/stats); de fora, o acesso é pelo Caddy.
+    ports:
+      - "127.0.0.1:${API_PORT:-4000}:4000"
+
+  backup:
+    image: postgres:17-alpine
+    <<: *logs
+    restart: unless-stopped
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PGHOST=db
+      - PGUSER=abyss
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGDATABASE=abyss
+      - BACKUP_EVERY_S=${BACKUP_EVERY_S:-21600}
+      - BACKUP_KEEP=${BACKUP_KEEP:-7}
+    mem_limit: 256m
+    cpus: 0.5
+    volumes:
+      - ../backup/backup.sh:/backup.sh:ro
+      - db_backups:/backups
+
+  # Site estático + proxy para a API (/api e /socket) na mesma origem: sem CORS no navegador.
+  # HTTPS de verdade (domínio e certificado) é decisão aberta do gate O; aqui é HTTP.
+  caddy:
+    image: caddy:2.10-alpine
+    <<: *logs
+    restart: unless-stopped
+    depends_on:
+      - api
+    mem_limit: 128m
+    cpus: 0.25
+    ports:
+      - "${SITE_PORT:-8080}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../apps/web/dist:/srv:ro
+      - caddy_data:/data
+    networks:
+      - default
+      - edge
+
+  # Acesso público pela Cloudflare Tunnel: só conexão de saída, nenhuma porta aberta na VPS.
+  # Fica só na rede `edge`, onde o único outro serviço é o Caddy (não alcança api nem db).
+  # No painel, a rota pública aponta para http://caddy:80.
+  tunnel:
+    image: cloudflare/cloudflared:2026.11.1
+    <<: *logs
+    restart: unless-stopped
+    depends_on:
+      - caddy
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:?defina TUNNEL_TOKEN no .env.prod}
+    mem_limit: 64m
+    cpus: 0.25
+    networks:
+      - edge
+
+networks:
+  default:
+  edge:
+
+volumes:
+  db_data:
+  db_backups:
+  caddy_data:

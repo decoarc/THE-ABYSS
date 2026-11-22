@@ -1,6 +1,10 @@
 .superpowers/
 node_modules/
+.pnpm-store/
 dist/
+apps/web/dist.*/
+# estado do deploy automático (scripts/vps/deploy.sh)
+.deploy/
 /captures/
 apps/api/_build/
 apps/api/deps/
@@ -8,3 +12,9 @@ apps/api/.elixir_ls/
 
 # vídeos de captura ficam fora do git (THE-ABYSS-capturas/)
 docs/captures/**/*.webm
+
+# segredos da VPS (gate O)
+infra/compose/.env.prod
+
+# build do site para o domínio público (fora do git)
+apps/web/.env.*.local

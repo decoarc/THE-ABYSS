@@ -12,6 +12,7 @@ import { Fallback } from './ui/Fallback';
 import { LoadingOverlay } from './ui/LoadingOverlay';
 import { WorldProvider, useWorld } from './services/WorldProvider';
 import { isClick, type Point } from './lib/pointer';
+import { useContextLossHandler } from './lib/contextLoss';
 import { debugEnabled, installDebugBridge, registerProgramCounter, type AbyssDebug } from './services/debugBridge';
 import type { SocketLike } from './services/worldConnection';
 import { PerfProbe, isPerfEnabled } from './ui/PerfProbe';
@@ -76,6 +77,7 @@ function Scene({ onFail }: { onFail: () => void }) {
   const downAt = useRef<Point | null>(null);
   const [ready, setReady] = useState(false);
   const [perf] = useState(() => isPerfEnabled(window.location.search));
+  const onContextLost = useContextLossHandler(onFail);
 
   return (
     <>
@@ -96,10 +98,7 @@ function Scene({ onFail }: { onFail: () => void }) {
             gl.domElement.addEventListener('pointerdown', (event) => {
               downAt.current = { x: event.clientX, y: event.clientY };
             });
-            gl.domElement.addEventListener('webglcontextlost', (event) => {
-              event.preventDefault();
-              onFail();
-            });
+            gl.domElement.addEventListener('webglcontextlost', onContextLost);
           }}
         >
           {perf && <PerfProbe />}

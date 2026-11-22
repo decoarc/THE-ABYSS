@@ -19,6 +19,7 @@ import type { Blueprint } from '../services/wire';
 import { Compass } from './CompassGuide';
 import { compassOffset, fitDistance } from './compassMath';
 import { centroidOffset, surfaceCoords, surfaceFrame } from './geometry';
+import { advanceBeat } from './materials';
 import type { PreviewProps } from './CreationScreen';
 import type { EditorAction } from './editor';
 
@@ -41,7 +42,8 @@ function Creature({ bp, view, bodyRef }: { bp: Blueprint; view: THREE.Vector3; b
   const offset = useMemo(() => centroidOffset(bp).sub(view).toArray() as [number, number, number], [bp, view]);
 
   useFrame((_, dt) => {
-    time.current += clampDelta(dt);
+    const step = clampDelta(dt);
+    time.current += step;
     if (!res) return;
     const breath = (pulse.current - CRIADA_PULSE.min) / (CRIADA_PULSE.max - CRIADA_PULSE.min);
     const bu = res.body.uniforms;
@@ -50,7 +52,7 @@ function Creature({ bp, view, bodyRef }: { bp: Blueprint; view: THREE.Vector3; b
     (bu.uGlow.value as THREE.Color).copy(glow);
     const pu = res.parts.uniforms;
     pu.uTime.value = time.current;
-    pu.uSwim.value = 0.25;
+    advanceBeat(pu.uBeat.value as THREE.Vector3, step, 0.25);
     pu.uFade.value = 1;
     (pu.uGlow.value as THREE.Color).copy(glow).multiplyScalar(0.8 + 0.4 * breath);
   });

@@ -22,6 +22,13 @@
 
 	handle {
 		root * /srv
+		# Os arquivos de /assets têm o hash no nome: podem ficar no cache para sempre. O resto
+		# (index.html e as rotas que caem nele) é revalidado a cada visita, senão o navegador segue
+		# mostrando a versão anterior por horas depois de um deploy.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@pages not path /assets/*
+		header @pages Cache-Control "no-cache"
 		try_files {path} /index.html
 		file_server
 	}

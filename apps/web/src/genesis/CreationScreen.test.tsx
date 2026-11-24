@@ -36,6 +36,11 @@ it('cartão de peça mostra a foto quando existe', () => {
   expect(img!.getAttribute('alt')).toBe('');
 });
 
+it('nome acessível do cartão separa nome, efeito e custo', () => {
+  render(<Harness />);
+  expect(screen.getByRole('button', { name: 'Raspador · come a flora · +2' })).toBeInTheDocument();
+});
+
 it('sem fotos, o cartão aparece só com o texto', () => {
   render(<Harness />);
   const btn = screen.getByRole('button', { name: /Raspador/ });

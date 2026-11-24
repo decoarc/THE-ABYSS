@@ -267,18 +267,20 @@ export function CreationScreen({
                     const next = nextInstanceCost(bp, kind);
                     const info = PART_INFO[kind];
                     const src = thumbs?.[kind];
+                    const costText = next === null ? '—' : `+${next}`;
                     return (
                       <button
                         key={kind}
                         type="button"
                         className="gen-part"
+                        aria-label={`${info.name} · ${info.effect} · ${costText}`}
                         disabled={next === null}
                         onClick={() => dispatch({ type: 'addPart', kind })}
                       >
                         {src ? <img className="gen-part-img" src={src} alt="" /> : <span className="gen-part-img" aria-hidden="true" />}
                         <span className="gen-part-name">{info.name}</span>
                         <span className="gen-part-effect">{info.effect}</span>
-                        <span className="gen-part-cost">{next === null ? '—' : `+${next}`}</span>
+                        <span className="gen-part-cost">{costText}</span>
                       </button>
                     );
                   })}

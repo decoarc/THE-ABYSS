@@ -4,6 +4,7 @@ import type { PartKind, Pattern } from '../services/wire';
 import { CATALOG, blueprintCost, nextInstanceCost, previewTraits, validateBlueprint } from './blueprint';
 import { addPointBlocker, canMirror, editorReducer, initialEditorState, type EditorAction, type EditorState } from './editor';
 import { submitSpecies } from './genesisApi';
+import { usePartThumbnails } from './partThumbnails';
 
 export interface Draft {
   editor: EditorState;
@@ -57,8 +58,13 @@ const CSS = `
 .gen-root :focus-visible { outline: 1px solid ${PALETTE.cyan}; outline-offset: 2px; }
 .gen-field { width: 100%; box-sizing: border-box; background: rgba(7,24,33,0.9); border: 1px solid rgba(220,235,232,0.25); padding: 8px 9px; }
 .gen-field[aria-invalid="true"] { border-color: ${PALETTE.amber}; }
-.gen-part { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%; text-align: left; background: transparent; border: 1px solid rgba(220,235,232,0.22); padding: 7px 9px; }
+.gen-parts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.gen-part { display: flex; flex-direction: column; align-items: stretch; gap: 3px; min-width: 0; text-align: left; background: transparent; border: 1px solid rgba(220,235,232,0.22); padding: 6px 7px 7px; }
 .gen-part:not(:disabled):hover { border-color: ${PALETTE.cyan}; }
+.gen-part-img { display: block; width: 100%; max-width: 64px; aspect-ratio: 1; margin: 0 auto 2px; object-fit: contain; }
+.gen-part-name { font-size: 12px; overflow-wrap: anywhere; }
+.gen-part-effect { font-size: 10px; line-height: 1.3; opacity: 0.65; overflow-wrap: anywhere; }
+.gen-part-cost { margin-top: auto; color: ${PALETTE.cyan}; }
 .gen-chip { background: transparent; border: 1px solid rgba(220,235,232,0.22); padding: 4px 8px; }
 .gen-chip[aria-pressed="true"] { border-color: ${PALETTE.cyan}; color: ${PALETTE.cyan}; }
 .gen-range { width: 100%; accent-color: ${PALETTE.cyan}; }
@@ -142,6 +148,7 @@ export function CreationScreen({
 }) {
   const { editor, email, name } = draft;
   const { bp, selected } = editor;
+  const thumbs = usePartThumbnails();
   // O resultado do envio vale só para a versão enviada: qualquer mudança na planta, no e-mail ou
   // no nome volta a "idle" (o link publica a versão enviada, não a que está na tela).
   const [sent, setSent] = useState<{ state: SendState; bp: Draft['editor']['bp']; email: string; name: string }>(
@@ -255,10 +262,11 @@ export function CreationScreen({
             {GROUPS.map((g) => (
               <div key={g.title} role="group" aria-label={g.title}>
                 <div style={{ font: `10px/1.4 ${MONO}`, letterSpacing: '0.08em', opacity: 0.65, marginBottom: 4 }}>{g.title}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div className="gen-parts">
                   {g.kinds.map((kind) => {
                     const next = nextInstanceCost(bp, kind);
                     const info = PART_INFO[kind];
+                    const src = thumbs?.[kind];
                     return (
                       <button
                         key={kind}
@@ -267,11 +275,10 @@ export function CreationScreen({
                         disabled={next === null}
                         onClick={() => dispatch({ type: 'addPart', kind })}
                       >
-                        <span>
-                          {info.name}
-                          <span style={{ opacity: 0.65 }}> · {info.effect}</span>
-                        </span>
-                        <span style={{ color: PALETTE.cyan }}>{next === null ? '—' : `+${next}`}</span>
+                        {src ? <img className="gen-part-img" src={src} alt="" /> : <span className="gen-part-img" aria-hidden="true" />}
+                        <span className="gen-part-name">{info.name}</span>
+                        <span className="gen-part-effect">{info.effect}</span>
+                        <span className="gen-part-cost">{next === null ? '—' : `+${next}`}</span>
                       </button>
                     );
                   })}

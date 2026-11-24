@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CreationScreen, initialDraft, type Draft } from './CreationScreen';
+import { PART_KINDS } from './geometry';
+
+let thumbs: Record<string, string> | null = null;
+vi.mock('./partThumbnails', () => ({ usePartThumbnails: () => thumbs }));
+afterEach(() => {
+  thumbs = null;
+});
 
 const NoPreview = () => <div data-testid="preview" />;
 
@@ -18,6 +25,29 @@ function fillForm() {
   fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'teste@exemplo.dev' } });
   fireEvent.change(screen.getByLabelText('Nome da espécie'), { target: { value: 'Lumen' } });
 }
+
+it('cartão de peça mostra a foto quando existe', () => {
+  thumbs = Object.fromEntries(PART_KINDS.map((k) => [k, `data:image/png;base64,${k}`]));
+  render(<Harness />);
+  const btn = screen.getByRole('button', { name: /Raspador/ });
+  const img = btn.querySelector('img');
+  expect(img).not.toBeNull();
+  expect(img!.getAttribute('src')).toBe('data:image/png;base64,raspador');
+  expect(img!.getAttribute('alt')).toBe('');
+});
+
+it('nome acessível do cartão separa nome, efeito e custo', () => {
+  render(<Harness />);
+  expect(screen.getByRole('button', { name: 'Raspador · come a flora · +2' })).toBeInTheDocument();
+});
+
+it('sem fotos, o cartão aparece só com o texto', () => {
+  render(<Harness />);
+  const btn = screen.getByRole('button', { name: /Raspador/ });
+  expect(btn.querySelector('img')).toBeNull();
+  expect(btn).toHaveTextContent('come a flora');
+  expect(btn).toHaveTextContent('+');
+});
 
 it('Liberar desabilitado sem boca', () => {
   render(<Harness />);

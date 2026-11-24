@@ -1,8 +1,10 @@
 import { renderHook } from '@testing-library/react';
+import * as THREE from 'three';
+import { createPartsMaterial } from './materials';
 import { PALETTE } from '../lib/palette';
 import { INITIAL_BLUEPRINT } from './blueprint';
 import { PART_KINDS } from './geometry';
-import { renderPartThumbnails, resetPartThumbnailsCache, thumbnailBlueprint, usePartThumbnails } from './partThumbnails';
+import { createThumbnailMaterial, renderPartThumbnails, resetPartThumbnailsCache, thumbnailBlueprint, usePartThumbnails } from './partThumbnails';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -34,4 +36,14 @@ it('usePartThumbnails tenta gerar uma vez só por página', () => {
   expect(b.result.current).toBeNull();
   // A falha também fica no cache: a segunda montagem não tenta de novo.
   expect(spy.mock.calls.length).toBe(afterFirst);
+});
+
+it('material das fotos: mesma geometria animada do jogo, cores do menu', () => {
+  const game = createPartsMaterial();
+  const thumb = createThumbnailMaterial();
+  expect(thumb.vertexShader).toBe(game.vertexShader);
+  expect(thumb.fragmentShader).not.toBe(game.fragmentShader);
+  expect((thumb.uniforms.uRim.value as THREE.Color).getHexString()).toBe(PALETTE.cyan.slice(1).toLowerCase());
+  expect((thumb.uniforms.uFill.value as THREE.Color).getHexString()).toBe(PALETTE.teal.slice(1).toLowerCase());
+  expect(thumb.side).toBe(game.side);
 });

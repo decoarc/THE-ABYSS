@@ -7,7 +7,7 @@ import { PALETTE } from '../lib/palette';
 import type { Blueprint, PartKind } from '../services/wire';
 import { CATALOG, INITIAL_BLUEPRINT } from './blueprint';
 import { PART_KINDS, buildPartsGeometry } from './geometry';
-import { applyBlueprint, createPartsMaterial } from './materials';
+import { createPartsMaterial } from './materials';
 
 export type PartThumbnails = Record<PartKind, string>;
 
@@ -15,6 +15,42 @@ const SIZE = 128;
 const FOV = 38;
 /** Fração do quadro ocupada pela maior dimensão da peça. */
 const FILL = 0.8;
+
+// No jogo as peças são escuras de propósito (lidas contra o corpo que brilha); sozinhas no painel
+// sumiriam. A foto usa o mesmo vertex shader (mesma forma) com um preenchimento teal e borda ciano.
+const thumbFragment = /* glsl */ `
+uniform vec3 uFill;
+uniform vec3 uRim;
+varying float vT;
+varying float vLum;
+varying vec3 vNormalV;
+varying vec3 vViewDir;
+void main() {
+  float facing = abs(dot(normalize(vNormalV), normalize(vViewDir)));
+  float rim = pow(1.0 - facing, 1.5);
+  vec3 col = mix(uFill * (0.8 + 0.4 * facing), uRim, rim * 0.85);
+  col = mix(col, uRim * 1.4, vLum);
+  gl_FragColor = vec4(col, 1.0);
+  #include <colorspace_fragment>
+}
+`;
+
+export function createThumbnailMaterial(): THREE.ShaderMaterial {
+  const game = createPartsMaterial();
+  const m = new THREE.ShaderMaterial({
+    vertexShader: game.vertexShader,
+    fragmentShader: thumbFragment,
+    side: game.side,
+    uniforms: {
+      uTime: { value: 0 },
+      uBeat: { value: new THREE.Vector3() },
+      uFill: { value: new THREE.Color(PALETTE.teal) },
+      uRim: { value: new THREE.Color(PALETTE.cyan) },
+    },
+  });
+  game.dispose();
+  return m;
+}
 
 export function thumbnailBlueprint(kind: PartKind): Blueprint {
   const [smin, smax] = CATALOG.part_size;
@@ -41,18 +77,21 @@ export function renderPartThumbnails(): PartThumbnails | null {
     for (const kind of PART_KINDS) {
       const bp = thumbnailBlueprint(kind);
       const geometry = buildPartsGeometry(bp);
-      const material = createPartsMaterial();
-      applyBlueprint(material, bp);
+      const material = createThumbnailMaterial();
       const mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
       // Enquadra pela caixa (a esfera de bounding já vem com folga para o vertex shader).
       geometry.computeBoundingBox();
       const box = geometry.boundingBox!;
       const center = box.getCenter(new THREE.Vector3());
-      const extent = box.getSize(new THREE.Vector3()).length() || 0.5;
+      // A câmera olha de lado (eixo x): o que aparece é sobretudo y e z.
+      const s = box.getSize(new THREE.Vector3());
+      const extent = Math.max(s.y, s.z, s.x * 0.5) || 0.5;
       const dist = extent / 2 / Math.tan((FOV * Math.PI) / 360) / FILL;
       // De lado e um pouco acima.
-      camera.position.copy(center).add(new THREE.Vector3(dist * 0.95, dist * 0.32, 0));
+      // A placa fica deitada sobre o corpo: de lado vira um traço, então ela é vista mais de cima.
+      const dir = kind === 'placa' ? new THREE.Vector3(0.45, 0.85, 0.28) : new THREE.Vector3(0.95, 0.32, 0);
+      camera.position.copy(center).addScaledVector(dir.normalize(), dist);
       camera.lookAt(center);
       renderer.clear();
       renderer.render(scene, camera);
